@@ -12,8 +12,6 @@ This document serves as a **shared development guideline** for the backend team 
 * Clear and consistent Git workflow
 * Maintainable and scalable backend development
 
-The backend is developed **first** using **Java Spring Boot**, with PostgreSQL managed via Docker.
-
 ---
 
 ## 2. General Collaboration Principles
@@ -73,8 +71,7 @@ This flow **must be followed for every feature**.
 
 Performed once at the beginning:
 
-* Spring Boot project initialized
-* Docker Compose configured for PostgreSQL
+* Django project initialized
 * Initial commit pushed to `main`
 * `develop` branch created from `main`
 
@@ -103,7 +100,7 @@ While working on a feature:
 
 * Only modify files related to your feature
 * Do not refactor or touch unrelated code
-* Follow Spring Boot layered architecture (Controller → Service → Repository)
+* Follow Django layered architecture (Controller → Service → Repository)
 
 If shared changes are needed (e.g. config), discuss with the team first.
 
@@ -144,7 +141,6 @@ On GitLab:
 **Before creating MR, ensure:**
 
 * Application builds successfully
-* Docker Compose runs properly
 * No unnecessary files are committed
 
 ---
@@ -153,7 +149,6 @@ On GitLab:
 
 Reviewer responsibilities:
 
-* Check API naming consistency
 * Verify separation of layers
 * Ensure no breaking changes
 
@@ -176,14 +171,7 @@ git push origin main
 
 ---
 
-## 5. Database Management & Migration Rules
-
-* PostgreSQL runs using **Docker Compose**
-* No manual schema changes are allowed directly in the database
-
----
-
-## 6. Daily Development Workflow (Mandatory)
+## 5. Daily Development Workflow (Mandatory)
 
 Start a new feature:
 
