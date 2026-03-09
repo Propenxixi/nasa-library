@@ -55,10 +55,14 @@ def check_in_view(request):
     # Get reading stats for gamification (if available)
     reading_stats = get_reading_stats(request.user)
     
+    # Get activities for the check-in form
+    activities = AttendanceActivity.objects.filter(is_active=True)
+    
     context = {
         'form': form,
         'user_profile': user_profile,
         'reading_stats': reading_stats,
+        'activities': activities,
     }
     
     return render(request, 'check-in.html', context)

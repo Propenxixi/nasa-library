@@ -98,13 +98,15 @@
                 
                 <!-- Activity Checkboxes -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {% for choice_value, choice_label in form.activities.field.choices %}
+                    {% for activity in activities %}
                         <label class="relative flex items-center p-4 rounded-xl border-2 border-gray-200 hover:border-blue-400 cursor-pointer transition-all hover:bg-blue-50 group has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50">
-                            <input type="checkbox" name="activities" value="{{ choice_value }}" {% if choice_value in form.activities.value %}checked{% endif %} class="w-5 h-5">
+                            <input type="checkbox" name="activities" value="{{ activity.id }}" class="w-5 h-5">
                             <span class="ml-3 font-sans text-sm text-gray-700 group-has-[:checked]:text-blue-700 group-has-[:checked]:font-semibold">
-                                {{ choice_label }}
+                                {{ activity.emoji }} {{ activity.name }}
                             </span>
                         </label>
+                    {% empty %}
+                        <p class="text-gray-500 text-sm col-span-2">No activities available. Please contact the librarian.</p>
                     {% endfor %}
                 </div>
 
