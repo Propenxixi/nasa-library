@@ -44,9 +44,10 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument(
-            'excel_file',
+            '--filepath',
             type=str,
-            help='Path ke file Excel (Dataset_Buku.xlsx)',
+            default='static/files/Dataset_Buku.xlsx',
+            help='Path ke file Excel (default: static/files/Dataset_Buku.xlsx)',
         )
         parser.add_argument(
             '--update',
@@ -67,7 +68,7 @@ class Command(BaseCommand):
 
         from book.models import Book
 
-        filepath  = options['excel_file']
+        filepath  = options['filepath']
         do_update = options['update']
         dry_run   = options['dry_run']
 

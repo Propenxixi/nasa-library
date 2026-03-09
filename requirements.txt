@@ -6,4 +6,6 @@ requests
 urllib3
 openpyxl
 django-crontab
-requests
+python-dotenv
+dj-database-url
+
