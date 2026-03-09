@@ -7,7 +7,7 @@ db.sqlite3
 media
 staticfiles/
 
-# Backup files
+# Backupgit
 *.bak
 
 # If you are using PyCharm
