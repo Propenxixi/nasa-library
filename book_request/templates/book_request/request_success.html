@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+
+{% block title %}Request Submitted — NASA Library{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-white via-gray-50 to-white flex items-center justify-center px-4 py-12">
+  <div class="max-w-md w-full text-center">
+
+    <!-- Success Icon -->
+    <div class="inline-flex items-center justify-center w-24 h-24 bg-green-100 rounded-full mb-6 shadow-lg">
+      <span class="text-5xl">✅</span>
+    </div>
+
+    <h1 class="font-display text-4xl font-bold text-gray-900 mb-3">Request Submitted!</h1>
+    <p class="font-sans text-gray-600 mb-8">
+      Your book request is now waiting for librarian approval. We'll notify you on your history page once it's reviewed.
+    </p>
+
+    <!-- Request Summary Card -->
+    <div class="bg-white border border-gray-200 rounded-2xl shadow-sm p-6 mb-8 text-left space-y-4">
+      <div>
+        <p class="font-sans text-xs text-gray-500 uppercase tracking-wide mb-1">Book Title</p>
+        <p class="font-sans font-semibold text-gray-900">{{ book_request.title }}</p>
+      </div>
+      <div>
+        <p class="font-sans text-xs text-gray-500 uppercase tracking-wide mb-1">Author</p>
+        <p class="font-sans font-semibold text-gray-900">{{ book_request.author }}</p>
+      </div>
+      {% if book_request.category %}
+      <div>
+        <p class="font-sans text-xs text-gray-500 uppercase tracking-wide mb-1">Category</p>
+        <p class="font-sans font-semibold text-gray-900">{{ book_request.category }}</p>
+      </div>
+      {% endif %}
+      <div>
+        <p class="font-sans text-xs text-gray-500 uppercase tracking-wide mb-1">Status</p>
+        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-800">
+          ⏳ Waiting Approval
+        </span>
+      </div>
+    </div>
+
+    <!-- Info note -->
+    <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-8 text-left flex gap-3">
+      <span class="text-xl flex-shrink-0">📬</span>
+      <p class="font-sans text-sm text-blue-800">
+        Check your <strong>Request History</strong> page to see status updates. A pop-up will appear the next time you visit when your request has been approved or declined.
+      </p>
+    </div>
+
+    <!-- Actions -->
+    <div class="flex flex-col sm:flex-row gap-3 justify-center">
+      <a href="{% url 'book_request:request_list' %}"
+         class="px-6 py-3 bg-gray-900 text-white font-sans font-semibold rounded-xl hover:bg-gray-800 transition-colors">
+        View My Requests
+      </a>
+      <a href="{% url 'book_request:request_create' %}"
+         class="px-6 py-3 bg-gray-100 text-gray-700 font-sans font-semibold rounded-xl hover:bg-gray-200 transition-colors">
+        Submit Another
+      </a>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

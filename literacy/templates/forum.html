@@ -1,0 +1,148 @@
+{% extends 'base.html' %}
+
+{% block title %}Literacy Forum - NASA Library{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-white via-gray-50 to-white">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        
+        <!-- Page Header -->
+        <div class="mb-12">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <h1 class="font-display text-4xl md:text-5xl font-bold text-gray-900">💬 Forum</h1>
+                    <p class="font-sans text-gray-600 mt-2">Share your reading experiences and connect with fellow students</p>
+                </div>
+                <a href="{% url 'literacy:create_post' %}" class="hidden md:block px-6 py-3 bg-blue-100 text-blue-700 font-sans font-semibold rounded-lg hover:bg-blue-200 transition-colors">
+                    ✍️ New Post
+                </a>
+            </div>
+        </div>
+
+        <!-- Search & Sort -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4 mb-8">
+            <div class="md:col-span-2">
+                <form method="GET" class="relative">
+                    <input 
+                        type="text" 
+                        name="q" 
+                        placeholder="Search discussions..."
+                        value="{{ search_query }}"
+                        class="w-full px-4 py-3 pl-12 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all font-sans text-sm"
+                    >
+                    <span class="absolute left-4 top-3.5 text-lg">🔍</span>
+                </form>
+            </div>
+            
+            <div>
+                <select name="sort" onchange="location.href='?sort=' + this.value + (document.querySelector('input[name=q]').value ? '&q=' + document.querySelector('input[name=q]').value : '');" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 font-sans text-sm bg-white">
+                    <option value="recent" {% if sort_by == 'recent' %}selected{% endif %}>📅 Most Recent</option>
+                    <option value="popular" {% if sort_by == 'popular' %}selected{% endif %}>❤️ Most Popular</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Posts List -->
+        <div class="space-y-4">
+            {% if posts %}
+                {% for post in posts %}
+                    <a href="{% url 'literacy:post_detail' post.pk %}" class="block bg-white border-2 border-gray-100 rounded-2xl p-4 md:p-6 hover:shadow-lg hover:border-blue-200 transition-all duration-300 group">
+                        <div class="flex gap-3 md:gap-4">
+                            <!-- Author Avatar -->
+                            <div class="flex-shrink-0">
+                                <div class="w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center text-white font-bold text-sm md:text-lg bg-gradient-to-br from-blue-500 to-blue-600 shadow-md group-hover:scale-110 transition-transform">
+                                    {{ post.student.first_name|first|upper }}
+                                </div>
+                            </div>
+
+                            <!-- Post Content -->
+                            <div class="flex-1 min-w-0">
+                                <!-- Header -->
+                                <div class="flex items-start justify-between gap-4 mb-2">
+                                    <div>
+                                        <h3 class="font-display text-base md:text-lg font-bold text-gray-900 group-hover:text-blue-700 transition-colors">{{ post.title }}</h3>
+                                        <p class="font-sans text-sm text-gray-600">
+                                            by <span class="font-semibold">{{ post.student.get_full_name }}</span>
+                                            • {{ post.created_at|date:"d M Y \a\t H:i" }}
+                                        </p>
+                                    </div>
+                                    {% if post.book_review %}
+                                        <span class="inline-flex items-center gap-1 px-2 md:px-3 py-1 font-sans text-xs font-semibold rounded-full flex-shrink-0 bg-blue-50 text-blue-700 border border-blue-200">
+                                            📚 {{ post.book_review.title|truncatechars:15 }}
+                                        </span>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Content Preview -->
+                                <p class="font-sans text-sm text-gray-600 mb-2 md:mb-3 line-clamp-2">{{ post.content }}</p>
+
+                                <!-- Engagement Footer -->
+                                <div class="flex gap-4 md:gap-6 text-xs md:text-sm text-gray-500">
+                                    <span class="flex items-center gap-1 hover:text-red-500 transition-colors">
+                                        <span class="text-base">❤️</span> {{ post.like_count }}
+                                    </span>
+                                    <span class="flex items-center gap-1 hover:text-blue-500 transition-colors">
+                                        <span class="text-base">💬</span> {{ post.comment_count }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                {% endfor %}
+            {% else %}
+                <div class="bg-white border border-gray-200 rounded-2xl p-12 text-center">
+                    <div class="text-6xl mb-4">💭</div>
+                    <h3 class="font-display text-2xl font-bold text-gray-900 mb-2">No Posts Yet</h3>
+                    {% if search_query %}
+                        <p class="font-sans text-gray-600 mb-6">No posts found matching "{{ search_query }}"</p>
+                        <a href="{% url 'literacy:forum' %}" class="inline-block px-6 py-2 bg-gray-100 text-gray-700 font-sans font-semibold rounded-lg hover:bg-gray-200 transition-colors">
+                            Clear Search
+                        </a>
+                    {% else %}
+                        <p class="font-sans text-gray-600 mb-6">Be the first to share your literacy experience!</p>
+                        <a href="{% url 'literacy:create_post' %}" class="inline-block px-8 py-3 bg-blue-100 text-blue-700 font-sans font-semibold rounded-lg hover:bg-blue-200 transition-colors">
+                            ✍️ Create the First Post
+                        </a>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Tips Section -->
+        <div class="mt-12 grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="bg-gradient-to-br from-blue-50 to-cyan-50 border-2 border-blue-300 rounded-2xl p-6">
+                <h3 class="font-display text-lg font-bold flex items-center gap-2 mb-4 text-blue-900">
+                    <span class="text-2xl">💡</span> Posting Tips
+                </h3>
+                <ul class="font-sans text-sm space-y-2 text-blue-700">
+                    <li>✓ Share genuine reactions to books</li>
+                    <li>✓ Ask questions & discuss themes</li>
+                    <li>✓ Recommend books to classmates</li>
+                    <li>✓ Connect posts to your reviews</li>
+                </ul>
+            </div>
+            
+            <div class="bg-gradient-to-br from-purple-50 to-pink-50 border-2 border-purple-300 rounded-2xl p-6">
+                <h3 class="font-display text-lg font-bold flex items-center gap-2 mb-4 text-purple-900">
+                    <span class="text-2xl">🎯</span> Community Guidelines
+                </h3>
+                <ul class="font-sans text-sm space-y-2 text-purple-700">
+                    <li>✓ Be respectful to all students</li>
+                    <li>✓ No spoilers without warning</li>
+                    <li>✓ Keep discussions on-topic</li>
+                    <li>✓ Engage constructively</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .line-clamp-2 {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+</style>
+{% endblock %}

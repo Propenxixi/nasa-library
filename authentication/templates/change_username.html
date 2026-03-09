@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+
+{% block title %}Change Username - MAN 61 Jakarta Library{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-white via-gray-50 to-white flex items-center justify-center px-4 py-12">
+    <div class="w-full max-w-md">
+        <!-- Header Section -->
+        <div class="text-center mb-12 fade-in">
+            <h1 class="font-display text-4xl md:text-5xl font-bold text-gray-900 mb-3">
+                Change Username
+            </h1>
+            <p class="font-sans text-gray-600 text-lg">
+                Update your login username
+            </p>
+        </div>
+
+        <!-- Messages Section -->
+        {% if messages %}
+            {% for message in messages %}
+                <div class="mb-6 p-4 rounded-lg border {% if message.tags %}border-red-300 bg-red-50 text-red-700{% else %}border-green-300 bg-green-50 text-green-700{% endif %} fade-in">
+                    <p class="font-sans font-medium">{{ message }}</p>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <!-- Change Username Form -->
+        <form method="post" class="bg-white rounded-2xl border border-gray-200 p-8 md:p-10 shadow-lg hover:shadow-xl transition-shadow fade-in" style="animation-delay: 0.1s;">
+            {% csrf_token %}
+            
+            <!-- Current Username Display -->
+            <div class="mb-6 p-4 bg-gray-100 rounded-lg border border-gray-200">
+                <p class="font-sans text-sm text-gray-600 mb-1">Current Username</p>
+                <p class="font-sans font-semibold text-gray-900 text-lg">{{ user.username }}</p>
+            </div>
+
+            <!-- New Username Field -->
+            <div class="mb-6">
+                <label for="id_new_username" class="block font-sans font-semibold text-gray-900 mb-3 text-sm">
+                    {{ form.new_username.label }}
+                </label>
+                {{ form.new_username }}
+                {% if form.new_username.errors %}
+                    <p class="text-red-600 font-sans text-sm mt-2">
+                        {{ form.new_username.errors.0 }}
+                    </p>
+                {% endif %}
+            </div>
+
+            <!-- Password Field -->
+            <div class="mb-8">
+                <label for="id_password" class="block font-sans font-semibold text-gray-900 mb-3 text-sm">
+                    {{ form.password.label }}
+                </label>
+                {{ form.password }}
+                {% if form.password.errors %}
+                    <p class="text-red-600 font-sans text-sm mt-2">
+                        {{ form.password.errors.0 }}
+                    </p>
+                {% endif %}
+            </div>
+
+            <!-- Buttons -->
+            <div class="flex gap-4">
+                <button type="submit" class="flex-1 py-3 px-6 bg-gray-900 text-white font-sans font-semibold rounded-lg hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900 transition-all transform hover:scale-105 active:scale-95">
+                    Change Username
+                </button>
+                <a href="{% url 'main:mainpage' %}" class="flex-1 py-3 px-6 bg-gray-200 text-gray-900 font-sans font-semibold rounded-lg hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400 transition-all text-center">
+                    Cancel
+                </a>
+            </div>
+        </form>
+
+        <!-- Help Section -->
+        <div class="mt-10 text-center fade-in" style="animation-delay: 0.2s;">
+            <p class="font-sans text-gray-600 text-sm">
+                Username must be unique and cannot contain spaces
+            </p>
+        </div>
+    </div>
+</div>
+
+<style>
+    input[type="text"],
+    input[type="password"] {
+        width: 100%;
+        padding: 12px 16px;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        font-family: 'Poppins', sans-serif;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        background-color: #ffffff;
+    }
+
+    input[type="text"]:focus,
+    input[type="password"]:focus {
+        outline: none;
+        border-color: #1f2937;
+        box-shadow: 0 0 0 3px rgba(31, 41, 55, 0.1);
+    }
+
+    input[type="text"]::placeholder,
+    input[type="password"]::placeholder {
+        color: #9ca3af;
+    }
+</style>
+{% endblock %}

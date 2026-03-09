@@ -1,0 +1,333 @@
+{% extends 'base.html' %}
+
+{% block title %}Active Session - SMAN 61 Jakarta Library{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-white via-gray-50 to-white">
+    <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        
+        <!-- Header -->
+        <div class="mb-8">
+            <div class="flex items-center justify-between mb-4">
+                <h1 class="font-display text-4xl font-bold text-gray-900">Your Session</h1>
+                <div class="inline-flex items-center justify-center w-12 h-12 bg-green-100 rounded-full">
+                    <span class="text-2xl animate-pulse">🟢</span>
+                </div>
+            </div>
+            <p class="font-sans text-gray-600">You're currently in the library</p>
+        </div>
+
+        <!-- Live Session Card -->
+        <div class="bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-300 rounded-2xl p-8 mb-8 shadow-sm">
+            
+            <!-- Check-in Time -->
+            <div class="mb-8 pb-8 border-b border-green-200">
+                <p class="font-sans text-sm text-green-700 uppercase tracking-wide mb-2">Check-in Time</p>
+                <p class="font-display text-5xl font-bold text-green-900 mb-2">
+                    {{ active_attendance.check_in_time|date:"H:i" }}
+                </p>
+                <p class="font-sans text-sm text-green-700">
+                    {{ active_attendance.check_in_time|date:"l, j F Y" }}
+                </p>
+            </div>
+
+            <!-- Time Spent Card -->
+            <div class="bg-white rounded-xl p-6 border border-green-200 mb-8">
+                <p class="font-sans text-xs text-gray-500 uppercase tracking-wide mb-3">Time Spent in Library</p>
+                <div class="flex items-end gap-4">
+                    {% if hours_spent > 0 %}
+                        <div class="text-center">
+                            <p class="font-display text-5xl font-bold text-green-600">{{ hours_spent }}</p>
+                            <p class="font-sans text-sm text-gray-600 mt-1">hour{% if hours_spent != 1 %}s{% endif %}</p>
+                        </div>
+                        <div class="text-2xl text-gray-300">•</div>
+                    {% endif %}
+                    <div class="text-center">
+                        <p class="font-display text-5xl font-bold text-green-600">{{ remaining_minutes }}</p>
+                        <p class="font-sans text-sm text-gray-600 mt-1">minute{% if remaining_minutes != 1 %}s{% endif %}</p>
+                    </div>
+                </div>
+                <div class="mt-4 pt-4 border-t border-gray-200">
+                    <p class="font-sans text-xs text-gray-500">Total: <span class="font-semibold text-gray-700">{{ minutes_spent }} minutes</span></p>
+                </div>
+            </div>
+
+            <!-- Activities Card -->
+            {% if active_attendance.activities.all %}
+                <div class="bg-white rounded-xl p-6 border border-green-200">
+                    <p class="font-sans text-xs text-gray-500 uppercase tracking-wide mb-4">Your Activities Today</p>
+                    <div class="space-y-2">
+                        {% for activity in active_attendance.activities.all %}
+                            <div class="flex items-center gap-3 p-3 bg-green-50 rounded-lg">
+                                <span class="text-2xl">{{ activity.emoji }}</span>
+                                <span class="font-sans text-gray-800">{{ activity.name }}</span>
+                            </div>
+                        {% endfor %}
+                        {% if active_attendance.custom_activity %}
+                            <div class="flex items-center gap-3 p-3 bg-blue-50 rounded-lg">
+                                <span class="text-2xl">✏️</span>
+                                <span class="font-sans text-gray-800">{{ active_attendance.custom_activity }}</span>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Reading Prompt Card -->
+        <div class="bg-gradient-to-br from-blue-50 to-cyan-50 border-2 border-blue-200 rounded-2xl p-6 mb-8">
+            <div class="flex items-start gap-4">
+                <div class="text-4xl">👀</div>
+                <div>
+                    <h3 class="font-display text-xl font-bold text-blue-900 mb-2">Have you picked up a book yet?</h3>
+                    <p class="font-sans text-sm text-blue-800 mb-4">Reading is a great way to spend your time in the library. Discover something new or continue a page-turner!</p>
+                    <div class="flex gap-2">
+                        <button class="px-4 py-2 bg-blue-600 text-white font-sans font-semibold rounded-lg hover:bg-blue-700 transition-colors text-sm">
+                            📚 Browse Books
+                        </button>
+                        <button class="px-4 py-2 bg-white text-blue-600 font-sans font-semibold rounded-lg border border-blue-300 hover:bg-blue-50 transition-colors text-sm">
+                            Later
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="grid grid-cols-2 gap-4 mb-8">
+            <div class="bg-white border border-gray-200 rounded-xl p-4">
+                <p class="font-sans text-xs text-gray-500 mb-2">Status</p>
+                <div class="flex items-center gap-2">
+                    <div class="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                    <p class="font-sans font-semibold text-green-700">Active</p>
+                </div>
+            </div>
+            <div class="bg-white border border-gray-200 rounded-xl p-4">
+                <p class="font-sans text-xs text-gray-500 mb-2">Check-out</p>
+                <p class="font-sans font-semibold text-gray-900">3:00 PM (Auto)</p>
+                <p class="font-sans text-xs text-gray-600 mt-1">or anytime below</p>
+            </div>
+        </div>
+
+        <!-- Check-Out Form - AJAX Version -->
+        <div class="bg-white border border-gray-200 rounded-2xl p-6 md:p-8 shadow-sm">
+            <h2 class="font-display text-2xl font-bold text-gray-900 mb-4">Ready to Leave?</h2>
+            <p class="font-sans text-gray-600 mb-6">Click below to check out and end your session</p>
+            
+            <!-- Session Summary -->
+            <div class="mb-6 p-4 rounded-xl border-2 border-gray-200 bg-gray-50">
+                <p class="font-sans text-sm text-gray-700 mb-3">
+                    <span class="font-semibold">You checked in at:</span> {{ active_attendance.check_in_time|date:"H:i, l j F Y" }}
+                </p>
+                <p class="font-sans text-sm text-gray-700 mb-3">
+                    <span class="font-semibold">Check-out will be recorded at:</span> <span id="checkout-time">--:--</span>
+                </p>
+                <p class="font-sans text-sm text-gray-700">
+                    <span class="font-semibold">Visit duration will be:</span> <span id="visit-duration">calculating...</span>
+                </p>
+            </div>
+
+            <!-- Warning -->
+            <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6">
+                <p class="font-sans text-sm text-amber-900">
+                    <span class="font-semibold">💡 Tip:</span> Your visit history helps us track library usage and improve services. Don't forget to check out!
+                </p>
+            </div>
+
+            <!-- Check-Out Button -->
+            <button id="checkout-btn" class="w-full py-4 px-6 bg-red-600 text-white font-sans font-semibold rounded-xl hover:bg-red-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 text-lg mb-3">
+                👋 Check Out
+            </button>
+
+            <!-- Continue Button -->
+            <a href="{% url 'main:mainpage' %}" class="block w-full py-3 px-6 text-center text-gray-700 font-sans font-semibold rounded-xl border-2 border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition-colors">
+                Explore the Library
+            </a>
+        </div>
+
+        <!-- Loading Modal -->
+        <div id="checkout-loading-modal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+            <div class="bg-white rounded-2xl p-8 max-w-sm mx-4 shadow-2xl">
+                <div class="text-center">
+                    <div class="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4">
+                        <div class="flex gap-1">
+                            <div class="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style="animation-delay: 0ms"></div>
+                            <div class="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style="animation-delay: 150ms"></div>
+                            <div class="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style="animation-delay: 300ms"></div>
+                        </div>
+                    </div>
+                    <h3 class="font-display text-lg font-bold text-gray-900 mb-2">Processing Checkout</h3>
+                    <p class="font-sans text-sm text-gray-600">Saving your visit information...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Success Modal -->
+        <div id="checkout-success-modal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+            <div class="bg-white rounded-2xl p-8 max-w-sm mx-4 shadow-2xl">
+                <div class="text-center">
+                    <div class="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-4">
+                        <span class="text-3xl animate-bounce">✓</span>
+                    </div>
+                    <h3 class="font-display text-lg font-bold text-gray-900 mb-2">Check-Out Successful!</h3>
+                    <p class="font-sans text-sm text-gray-600 mb-4" id="success-message">
+                        Thank you for visiting! You spent <span id="success-duration">--</span> in the library.
+                    </p>
+                    <div class="bg-gray-50 rounded-xl p-4 mb-6 text-left">
+                        <p class="font-sans text-xs text-gray-600 mb-1">
+                            <span class="text-gray-800 font-semibold">Check-in:</span> <span id="success-checkin">--:--</span>
+                        </p>
+                        <p class="font-sans text-xs text-gray-600">
+                            <span class="text-gray-800 font-semibold">Check-out:</span> <span id="success-checkout">--:--</span>
+                        </p>
+                    </div>
+                    <button onclick="window.location.href=this.dataset.url;" data-url="{% url 'attendance:check_in' %}" class="w-full py-3 px-6 bg-green-600 text-white font-sans font-semibold rounded-xl hover:bg-green-700 transition-colors">
+                        Return to Check-In
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Error Modal -->
+        <div id="checkout-error-modal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+            <div class="bg-white rounded-2xl p-8 max-w-sm mx-4 shadow-2xl">
+                <div class="text-center">
+                    <div class="inline-flex items-center justify-center w-16 h-16 bg-red-100 rounded-full mb-4">
+                        <span class="text-3xl">⚠️</span>
+                    </div>
+                    <h3 class="font-display text-lg font-bold text-gray-900 mb-2">Checkout Failed</h3>
+                    <p class="font-sans text-sm text-gray-600 mb-6" id="error-message">An error occurred while processing your checkout.</p>
+                    <div class="flex gap-3">
+                        <button onclick="document.getElementById('checkout-error-modal').classList.add('hidden')" class="flex-1 py-3 px-4 bg-gray-200 text-gray-800 font-sans font-semibold rounded-xl hover:bg-gray-300 transition-colors">
+                            Close
+                        </button>
+                        <button onclick="document.getElementById('checkout-btn').click()" class="flex-1 py-3 px-4 bg-red-600 text-white font-sans font-semibold rounded-xl hover:bg-red-700 transition-colors">
+                            Try Again
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Info Message -->
+        <div class="mt-8 p-4 bg-gray-50 rounded-xl border border-gray-200">
+            <p class="font-sans text-xs text-gray-600 text-center">
+                <span class="font-semibold">Automatic Check-out:</span> If you forget to check out, the system will automatically record your checkout at 3:00 PM.
+            </p>
+        </div>
+    </div>
+</div>
+
+<style>
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
+    }
+    
+    @keyframes bounce {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-10px); }
+    }
+    
+    .animate-pulse {
+        animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+
+    .animate-bounce {
+        animation: bounce 1s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+</style>
+
+<script>
+    // Update checkout time display when page loads
+    window.addEventListener('DOMContentLoaded', function() {
+        updateCheckoutDisplay();
+        // Update every second
+        setInterval(updateCheckoutDisplay, 1000);
+    });
+
+    // Use server time to ensure Jakarta timezone
+    const checkInTimeISO = '{{ active_attendance.check_in_time|date:"c" }}';
+    const serverTimeISO = '{{ current_server_time|date:"c" }}';
+    const checkInTime = new Date(checkInTimeISO);
+    const initialServerTime = new Date(serverTimeISO);
+    const clientTimeAtLoad = new Date();
+    
+    // Calculate the difference between server and client time
+    const timeDiff = initialServerTime.getTime() - clientTimeAtLoad.getTime();
+    
+    function getAdjustedNow() {
+        return new Date(Date.now() + timeDiff);
+    }
+
+    function updateCheckoutDisplay() {
+        const now = getAdjustedNow();
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        document.getElementById('checkout-time').textContent = hours + ':' + minutes;
+        
+        // Update duration based on server time
+        const durationMs = now - checkInTime;
+        const totalMinutes = Math.floor(durationMs / 60000);
+        const durationHours = Math.floor(totalMinutes / 60);
+        const durationMins = totalMinutes % 60;
+        
+        let durationText = '';
+        if (durationHours > 0) {
+            durationText = durationHours + 'h ' + durationMins + 'm';
+        } else {
+            durationText = durationMins + 'm';
+        }
+        document.getElementById('visit-duration').textContent = durationText;
+    }
+
+    // Handle check-out button click
+    document.getElementById('checkout-btn').addEventListener('click', function(e) {
+        e.preventDefault();
+        performCheckout();
+    });
+
+    async function performCheckout() {
+        const loadingModal = document.getElementById('checkout-loading-modal');
+        const successModal = document.getElementById('checkout-success-modal');
+        const errorModal = document.getElementById('checkout-error-modal');
+
+        // Show loading modal
+        loadingModal.classList.remove('hidden');
+
+        try {
+            const response = await fetch('{% url "attendance:api_checkout" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('[name="csrfmiddlewaretoken"]').value
+                },
+                body: JSON.stringify({})
+            });
+
+            const data = await response.json();
+            loadingModal.classList.add('hidden');
+
+            if (response.ok && data.status === 'success') {
+                // Show success modal with details
+                document.getElementById('success-duration').textContent = data.duration_display;
+                document.getElementById('success-checkin').textContent = data.check_in_time_formatted;
+                document.getElementById('success-checkout').textContent = data.check_out_time_formatted;
+                successModal.classList.remove('hidden');
+                console.log('✓ Checkout successful:', data);
+            } else {
+                // Show error modal
+                document.getElementById('error-message').textContent = data.message || 'An error occurred while processing your checkout.';
+                errorModal.classList.remove('hidden');
+                console.error('✗ Checkout failed:', data);
+            }
+        } catch (error) {
+            loadingModal.classList.add('hidden');
+            document.getElementById('error-message').textContent = `Network error: ${error.message}`;
+            document.getElementById('checkout-error-modal').classList.remove('hidden');
+            console.error('✗ Checkout error:', error);
+        }
+    }
+</script>
+
+{% endblock %}

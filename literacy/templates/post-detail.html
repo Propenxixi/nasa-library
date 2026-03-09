@@ -1,0 +1,129 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ post.title }} - NASA Library Forum{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-white via-green-50 to-white">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        
+        <!-- Back Button -->
+        <a href="{% url 'literacy:forum' %}" class="inline-flex items-center gap-2 text-green-600 hover:text-green-700 font-semibold mb-6">
+            ← Back to Forum
+        </a>
+
+        <!-- Main Post Card -->
+        <div class="bg-white border-2 border-gray-200 rounded-2xl p-6 md:p-8 mb-8 shadow-sm">
+            <!-- Header -->
+            <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6 pb-6 border-b border-gray-200">
+                <div>
+                    <h1 class="font-display text-3xl md:text-4xl font-bold text-gray-900 mb-3">{{ post.title }}</h1>
+                    <div class="flex items-center gap-4 text-gray-600">
+                        <div class="flex items-center gap-2">
+                            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-green-400 to-blue-500 flex items-center justify-center text-white font-bold">
+                                {{ post.student.first_name|first|upper }}
+                            </div>
+                            <div>
+                                <p class="font-semibold text-gray-900">{{ post.student.get_full_name }}</p>
+                                <p class="font-sans text-xs text-gray-500">{{ post.created_at|date:"d M Y \a\t H:i" }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Related Book -->
+                {% if post.book_review %}
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 flex-shrink-0">
+                        <p class="font-sans text-xs text-blue-600 mb-1">📚 Related Review</p>
+                        <p class="font-semibold text-blue-900">{{ post.book_review.title }}</p>
+                        <p class="font-sans text-xs text-blue-700">by {{ post.book_review.author }}</p>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Content -->
+            <div class="prose prose-sm max-w-none mb-6">
+                <p class="font-sans text-lg text-gray-700 whitespace-pre-wrap">{{ post.content }}</p>
+            </div>
+
+            <!-- Engagement Footer -->
+            <div class="flex gap-6 pt-6 border-t border-gray-200">
+                <form method="POST" class="inline">
+                    {% csrf_token %}
+                    <button type="submit" name="like" class="flex items-center gap-2 font-sans font-semibold transition-colors
+                        {% if post.user_liked %}text-red-600 hover:text-red-700{% else %}text-gray-600 hover:text-red-600{% endif %}">
+                        {% if post.user_liked %}❤️{% else %}🤍{% endif %} {{ post.like_count }} Like{{ post.like_count|pluralize }}
+                    </button>
+                </form>
+                <span class="flex items-center gap-2 text-gray-600 font-sans font-semibold">
+                    💬 {{ post.comment_count }} Comment{{ post.comment_count|pluralize }}
+                </span>
+
+                {% if post.student == user %}
+                    <a href="{% url 'literacy:delete_post' post.pk %}" class="ml-auto text-red-600 hover:text-red-700 font-sans font-semibold">
+                        🗑️ Delete
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Comments Section -->
+        <div class="bg-white border-2 border-gray-200 rounded-2xl p-6 md:p-8">
+            <h2 class="font-display text-2xl font-bold text-gray-900 mb-6">Comments</h2>
+
+            <!-- Comment Form -->
+            <form method="POST" class="mb-8 p-6 bg-gray-50 border border-gray-200 rounded-xl">
+                {% csrf_token %}
+                <label class="block font-sans font-semibold text-gray-900 mb-3">Add Your Comment</label>
+                {% if form.content.errors %}
+                    <div class="text-red-600 text-sm mb-2">{{ form.content.errors }}</div>
+                {% endif %}
+                {{ form.content }}
+                <button type="submit" name="comment" class="mt-3 px-6 py-2 bg-green-600 text-white font-sans font-semibold rounded-lg hover:bg-green-700 transition-colors">
+                    Post Comment
+                </button>
+            </form>
+
+            <!-- Comments List -->
+            {% if comments %}
+                <div class="space-y-4">
+                    {% for comment in comments %}
+                        <div class="p-4 bg-gray-50 border border-gray-200 rounded-lg">
+                            <div class="flex items-start gap-3 mb-2">
+                                <div class="w-8 h-8 rounded-full bg-gradient-to-br from-purple-400 to-pink-500 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                                    {{ comment.student.first_name|first|upper }}
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="font-semibold text-gray-900">{{ comment.student.get_full_name }}</p>
+                                    <p class="font-sans text-xs text-gray-500">{{ comment.created_at|date:"d M Y \a\t H:i" }}</p>
+                                </div>
+                            </div>
+                            <p class="font-sans text-gray-700 text-sm ml-11">{{ comment.content }}</p>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-8">
+                    <p class="font-sans text-gray-600">No comments yet. Be the first to share your thoughts!</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Related Resources -->
+        <div class="mt-12 grid grid-cols-1 md:grid-cols-2 gap-6">
+            <a href="{% url 'literacy:forum' %}" class="bg-gradient-to-br from-green-50 to-emerald-50 border border-green-300 rounded-xl p-6 hover:shadow-lg transition-shadow">
+                <h3 class="font-display text-lg font-bold text-green-900 flex items-center gap-2 mb-2">
+                    <span class="text-2xl">💬</span> More Posts
+                </h3>
+                <p class="font-sans text-sm text-green-700">Read other students' literacy discussions</p>
+            </a>
+            
+            <a href="{% url 'literacy:leaderboard' %}" class="bg-gradient-to-br from-purple-50 to-pink-50 border-2 border-purple-300 rounded-xl p-6 hover:shadow-lg transition-shadow">
+                <h3 class="font-display text-lg font-bold text-purple-900 flex items-center gap-2 mb-2">
+                    <span class="text-2xl">🏆</span> Leaderboard
+                </h3>
+                <p class="font-sans text-sm text-purple-700">See how you rank among top readers</p>
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,391 @@
+{% extends 'base.html' %}
+
+{% block title %}Attendance Report - SMAN 61 Jakarta Library{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-white via-gray-50 to-white">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        
+        <!-- Header -->
+        <div class="mb-8">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <p class="font-sans text-sm text-gray-600 mb-2 uppercase tracking-wide">📊 SMAN 61 Jakarta Library</p>
+                    <h1 class="font-display text-4xl font-bold text-gray-900">Attendance Report</h1>
+                </div>
+                <button onclick="window.print()" class="hidden sm:block px-6 py-3 bg-blue-600 text-white font-sans font-semibold rounded-lg hover:bg-blue-700 transition-colors">
+                    🖨️ Print
+                </button>
+            </div>
+            <p class="font-sans text-gray-600">Generate and view attendance statistics</p>
+        </div>
+
+        <!-- Filter Section -->
+        <div class="bg-white border border-gray-200 rounded-2xl p-6 mb-8 shadow-sm">
+            <h2 class="font-display text-xl font-bold text-gray-900 mb-6">Generate Report</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Period Selection -->
+                <div>
+                    <label for="period" class="block font-sans font-semibold text-gray-700 mb-2">Report Period</label>
+                    <select id="period" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-sans">
+                        <option value="daily">Daily (Today)</option>
+                        <option value="monthly">Monthly</option>
+                    </select>
+                </div>
+
+                <!-- Month Selector (for monthly reports) -->
+                <div id="month-selector" class="hidden">
+                    <label for="month" class="block font-sans font-semibold text-gray-700 mb-2">Month</label>
+                    <select id="month" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-sans">
+                        <option value="1">January</option>
+                        <option value="2">February</option>
+                        <option value="3">March</option>
+                        <option value="4">April</option>
+                        <option value="5">May</option>
+                        <option value="6">June</option>
+                        <option value="7">July</option>
+                        <option value="8">August</option>
+                        <option value="9">September</option>
+                        <option value="10">October</option>
+                        <option value="11">November</option>
+                        <option value="12">December</option>
+                    </select>
+                </div>
+
+                <!-- Year Selector (for monthly reports) -->
+                <div id="year-selector" class="hidden">
+                    <label for="year" class="block font-sans font-semibold text-gray-700 mb-2">Year</label>
+                    <input type="number" id="year" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-sans" value="2026">
+                </div>
+            </div>
+
+            <!-- Generate Button -->
+            <div class="mt-6">
+                <button id="generate-btn" class="w-full sm:w-auto px-8 py-3 bg-blue-600 text-white font-sans font-semibold rounded-lg hover:bg-blue-700 transition-all duration-200 shadow-lg hover:shadow-xl">
+                    📈 Generate Report
+                </button>
+            </div>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loading-state" class="hidden bg-white border border-gray-200 rounded-2xl p-8 text-center">
+            <div class="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4">
+                <div class="flex gap-1">
+                    <div class="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style="animation-delay: 0ms"></div>
+                    <div class="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style="animation-delay: 150ms"></div>
+                    <div class="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style="animation-delay: 300ms"></div>
+                </div>
+            </div>
+            <p class="font-display text-lg font-bold text-gray-900 mt-4">Generating Report...</p>
+            <p class="font-sans text-gray-600 mt-2">Please wait while we compile the data</p>
+        </div>
+
+        <!-- Report Results -->
+        <div id="report-results" class="hidden space-y-8">
+            
+            <!-- Summary Stats -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-gradient-to-br from-blue-50 to-cyan-50 border-2 border-blue-300 rounded-2xl p-6">
+                    <p class="font-sans text-sm text-blue-700 uppercase tracking-wide mb-2">Total Visits</p>
+                    <p class="font-display text-4xl font-bold text-blue-900" id="stat-total-visits">0</p>
+                    <p class="font-sans text-xs text-blue-700 mt-2">check-ins recorded</p>
+                </div>
+
+                <div class="bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-300 rounded-2xl p-6">
+                    <p class="font-sans text-sm text-green-700 uppercase tracking-wide mb-2">Unique Visitors</p>
+                    <p class="font-display text-4xl font-bold text-green-900" id="stat-unique-visitors">0</p>
+                    <p class="font-sans text-xs text-green-700 mt-2">different students</p>
+                </div>
+
+                <div class="bg-gradient-to-br from-purple-50 to-pink-50 border-2 border-purple-300 rounded-2xl p-6">
+                    <p class="font-sans text-sm text-purple-700 uppercase tracking-wide mb-2">Average Duration</p>
+                    <p class="font-display text-4xl font-bold text-purple-900" id="stat-avg-duration">0m</p>
+                    <p class="font-sans text-xs text-purple-700 mt-2">per visit</p>
+                </div>
+            </div>
+
+            <!-- Activities Breakdown -->
+            <div class="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
+                <h2 class="font-display text-2xl font-bold text-gray-900 mb-6">📋 Top Activities</h2>
+                
+                <div id="activities-list" class="space-y-3">
+                    <!-- Activities will be populated here -->
+                </div>
+
+                <div id="no-activities" class="text-center py-8">
+                    <p class="font-sans text-gray-500">No activity data available for this period</p>
+                </div>
+            </div>
+
+            <!-- Top Students -->
+            <div class="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
+                <h2 class="font-display text-2xl font-bold text-gray-900 mb-6">👥 Top Visitors</h2>
+                
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead>
+                            <tr class="border-b border-gray-200">
+                                <th class="px-4 py-3 text-left font-sans font-semibold text-gray-700">Name</th>
+                                <th class="px-4 py-3 text-right font-sans font-semibold text-gray-700">Visits</th>
+                                <th class="px-4 py-3 text-right font-sans font-semibold text-gray-700">Avg Duration</th>
+                            </tr>
+                        </thead>
+                        <tbody id="students-list">
+                            <!-- Students will be populated here -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div id="no-students" class="text-center py-8">
+                    <p class="font-sans text-gray-500">No student data available for this period</p>
+                </div>
+            </div>
+
+            <!-- Daily Breakdown (Monthly Reports Only) -->
+            <div id="daily-breakdown" class="hidden bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
+                <h2 class="font-display text-2xl font-bold text-gray-900 mb-6">📅 Daily Breakdown</h2>
+                
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead>
+                            <tr class="border-b border-gray-200">
+                                <th class="px-4 py-3 text-left font-sans font-semibold text-gray-700">Date</th>
+                                <th class="px-4 py-3 text-right font-sans font-semibold text-gray-700">Visits</th>
+                                <th class="px-4 py-3 text-right font-sans font-semibold text-gray-700">Avg Duration</th>
+                            </tr>
+                        </thead>
+                        <tbody id="daily-list">
+                            <!-- Daily data will be populated here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Empty State -->
+        <div id="empty-state" class="bg-white border border-gray-200 rounded-2xl p-12 text-center">
+            <div class="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-4">
+                <span class="text-3xl">📊</span>
+            </div>
+            <p class="font-display text-xl font-bold text-gray-900 mt-4">No Report Generated Yet</p>
+            <p class="font-sans text-gray-600 mt-2">Select your report parameters and click "Generate Report" to view attendance statistics</p>
+        </div>
+
+        <!-- Error State -->
+        <div id="error-state" class="hidden bg-red-50 border-2 border-red-300 rounded-2xl p-6">
+            <div class="flex items-start gap-4">
+                <div class="text-3xl">⚠️</div>
+                <div>
+                    <h3 class="font-display text-lg font-bold text-red-900 mb-2">Error Generating Report</h3>
+                    <p class="font-sans text-red-800 mb-4" id="error-message"></p>
+                    <button onclick="location.reload()" class="px-6 py-2 bg-red-600 text-white font-sans font-semibold rounded-lg hover:bg-red-700 transition-colors">
+                        Try Again
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    @keyframes bounce {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-10px); }
+    }
+    
+    .animate-bounce {
+        animation: bounce 1s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+
+    @media print {
+        #loading-state,
+        #empty-state,
+        .border-2 {
+            border-color: #d1d5db !important;
+            box-shadow: none !important;
+        }
+
+        button {
+            display: none !important;
+        }
+    }
+</style>
+
+<script>
+    // Set current month/year as defaults
+    const today = new Date();
+    document.getElementById('month').value = today.getMonth() + 1;
+    document.getElementById('year').value = today.getFullYear();
+
+    // Toggle month/year selectors based on period
+    document.getElementById('period').addEventListener('change', function() {
+        const monthSelector = document.getElementById('month-selector');
+        const yearSelector = document.getElementById('year-selector');
+        
+        if (this.value === 'monthly') {
+            monthSelector.classList.remove('hidden');
+            yearSelector.classList.remove('hidden');
+        } else {
+            monthSelector.classList.add('hidden');
+            yearSelector.classList.add('hidden');
+        }
+    });
+
+    // Handle report generation
+    document.getElementById('generate-btn').addEventListener('click', generateReport);
+
+    async function generateReport() {
+        const period = document.getElementById('period').value;
+        const month = document.getElementById('month').value;
+        const year = document.getElementById('year').value;
+
+        // Show loading state
+        document.getElementById('empty-state').classList.add('hidden');
+        document.getElementById('error-state').classList.add('hidden');
+        document.getElementById('report-results').classList.add('hidden');
+        document.getElementById('loading-state').classList.remove('hidden');
+
+        try {
+            const body = {
+                period: period,
+                month: month,
+                year: year
+            };
+
+            const response = await fetch('{% url "attendance:api_report" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('[name="csrfmiddlewaretoken"]').value
+                },
+                body: JSON.stringify(body)
+            });
+
+            const data = await response.json();
+            document.getElementById('loading-state').classList.add('hidden');
+
+            if (response.ok && data.status === 'success') {
+                displayReport(data);
+                console.log('✓ Report generated:', data);
+            } else {
+                showError(data.message || 'Failed to generate report');
+                console.error('✗ Report generation failed:', data);
+            }
+        } catch (error) {
+            document.getElementById('loading-state').classList.add('hidden');
+            showError(`Network error: ${error.message}`);
+            console.error('✗ Report error:', error);
+        }
+    }
+
+    function displayReport(data) {
+        // Update summary stats
+        document.getElementById('stat-total-visits').textContent = data.summary.total_visits;
+        document.getElementById('stat-unique-visitors').textContent = data.summary.unique_visitors;
+        document.getElementById('stat-avg-duration').textContent = data.summary.avg_duration_display;
+
+        // Display activities
+        const activitiesList = document.getElementById('activities-list');
+        activitiesList.innerHTML = '';
+        
+        if (data.top_activities && data.top_activities.length > 0) {
+            document.getElementById('no-activities').classList.add('hidden');
+            data.top_activities.forEach((activity, index) => {
+                const percentage = Math.round((activity.count / data.summary.total_visits) * 100) || 0;
+                activitiesList.innerHTML += `
+                    <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                        <div class="flex items-center gap-3">
+                            <span class="text-2xl">${activity.emoji}</span>
+                            <div>
+                                <p class="font-sans font-semibold text-gray-900">${activity.name}</p>
+                                <p class="font-sans text-xs text-gray-600">${activity.count} times</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="w-48 h-2 bg-gray-200 rounded-full overflow-hidden">
+                                <div class="h-full bg-gradient-to-r from-blue-500 to-blue-600" style="width: ${percentage}%"></div>
+                            </div>
+                            <p class="font-sans text-xs text-gray-600 mt-1">${percentage}%</p>
+                        </div>
+                    </div>
+                `;
+            });
+        } else {
+            document.getElementById('no-activities').classList.remove('hidden');
+        }
+
+        // Display students
+        const studentsList = document.getElementById('students-list');
+        studentsList.innerHTML = '';
+        
+        if (data.top_students && data.top_students.length > 0) {
+            document.getElementById('no-students').classList.add('hidden');
+            data.top_students.forEach((student, index) => {
+                const duration = formatDuration(student.avg_duration);
+                studentsList.innerHTML += `
+                    <tr class="border-b border-gray-200 hover:bg-gray-50 transition-colors">
+                        <td class="px-4 py-3">
+                            <div class="flex items-center gap-2">
+                                <span class="font-sans font-semibold text-gray-900">${student.name}</span>
+                            </div>
+                        </td>
+                        <td class="px-4 py-3 text-right font-sans text-gray-700">${student.visits}</td>
+                        <td class="px-4 py-3 text-right font-sans text-gray-700">${duration}</td>
+                    </tr>
+                `;
+            });
+        } else {
+            document.getElementById('no-students').classList.remove('hidden');
+        }
+
+        // Display daily breakdown (monthly only)
+        if (data.period === 'monthly' && data.daily_breakdown) {
+            const dailyList = document.getElementById('daily-list');
+            dailyList.innerHTML = '';
+            
+            const dates = Object.keys(data.daily_breakdown).sort();
+            if (dates.length > 0) {
+                document.getElementById('daily-breakdown').classList.remove('hidden');
+                dates.forEach(date => {
+                    const daily = data.daily_breakdown[date];
+                    const duration = formatDuration(daily.avg_duration);
+                    const dateObj = new Date(date);
+                    const formattedDate = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                    
+                    dailyList.innerHTML += `
+                        <tr class="border-b border-gray-200 hover:bg-gray-50 transition-colors">
+                            <td class="px-4 py-3 font-sans font-semibold text-gray-900">${formattedDate}</td>
+                            <td class="px-4 py-3 text-right font-sans text-gray-700">${daily.visits}</td>
+                            <td class="px-4 py-3 text-right font-sans text-gray-700">${duration}</td>
+                        </tr>
+                    `;
+                });
+            }
+        } else {
+            document.getElementById('daily-breakdown').classList.add('hidden');
+        }
+
+        // Show results
+        document.getElementById('report-results').classList.remove('hidden');
+        document.getElementById('empty-state').classList.add('hidden');
+    }
+
+    function formatDuration(minutes) {
+        if (!minutes || minutes === 0) return '—';
+        const hours = Math.floor(minutes / 60);
+        const mins = minutes % 60;
+        if (hours > 0) {
+            return `${hours}h ${mins}m`;
+        }
+        return `${mins}m`;
+    }
+
+    function showError(message) {
+        document.getElementById('error-message').textContent = message;
+        document.getElementById('error-state').classList.remove('hidden');
+        document.getElementById('empty-state').classList.add('hidden');
+    }
+</script>
+
+{% endblock %}
