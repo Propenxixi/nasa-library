@@ -151,7 +151,10 @@ LOGIN_REDIRECT_URL = 'main:mainpage'
 LOGOUT_REDIRECT_URL = 'authentication:login'
 
 # Security Settings for Production
-SECURE_SSL_REDIRECT = IS_PRODUCTION
+# Railway (and most platforms) handle SSL at the proxy level
+# This tells Django to trust the X-Forwarded-Proto header from the proxy
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+SECURE_SSL_REDIRECT = False  # Railway handles HTTPS, don't redirect to avoid infinite loop
 SESSION_COOKIE_SECURE = IS_PRODUCTION
 CSRF_COOKIE_SECURE = IS_PRODUCTION
 SECURE_HSTS_SECONDS = 31536000 if IS_PRODUCTION else 0
