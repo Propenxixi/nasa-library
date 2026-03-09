@@ -1,0 +1,385 @@
+{% extends 'base.html' %}
+
+{% block title %}Library Check-In - SMAN 61 Jakarta{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-white via-gray-50 to-white">
+    <!-- Main Container -->
+    <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        
+        <!-- Welcome Section -->
+        <div class="mb-12 text-center">
+            <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full mb-4 shadow-lg">
+                <span class="text-3xl">📖</span>
+            </div>
+            <h1 class="font-display text-4xl md:text-5xl font-bold text-gray-900 mb-2">Welcome to NASA Library</h1>
+            <p class="font-sans text-lg text-gray-600">Hi, <span class="font-semibold">{{ user.first_name }}</span>! Let's check you in.</p>
+        </div>
+
+        <!-- User Info Card -->
+        <div class="bg-white border border-gray-200 rounded-2xl p-6 md:p-8 mb-8 shadow-sm hover:shadow-md transition-shadow">
+            <div class="grid grid-cols-3 gap-4 md:gap-6">
+                <div class="text-center">
+                    <p class="font-sans text-sm text-gray-500 mb-1">Class</p>
+                    <p class="font-sans font-semibold text-gray-900">{{ user_profile.kelas }}</p>
+                </div>
+                <div class="text-center border-l border-r border-gray-200">
+                    <p class="font-sans text-sm text-gray-500 mb-1">Role</p>
+                    <p class="font-sans font-semibold text-gray-900">Student</p>
+                </div>
+                <div class="text-center">
+                    <p class="font-sans text-sm text-gray-500 mb-1">Time</p>
+                    <p class="font-sans font-semibold text-gray-900" id="current-time">--:--</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reading Gamification Card -->
+        <div class="bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-amber-200 rounded-2xl p-6 md:p-8 mb-8">
+            <div class="flex items-start justify-between mb-4">
+                <div>
+                    <h3 class="font-display text-2xl font-bold text-amber-900 mb-1">📚 Reading Challenge</h3>
+                    <p class="font-sans text-sm text-amber-800">Keep your reading streak alive!</p>
+                </div>
+                <div class="flex items-center justify-center w-12 h-12 bg-amber-200 rounded-full">
+                    <span class="text-xl">🔥</span>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <!-- Streak Counter -->
+                <div class="bg-white rounded-xl p-4 border border-amber-100">
+                    <p class="font-sans text-xs text-amber-700 uppercase tracking-wide mb-1">Reading Streak</p>
+                    <p class="font-display text-3xl font-bold text-amber-900">{{ reading_stats.reading_streak }}</p>
+                    <p class="font-sans text-xs text-amber-600 mt-1">days</p>
+                </div>
+                <!-- Books This Month -->
+                <div class="bg-white rounded-xl p-4 border border-amber-100">
+                    <p class="font-sans text-xs text-amber-700 uppercase tracking-wide mb-1">This Month</p>
+                    <p class="font-display text-3xl font-bold text-amber-900">{{ reading_stats.books_read_this_month }}</p>
+                    <p class="font-sans text-xs text-amber-600 mt-1">books read</p>
+                </div>
+            </div>
+
+            <!-- Challenge Progress -->
+            <div class="bg-white rounded-xl p-4 border border-amber-100">
+                <div class="flex justify-between items-center mb-3">
+                    <span class="font-sans text-sm font-semibold text-gray-700">Challenge Progress</span>
+                    <span class="font-sans text-sm font-bold text-amber-700">{{ reading_stats.books_read_this_month }}/{{ reading_stats.next_milestone }}</span>
+                </div>
+                <div class="w-full bg-amber-200 rounded-full h-2 overflow-hidden">
+                    <div class="bg-gradient-to-r from-amber-400 to-orange-500 h-2 rounded-full transition-all duration-300 progress-bar"
+                         data-current="{{ reading_stats.books_read_this_month }}" data-max="{{ reading_stats.next_milestone }}"></div>
+                </div>
+                <p class="font-sans text-xs text-amber-700 mt-2">{{ reading_stats.message }}</p>
+            </div>
+            <script>
+                // Set progress bar width
+                const progressBar = document.querySelector('.progress-bar');
+                if (progressBar) {
+                    const current = parseInt(progressBar.dataset.current) || 0;
+                    const max = parseInt(progressBar.dataset.max) || 1;
+                    const percentage = (current / max) * 100;
+                    progressBar.style.width = percentage + '%';
+                }
+            </script>
+        </div>
+
+        <!-- Check-In Form -->
+        <form id="checkin-form" class="bg-white border border-gray-200 rounded-2xl p-6 md:p-8 shadow-sm">
+            {% csrf_token %}
+            
+            <!-- Activities Section -->
+            <div class="mb-8">
+                <h2 class="font-display text-2xl font-bold text-gray-900 mb-2">
+                    <span class="inline-block mr-2">🎯</span>What will you do today?
+                </h2>
+                <p class="font-sans text-gray-600 text-sm mb-6">Select all activities that apply</p>
+                
+                <!-- Activity Checkboxes -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {% for choice_value, choice_label in form.activities.field.choices %}
+                        <label class="relative flex items-center p-4 rounded-xl border-2 border-gray-200 hover:border-blue-400 cursor-pointer transition-all hover:bg-blue-50 group has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50">
+                            <input type="checkbox" name="activities" value="{{ choice_value }}" {% if choice_value in form.activities.value %}checked{% endif %} class="w-5 h-5">
+                            <span class="ml-3 font-sans text-sm text-gray-700 group-has-[:checked]:text-blue-700 group-has-[:checked]:font-semibold">
+                                {{ choice_label }}
+                            </span>
+                        </label>
+                    {% endfor %}
+                </div>
+
+                <!-- Custom Activity Field -->
+                <div class="mt-6">
+                    <div class="relative">
+                        {{ form.custom_activity }}
+                        <span class="absolute right-4 top-14 text-gray-400 text-2xl">✏️</span>
+                    </div>
+                    {% if form.custom_activity.errors %}
+                        <p class="text-red-600 font-sans text-sm mt-2">{{ form.custom_activity.errors }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Confirmation Message -->
+            <div class="bg-gray-50 border border-gray-200 rounded-xl p-4 mb-6">
+                <p class="font-sans text-sm text-gray-700">
+                    <span class="font-semibold">Heads up!</span> You're about to check in at <span id="checkin-time" class="font-mono font-bold text-gray-900">--:--</span>. If you forget to check out, we'll automatically do it at 3:00 PM (closing time).
+                </p>
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit" id="submit-btn" class="w-full py-4 px-6 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-sans font-semibold rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 text-lg">
+                ✨ Check Me In
+            </button>
+
+            <!-- Alternative Action -->
+            <p class="text-center font-sans text-sm text-gray-600 mt-4">
+                Already checked in? <a href="{% url 'attendance:active_attendance' %}" class="text-blue-600 hover:text-blue-700 font-semibold underline">View your session</a> • 
+                <a href="{% url 'attendance:history' %}" class="text-purple-600 hover:text-purple-700 font-semibold underline">View history</a>
+            </p>
+        </form>
+
+        <!-- Features Showcase -->
+        <div class="mt-12 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="bg-white border border-gray-200 rounded-xl p-4 hover:shadow-md transition-shadow">
+                <p class="text-2xl mb-2">⏱️</p>
+                <p class="font-sans font-semibold text-gray-900 text-sm mb-1">Track Your Time</p>
+                <p class="font-sans text-xs text-gray-600">Automatically logs your visit duration</p>
+            </div>
+            <div class="bg-white border border-gray-200 rounded-xl p-4 hover:shadow-md transition-shadow">
+                <p class="text-2xl mb-2">📊</p>
+                <p class="font-sans font-semibold text-gray-900 text-sm mb-1">Earn Badges</p>
+                <p class="font-sans text-xs text-gray-600">Coming soon - unlock reading achievements</p>
+            </div>
+    </div>
+</div>
+
+<!-- Loading Modal -->
+<div id="loading-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50 transition-opacity duration-300">
+    <div class="bg-white rounded-2xl p-8 text-center shadow-2xl">
+        <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full mb-4 animate-pulse">
+            <span class="text-3xl">📖</span>
+        </div>
+        <p class="font-sans font-semibold text-gray-900 text-lg mb-2">Processing Check-In</p>
+        <p class="font-sans text-gray-600 text-sm">Please wait...</p>
+        <div class="mt-4 flex justify-center">
+            <div class="flex space-x-2">
+                <div class="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style="animation-delay: 0s;"></div>
+                <div class="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style="animation-delay: 0.1s;"></div>
+                <div class="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style="animation-delay: 0.2s;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Success Modal -->
+<div id="success-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50 transition-opacity duration-300">
+    <div class="bg-white rounded-2xl p-8 text-center shadow-2xl max-w-md">
+        <div class="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-green-400 to-green-500 rounded-full mb-4">
+            <span class="text-4xl animate-bounce">✓</span>
+        </div>
+        <h3 class="font-display text-2xl font-bold text-gray-900 mb-2">Check-In Success!</h3>
+        <p id="success-message" class="font-sans text-gray-600 mb-6 text-center"></p>
+        <button id="success-btn" class="w-full py-3 px-6 bg-gradient-to-r from-green-600 to-green-700 text-white font-sans font-semibold rounded-xl hover:from-green-700 hover:to-green-800 transition-all">
+            Continue →
+        </button>
+    </div>
+</div>
+
+<!-- Error Modal -->
+<div id="error-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50 transition-opacity duration-300">
+    <div class="bg-white rounded-2xl p-8 text-center shadow-2xl max-w-md">
+        <div class="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-red-400 to-red-500 rounded-full mb-4">
+            <span class="text-4xl">✕</span>
+        </div>
+        <h3 class="font-display text-2xl font-bold text-gray-900 mb-2">Check-In Failed</h3>
+        <p id="error-message" class="font-sans text-gray-600 mb-6 text-center"></p>
+        <button id="error-btn" class="w-full py-3 px-6 bg-gradient-to-r from-red-600 to-red-700 text-white font-sans font-semibold rounded-xl hover:from-red-700 hover:to-red-800 transition-all">
+            Try Again
+        </button>
+    </div>
+</div>
+
+<script>
+    // Update current time
+    function updateTime() {
+        const now = new Date();
+        const timeString = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+        document.getElementById('current-time').textContent = timeString;
+        document.getElementById('checkin-time').textContent = timeString;
+    }
+    
+    updateTime();
+    setInterval(updateTime, 1000);
+
+    // Modal functions
+    function showModal(modalId) {
+        document.getElementById(modalId).classList.remove('hidden');
+    }
+
+    function hideModal(modalId) {
+        document.getElementById(modalId).classList.add('hidden');
+    }
+
+    // Form submission with AJAX
+    const form = document.getElementById('checkin-form');
+    const submitBtn = document.getElementById('submit-btn');
+    
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        // Show loading indicator
+        showModal('loading-modal');
+        submitBtn.disabled = true;
+
+        // Get form data
+        const formData = new FormData(form);
+        const activities = Array.from(document.querySelectorAll('input[name="activities"]:checked')).map(cb => cb.value);
+        const customActivity = document.querySelector('textarea[name="custom_activity"]').value;
+        
+        // Prepare JSON data
+        const data = {
+            activities: activities,
+            custom_activity: customActivity
+        };
+
+        console.log('📤 Sending check-in request:', data);
+
+        // Send AJAX request
+        fetch('{% url "attendance:api_checkin" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name="csrfmiddlewaretoken"]').value
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => {
+            console.log('📥 Response status:', response.status);
+            return response.json().then(data => ({ status: response.status, data }));
+        })
+        .then(({ status, data }) => {
+            console.log('📦 Response data:', data);
+            hideModal('loading-modal');
+            
+            if (status === 201 || data.status === 'success') {
+                // Show success modal
+                document.getElementById('success-message').textContent = data.message;
+                showModal('success-modal');
+                
+                // Redirect on button click
+                document.getElementById('success-btn').addEventListener('click', function() {
+                    window.location.href = '{% url "attendance:active_attendance" %}';
+                });
+            } else {
+                // Show error modal
+                console.error('❌ Check-in failed:', data);
+                document.getElementById('error-message').textContent = data.message || 'An error occurred';
+                showModal('error-modal');
+                
+                // Allow retry
+                document.getElementById('error-btn').addEventListener('click', function() {
+                    hideModal('error-modal');
+                    submitBtn.disabled = false;
+                });
+            }
+        })
+        .catch(error => {
+            console.error('❌ Error:', error);
+            hideModal('loading-modal');
+            document.getElementById('error-message').textContent = 'A network error occurred. Please check your connection and try again.';
+            showModal('error-modal');
+            submitBtn.disabled = false;
+            
+            document.getElementById('error-btn').addEventListener('click', function() {
+                hideModal('error-modal');
+            });
+        });
+    });
+
+    // Close modals when clicking outside
+    document.addEventListener('click', function(e) {
+        if (e.target.id === 'loading-modal') return; // Don't close loading modal
+        if (e.target.id === 'success-modal' || e.target.id === 'error-modal') {
+            hideModal(e.target.id);
+        }
+    });
+
+    // Smooth scrolling for links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) target.scrollIntoView({ behavior: 'smooth' });
+        });
+    });
+</script>
+
+<style>
+    /* Custom checkbox styling */
+    input[type="checkbox"] {
+        appearance: none;
+        -webkit-appearance: none;
+        width: 20px;
+        height: 20px;
+        border: 2px solid #d1d5db;
+        border-radius: 0.375rem;
+        cursor: pointer;
+        background-color: white;
+        transition: all 0.3s ease;
+    }
+
+    input[type="checkbox"]:checked {
+        background-color: #3b82f6;
+        border-color: #3b82f6;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3E%3Cpath d='M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z'/%3E%3C/svg%3E");
+        background-size: contain;
+        background-position: center;
+        background-repeat: no-repeat;
+    }
+
+    input[type="checkbox"]:hover {
+        border-color: #93c5fd;
+    }
+
+    input[type="checkbox"]:focus {
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    /* Textarea styling */
+    textarea {
+        font-family: inherit;
+        padding-right: 45px !important;
+    }
+
+    /* Loading animation */
+    @keyframes bounce {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-8px); }
+    }
+
+    .animate-bounce {
+        animation: bounce 1s infinite;
+    }
+
+    @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+
+    .animate-spin {
+        animation: spin 1s linear infinite;
+    }
+
+    .animate-pulse {
+        animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
+    }
+</style>
+
+{% endblock %}

@@ -1,0 +1,182 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Riwayat Peminjaman - SMAN 61 Jakarta Library{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-white via-gray-50 to-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        
+        <!-- Header -->
+        <div class="mb-8">
+            <div class="flex items-center justify-between mb-4">
+                <h1 class="font-display text-4xl font-bold text-gray-900">📚 Riwayat Peminjaman</h1>
+                <a href="{% url 'book_loan:waiting_list' %}" class="px-6 py-2 bg-blue-600 text-white font-sans font-semibold rounded-lg hover:bg-blue-700 transition-colors">
+                    📋 Antrian Saya
+                </a>
+            </div>
+            <p class="font-sans text-gray-600">Kelola peminjaman dan riwayat buku Anda</p>
+        </div>
+
+        <!-- Status Filter -->
+        <div class="mb-6 flex flex-wrap gap-2">
+            <a href="{% url 'book_loan:loan_history' %}" class="px-4 py-2 rounded-lg font-sans text-sm font-semibold {% if not status_filter %}bg-gray-900 text-white{% else %}bg-gray-200 text-gray-700 hover:bg-gray-300{% endif %} transition-colors">
+                Semua
+            </a>
+            {% for status, display in status_choices %}
+                <a href="?status={{ status }}" class="px-4 py-2 rounded-lg font-sans text-sm font-semibold {% if status == status_filter %}bg-gray-900 text-white{% else %}bg-gray-200 text-gray-700 hover:bg-gray-300{% endif %} transition-colors">
+                    {{ display }}
+                </a>
+            {% endfor %}
+        </div>
+
+        <!-- Loans Table -->
+        {% if loans %}
+        <div class="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead>
+                        <tr class="bg-gray-50 border-b border-gray-200">
+                            <th class="px-6 py-4 text-left font-sans text-sm font-semibold text-gray-700">Judul Buku</th>
+                            <th class="px-6 py-4 text-left font-sans text-sm font-semibold text-gray-700">Pengarang</th>
+                            <th class="px-6 py-4 text-left font-sans text-sm font-semibold text-gray-700">Status</th>
+                            <th class="px-6 py-4 text-left font-sans text-sm font-semibold text-gray-700">Tanggal Pinjam</th>
+                            <th class="px-6 py-4 text-left font-sans text-sm font-semibold text-gray-700">Jatuh Tempo</th>
+                            <th class="px-6 py-4 text-left font-sans text-sm font-semibold text-gray-700">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for loan in loans %}
+                        <tr class="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                            <td class="px-6 py-4">
+                                <a href="{% url 'book:book_detail' loan.book.id %}" class="font-sans font-semibold text-gray-900 hover:text-blue-600 transition-colors">
+                                    {{ loan.book.title|truncatechars:40 }}
+                                </a>
+                            </td>
+                            <td class="px-6 py-4 font-sans text-sm text-gray-600">{{ loan.book.author|truncatechars:30 }}</td>
+                            <td class="px-6 py-4">
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold 
+                                    {% if loan.status == 'pending_approval' %}bg-yellow-100 text-yellow-800
+                                    {% elif loan.status == 'borrowed' %}bg-green-100 text-green-800
+                                    {% elif loan.status == 'returned' %}bg-blue-100 text-blue-800
+                                    {% elif loan.status == 'rejected' %}bg-red-100 text-red-800
+                                    {% elif loan.status == 'pending_extension' %}bg-purple-100 text-purple-800
+                                    {% else %}bg-gray-100 text-gray-800
+                                    {% endif %}
+                                ">
+                                    {{ loan.get_status_display }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 font-sans text-sm text-gray-600">
+                                {{ loan.loan_date|date:"d M Y" }}
+                            </td>
+                            <td class="px-6 py-4 font-sans text-sm text-gray-600">
+                                {% if loan.due_date %}
+                                    <span class="{% if loan.days_overdue > 0 %}text-red-600 font-semibold{% endif %}">
+                                        {{ loan.due_date|date:"d M Y" }}
+                                        {% if loan.days_overdue > 0 %}
+                                            <span class="ml-2 text-xs bg-red-100 text-red-700 px-2 py-1 rounded">(+{{ loan.days_overdue }} hari)</span>
+                                        {% endif %}
+                                    </span>
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="flex gap-2">
+                                    <button type="button" data-action="detail" data-loan-id="{{ loan.id }}" class="px-3 py-1 bg-blue-100 text-blue-700 font-sans text-xs font-semibold rounded hover:bg-blue-200 transition-colors">
+                                        Detail
+                                    </button>
+                                    {% if loan.can_extend %}
+                                    <button type="button" data-action="extend" data-loan-id="{{ loan.id }}" class="px-3 py-1 bg-green-100 text-green-700 font-sans text-xs font-semibold rounded hover:bg-green-200 transition-colors">
+                                        Perpanjang
+                                    </button>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% else %}
+        <div class="bg-white border border-gray-200 rounded-2xl p-12 text-center shadow-sm">
+            <div class="text-6xl mb-4">📦</div>
+            <h3 class="font-display text-xl font-bold text-gray-900 mb-2">Belum ada riwayat peminjaman</h3>
+            <p class="font-sans text-gray-600 mb-6">Mulai jelajahi koleksi buku kami dan pinjam buku favorit Anda!</p>
+            <a href="{% url 'book:book_list' %}" class="inline-block px-6 py-3 bg-blue-600 text-white font-sans font-semibold rounded-lg hover:bg-blue-700 transition-colors">
+                🔍 Jelajahi Katalog
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Loan Detail Modal -->
+<div id="loanDetailModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl">
+        <div id="loanDetailContent">
+            <!-- Content will be populated via JS -->
+        </div>
+        <button onclick="document.getElementById('loanDetailModal').classList.add('hidden')" class="w-full mt-6 px-4 py-2 bg-gray-200 text-gray-800 font-sans font-semibold rounded-lg hover:bg-gray-300 transition-colors">
+            Tutup
+        </button>
+    </div>
+</div>
+
+<!-- Extension Request Modal -->
+<div id="extensionModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl">
+        <h3 class="font-display text-xl font-bold text-gray-900 mb-4">Ajukan Perpanjangan</h3>
+        <div class="mb-4">
+            <label class="block font-sans text-sm font-semibold text-gray-700 mb-2">Durasi Perpanjangan (hari):</label>
+            <input type="number" id="extensionDays" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500" value="7" min="1" max="30">
+        </div>
+        <div class="flex gap-3">
+            <button onclick="document.getElementById('extensionModal').classList.add('hidden')" class="flex-1 px-4 py-2 bg-gray-200 text-gray-800 font-sans font-semibold rounded-lg hover:bg-gray-300 transition-colors">
+                Batal
+            </button>
+            <button onclick="submitExtension()" class="flex-1 px-4 py-2 bg-blue-600 text-white font-sans font-semibold rounded-lg hover:bg-blue-700 transition-colors">
+                Ajukan
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentLoanId = null;
+
+// Event delegation for buttons with data attributes
+document.addEventListener('click', function(e) {
+    const btn = e.target.closest('[data-action]');
+    if (!btn) return;
+    
+    const action = btn.getAttribute('data-action');
+    const loanId = btn.getAttribute('data-loan-id');
+    
+    if (action === 'detail') {
+        showLoanDetail(loanId);
+    } else if (action === 'extend') {
+        requestExtension(loanId);
+    }
+});
+
+function showLoanDetail(loanId) {
+    // This would fetch loan details via API in a real implementation
+    document.getElementById('loanDetailModal').classList.remove('hidden');
+}
+
+function requestExtension(loanId) {
+    currentLoanId = loanId;
+    document.getElementById('extensionModal').classList.remove('hidden');
+}
+
+function submitExtension() {
+    const days = document.getElementById('extensionDays').value;
+    // This would submit via API
+    document.getElementById('extensionModal').classList.add('hidden');
+}
+</script>
+
+{% endblock %}

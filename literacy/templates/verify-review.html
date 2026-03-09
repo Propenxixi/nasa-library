@@ -1,0 +1,181 @@
+{% extends 'base.html' %}
+
+{% block title %}Verify Review - NASA Library Admin{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-white via-orange-50 to-white">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        
+        <!-- Back Button -->
+        <a href="{% url 'literacy:teacher_verify_reviews' %}" class="inline-flex items-center gap-2 text-orange-600 hover:text-orange-700 font-semibold mb-6">
+            ← Back to Reviews
+        </a>
+
+        <!-- Review Card -->
+        <div class="bg-white border-2 border-gray-200 rounded-2xl p-6 md:p-8 mb-8 shadow-sm">
+            <!-- Header -->
+            <div class="mb-6 pb-6 border-b border-gray-200">
+                <h1 class="font-display text-3xl font-bold text-gray-900 mb-2">{{ review.title }}</h1>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div>
+                        <p class="font-sans text-xs text-gray-500 uppercase">Author</p>
+                        <p class="font-semibold text-gray-900">{{ review.author }}</p>
+                    </div>
+                    <div>
+                        <p class="font-sans text-xs text-gray-500 uppercase">Publisher</p>
+                        <p class="font-semibold text-gray-900">{{ review.publisher }}</p>
+                    </div>
+                    <div>
+                        <p class="font-sans text-xs text-gray-500 uppercase">Year</p>
+                        <p class="font-semibold text-gray-900">{{ review.year_published }}</p>
+                    </div>
+                    <div>
+                        <p class="font-sans text-xs text-gray-500 uppercase">Submitted</p>
+                        <p class="font-semibold text-gray-900">{{ review.created_at|date:"d M Y" }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Student Info -->
+            <div class="mb-6 pb-6 border-b border-gray-200">
+                <p class="font-sans text-xs text-gray-500 uppercase mb-2">Submitted by</p>
+                <div class="flex items-center gap-3">
+                    <div class="w-12 h-12 rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center text-white font-bold">
+                        {{ review.student.first_name|first|upper }}
+                    </div>
+                    <div>
+                        <p class="font-semibold text-gray-900">{{ review.student.get_full_name }}</p>
+                        <p class="font-sans text-sm text-gray-600">{{ review.student.profile.kelas }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Summary/Review Content -->
+            <div class="mb-8">
+                <h3 class="font-display text-lg font-bold text-gray-900 mb-3">Review Summary</h3>
+                <div class="bg-gray-50 border border-gray-200 rounded-lg p-6">
+                    <p class="font-sans text-gray-700 leading-relaxed whitespace-pre-wrap">{{ review.summary }}</p>
+                </div>
+            </div>
+
+            <!-- Verification Form -->
+            <form method="POST" class="space-y-6">
+                {% csrf_token %}
+                
+                <!-- Action Selection -->
+                <div class="space-y-4">
+                    <h3 class="font-display text-lg font-bold text-gray-900">Your Decision</h3>
+                    
+                    {% for radio in form.action %}
+                        <label class="flex items-start gap-4 p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-blue-400 transition-colors
+                            {% if radio.data == 'verify' %}
+                                {% if form.action.value == 'verify' %}border-green-400 bg-green-50{% endif %}
+                            {% else %}
+                                {% if form.action.value == 'reject' %}border-red-400 bg-red-50{% endif %}
+                            {% endif %}">
+                            
+                            <div class="flex-shrink-0 pt-1">
+                                {{ radio.tag }}
+                            </div>
+                            
+                            <div class="flex-1">
+                                <p class="font-semibold text-gray-900">
+                                    {% if radio.data == 'verify' %}
+                                        ✓ Approve this Review
+                                    {% else %}
+                                        ✕ Reject this Review
+                                    {% endif %}
+                                </p>
+                                <p class="font-sans text-sm text-gray-600 mt-1">
+                                    {% if radio.data == 'verify' %}
+                                        Mark this review as verified. The student will earn 20 points.
+                                    {% else %}
+                                        Reject this review and provide feedback for improvement.
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </label>
+                    {% endfor %}
+                </div>
+
+                <!-- Rejection Reason (conditional) -->
+                <div id="rejection-section" style="display: none;">
+                    <label class="block font-display text-lg font-semibold text-gray-900 mb-3">
+                        {{ form.rejection_reason.label }}
+                    </label>
+                    {% if form.rejection_reason.errors %}
+                        <div class="text-red-600 text-sm mb-2">{{ form.rejection_reason.errors }}</div>
+                    {% endif %}
+                    {{ form.rejection_reason }}
+                    <p class="font-sans text-xs text-gray-500 mt-2">Provide constructive feedback to help the student improve</p>
+                </div>
+
+                <!-- Submit Buttons -->
+                <div class="flex gap-3 pt-4">
+                    <button type="submit" class="flex-1 py-4 px-6 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-sans font-semibold rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                        ✓ Submit Decision
+                    </button>
+                    <a href="{% url 'literacy:teacher_verify_reviews' %}" class="py-4 px-6 border-2 border-gray-300 text-gray-700 font-sans font-semibold rounded-xl hover:bg-gray-50 transition-colors">
+                        Cancel
+                    </a>
+                </div>
+            </form>
+
+            <!-- Info Message -->
+            <div class="mt-8 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+                <p class="font-sans text-sm text-blue-900">
+                    <span class="font-semibold">💡 Tip:</span> Students can resubmit rejected reviews with improvements. Your feedback is important for their development!
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const form = document.querySelector('form');
+const rejectionSection = document.getElementById('rejection-section');
+const actionRadios = document.querySelectorAll('input[name="action"]');
+
+function updateRejectionSection() {
+    const selectedAction = Array.from(actionRadios).find(r => r.checked).value;
+    if (selectedAction === 'reject') {
+        rejectionSection.style.display = 'block';
+    } else {
+        rejectionSection.style.display = 'none';
+    }
+}
+
+actionRadios.forEach(radio => {
+    radio.addEventListener('change', updateRejectionSection);
+});
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', updateRejectionSection);
+
+// Add custom styling to radio buttons
+const radioStyle = document.createElement('style');
+radioStyle.textContent = `
+    input[type="radio"] {
+        appearance: none;
+        -webkit-appearance: none;
+        width: 20px;
+        height: 20px;
+        border: 2px solid #d1d5db;
+        border-radius: 50%;
+        cursor: pointer;
+        background-color: white;
+        transition: all 0.3s ease;
+    }
+    
+    input[type="radio"]:checked {
+        background-color: #3b82f6;
+        border-color: #3b82f6;
+    }
+    
+    input[type="radio"]:hover {
+        border-color: #93c5fd;
+    }
+`;
+document.head.appendChild(radioStyle);
+</script>
+{% endblock %}

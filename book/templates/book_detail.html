@@ -1,0 +1,432 @@
+{% extends 'base.html' %}
+{% load static book_extras %}
+{% block title %}{{ book.title }} — Nasa Library{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto px-6 py-8">
+
+    <!-- Breadcrumb -->
+    <nav class="flex items-center gap-2 text-xs text-gray-400 mb-6">
+        <a href="{% url 'book:dashboard' %}" class="hover:text-gray-700 transition">Home</a>
+        <span>/</span>
+        <a href="{% url 'book:book_list' %}" class="hover:text-gray-700 transition">Katalog</a>
+        <span>/</span>
+        <span class="text-gray-600 truncate max-w-xs">{{ book.title|truncatechars:40 }}</span>
+    </nav>
+
+    <div class="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-6 items-start">
+
+        <!-- LEFT: Book Info -->
+        <div class="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
+            <div class="flex gap-0">
+
+                <!-- Cover -->
+                <div class="p-6 flex-shrink-0">
+                    <div class="w-40 rounded-xl overflow-hidden shadow-md bg-gray-100" id="coverWrap">
+                        {% if book.cover_url %}
+                        <img src="{{ book.cover_url }}" alt="{{ book.title }}" class="w-full block">
+                        {% else %}
+                        <div id="coverPlaceholder" data-isbn="{{ book.isbn }}"
+                             class="w-full aspect-[2/3] flex items-center justify-center p-3">
+                            <p class="text-xs text-gray-400 text-center leading-relaxed font-medium">
+                                {{ book.title|truncatechars:60 }}
+                            </p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Content -->
+                <div class="flex-1 p-6 pl-2">
+                    <div class="flex items-start justify-between gap-3 mb-2">
+                        <h1 class="text-2xl font-bold text-gray-800 leading-tight" style="font-family:'Playfair Display',serif">{{ book.title }}</h1>
+                        {% if book.status == 'tersedia' %}
+                        <span class="flex-shrink-0 text-xs bg-green-50 text-green-700 px-3 py-1 rounded-full font-semibold">Tersedia</span>
+                        {% elif book.status == 'rusak' %}
+                        <span class="flex-shrink-0 text-xs bg-orange-50 text-orange-700 px-3 py-1 rounded-full font-semibold">Rusak</span>
+                        {% elif book.status == 'hilang' %}
+                        <span class="flex-shrink-0 text-xs bg-red-50 text-red-700 px-3 py-1 rounded-full font-semibold">Hilang</span>
+                        {% else %}
+                        <span class="flex-shrink-0 text-xs bg-gray-100 text-gray-500 px-3 py-1 rounded-full font-semibold">Tidak Aktif</span>
+                        {% endif %}
+                    </div>
+
+                    <p class="text-sm text-gray-500 mb-3">✍️ {{ book.author }}</p>
+
+                    {% if avg_rating %}
+                    <div class="flex items-center gap-1.5 mb-4">
+                        {% for i in "12345" %}
+                        <span class="text-lg {% if forloop.counter <= avg_rating %}text-amber-400{% else %}text-gray-200{% endif %}">★</span>
+                        {% endfor %}
+                        <span class="text-xs text-gray-400 ml-1">{{ avg_rating }} / 5 ({{ reviews.count }} ulasan)</span>
+                    </div>
+                    {% endif %}
+
+                    <!-- Info Grid -->
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-4 mb-5">
+                        <div>
+                            <p class="text-xs uppercase tracking-widest text-gray-400 mb-0.5">ISBN</p>
+                            <p class="text-sm font-semibold text-gray-700">{{ book.isbn }}</p>
+                        </div>
+                        <div>
+                            <p class="text-xs uppercase tracking-widest text-gray-400 mb-0.5">Bahasa</p>
+                            <p class="text-sm font-semibold text-gray-700">{{ book.language }}</p>
+                        </div>
+                        <div>
+                            <p class="text-xs uppercase tracking-widest text-gray-400 mb-0.5">Halaman</p>
+                            <p class="text-sm font-semibold text-gray-700">{% if book.pages %}{{ book.pages }} hal.{% else %}—{% endif %}</p>
+                        </div>
+                        <div>
+                            <p class="text-xs uppercase tracking-widest text-gray-400 mb-0.5">Stok</p>
+                            <p class="text-sm font-semibold text-gray-700">{{ book.available_copies }} / {{ book.total_copies }}</p>
+                        </div>
+                        <div>
+                            <p class="text-xs uppercase tracking-widest text-gray-400 mb-0.5">Lokasi Rak</p>
+                            <p class="text-sm font-semibold text-gray-700">{{ book.shelf_location|default:"—" }}</p>
+                        </div>
+                        <div id="infoPublisher">
+                            <p class="text-xs uppercase tracking-widest text-gray-400 mb-0.5">Penerbit</p>
+                            <p class="text-sm font-semibold text-gray-700">
+                                {% if book.publisher %}{{ book.publisher }}{% else %}<em class="api-pending font-normal text-gray-400">Memuat…</em>{% endif %}
+                            </p>
+                        </div>
+                        <div id="infoYear">
+                            <p class="text-xs uppercase tracking-widest text-gray-400 mb-0.5">Tahun Terbit</p>
+                            <p class="text-sm font-semibold text-gray-700">
+                                {% if book.publish_year %}{{ book.publish_year }}{% else %}<em class="api-pending font-normal text-gray-400">Memuat…</em>{% endif %}
+                            </p>
+                        </div>
+                        <div class="col-span-2 md:col-span-3" id="infoCategory">
+                            <p class="text-xs uppercase tracking-widest text-gray-400 mb-1">Kategori</p>
+                            <div class="flex flex-wrap gap-1.5">
+                                {% if book.category %}
+                                {% for cat in book.category|split_comma %}
+                                <a href="{% url 'book:book_list' %}?category={{ cat|urlencode }}"
+                                   class="text-xs bg-gray-100 hover:bg-gray-800 hover:text-white text-gray-600 px-2.5 py-0.5 rounded-full font-medium transition">{{ cat }}</a>
+                                {% endfor %}
+                                {% else %}
+                                <em class="api-pending text-xs text-gray-400">Memuat…</em>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Synopsis -->
+                    {% if book.synopsis %}
+                    <div class="border-l-4 border-amber-400 bg-amber-50 rounded-r-lg px-4 py-3 mb-5">
+                        <p class="text-xs font-bold uppercase tracking-widest text-amber-700 mb-1">Sinopsis</p>
+                        <p class="text-sm text-gray-600 leading-relaxed">{{ book.synopsis }}</p>
+                    </div>
+                    {% else %}
+                    <div id="synopsisBox" class="border-l-4 border-amber-400 bg-amber-50 rounded-r-lg px-4 py-3 mb-5 hidden">
+                        <p class="text-xs font-bold uppercase tracking-widest text-amber-700 mb-1">Sinopsis</p>
+                        <p class="text-sm text-gray-600 leading-relaxed" id="synopsisText"></p>
+                    </div>
+                    {% endif %}
+
+                    <!-- Actions -->
+                    <div class="flex gap-2 flex-wrap">
+                        {% if book.status == 'tersedia' and book.available_copies > 0 %}
+                        <button type="button" onclick="requestBorrow('{{ book.id }}')"
+                                class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-5 py-2.5 rounded-lg transition">
+                            📚 Pinjam Buku
+                        </button>
+                        {% elif book.status != 'tersedia' and book.status != 'tidak_aktif' %}
+                        <button type="button" onclick="joinWaitlist('{{ book.id }}')"
+                                class="inline-flex items-center gap-2 bg-orange-600 hover:bg-orange-700 text-white text-sm font-semibold px-5 py-2.5 rounded-lg transition">
+                            📋 Masuk Antrian
+                        </button>
+                        {% endif %}
+                        <a href="{% url 'book_loan:loan_history' %}"
+                           class="inline-flex items-center gap-2 bg-gray-600 hover:bg-gray-700 text-white text-sm font-semibold px-5 py-2.5 rounded-lg transition">
+                            Riwayat Peminjaman
+                        </a>
+                        {% if perms.book.change_book %}
+                        <a href="{% url 'book:book_edit' book.pk %}"
+                           class="inline-flex items-center gap-2 bg-gray-800 hover:bg-gray-700 text-white text-sm font-semibold px-5 py-2.5 rounded-lg transition">
+                            Edit Detail Buku
+                        </a>
+                        {% endif %}
+                        {% if perms.book.delete_book and book.status != 'tidak_aktif' %}
+                        <button id="deleteBtn"
+                                class="inline-flex items-center gap-2 bg-red-600 hover:bg-red-500 text-white text-sm font-semibold px-5 py-2.5 rounded-lg transition">
+                            Nonaktifkan Buku
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT: Reviews -->
+        <div class="bg-white border border-gray-100 rounded-2xl shadow-sm p-6 lg:sticky lg:top-20">
+            <h2 class="text-lg font-bold text-gray-800 mb-4" style="font-family:'Playfair Display',serif">Review & Rating</h2>
+
+            <!-- Review Form -->
+            <p class="text-xs uppercase tracking-widest text-gray-400 mb-2">
+                {% if user_review %}Ulasan kamu{% else %}Tulis ulasan{% endif %}
+            </p>
+            <form method="post" class="mb-5">
+                {% csrf_token %}
+                <input type="hidden" name="review_submit" value="1">
+                <!-- Star Picker -->
+                <div class="flex flex-row-reverse justify-end gap-1 mb-2" id="starPicker">
+                    {% for i in "54321" %}
+                    <label class="cursor-pointer">
+                        <input type="radio" name="rating" value="{{ i }}" class="hidden peer"
+                               {% if user_review and user_review.rating|stringformat:"s" == i %}checked{% endif %}>
+                        <span class="text-2xl text-gray-200 peer-checked:text-amber-400 hover:text-amber-400 transition star-pick">★</span>
+                    </label>
+                    {% endfor %}
+                </div>
+                <textarea name="comment" rows="3" placeholder="Tulis ulasan kamu di sini…"
+                          class="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm bg-gray-50 focus:outline-none focus:border-gray-400 resize-none mb-2">{% if user_review %}{{ user_review.comment }}{% endif %}</textarea>
+                <button type="submit"
+                        class="w-full bg-gray-800 hover:bg-gray-700 text-white text-sm font-semibold py-2.5 rounded-lg transition">
+                    {% if user_review %}Perbarui Ulasan{% else %}Kirim Ulasan{% endif %}
+                </button>
+            </form>
+
+            <hr class="border-gray-100 mb-4">
+
+            <!-- Reviews List -->
+            <div class="flex flex-col gap-3">
+                {% for review in reviews %}
+                <div class="bg-gray-50 rounded-xl p-4">
+                    <div class="flex items-start justify-between mb-1">
+                        <div>
+                            <p class="text-sm font-semibold text-gray-800">{{ review.user.get_full_name|default:review.user.username }}</p>
+                            <div class="flex gap-0.5 mt-0.5">
+                                {% for i in "12345" %}
+                                <span class="text-sm {% if forloop.counter <= review.rating %}text-amber-400{% else %}text-gray-200{% endif %}">★</span>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% if review.user == request.user or request.user.is_staff %}
+                        <form method="post" action="{% url 'book:review_delete' review.pk %}">
+                            {% csrf_token %}
+                            <button type="submit"
+                                    class="text-gray-300 hover:text-red-500 transition p-1 rounded"
+                                    title="Hapus ulasan">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+                            </button>
+                        </form>
+                        {% endif %}
+                    </div>
+                    <p class="text-sm text-gray-600 leading-relaxed mt-1">{{ review.comment }}</p>
+                    <p class="text-xs text-gray-400 mt-1.5">{{ review.created_at|date:"d M Y" }}</p>
+                </div>
+                {% empty %}
+                <p class="text-sm text-gray-400 text-center py-4">Belum ada ulasan. Jadilah yang pertama!</p>
+                {% endfor %}
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- Delete Modal -->
+<div id="deleteModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-6">
+    <div class="bg-white rounded-2xl p-8 max-w-sm w-full shadow-2xl">
+        <h3 class="text-xl font-bold text-gray-800 mb-2" style="font-family:'Playfair Display',serif">Nonaktifkan Buku?</h3>
+        <p class="text-sm text-gray-500 mb-6">
+            Buku <strong class="text-gray-700">{{ book.title }}</strong> akan diubah statusnya menjadi <em>Tidak Aktif</em> dan tidak muncul di katalog.
+        </p>
+        <div class="flex gap-3 justify-end">
+            <button onclick="document.getElementById('deleteModal').classList.add('hidden')"
+                    class="px-5 py-2.5 text-sm border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-100 transition">
+                Batal
+            </button>
+            <form method="post" action="{% url 'book:book_delete' book.pk %}">
+                {% csrf_token %}
+                <button type="submit" class="px-5 py-2.5 text-sm bg-red-600 hover:bg-red-500 text-white font-semibold rounded-lg transition">
+                    Ya, Nonaktifkan
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const bookIsbn = "{{ book.isbn }}";
+    const bookPk   = "{{ book.pk }}";
+
+    // Auto-fetch enriched data if fields are missing
+    (async () => {
+      const hasPending = document.querySelector('.api-pending');
+      const coverPH    = document.getElementById('coverPlaceholder');
+      if (!hasPending && !coverPH) return;
+
+      try {
+        const r    = await fetch(`/book/api/${bookPk}/`);
+        const data = await r.json();
+
+        // Cover
+        if (coverPH) {
+          if (data.cover_url) {
+            coverPH.outerHTML = `<img src="${data.cover_url}" alt="{{ book.title|escapejs }}" class="w-full block">`;
+          } else if (bookIsbn && !bookIsbn.startsWith('NOISBN')) {
+            const img = new Image();
+            img.onload = () => {
+              if (img.naturalWidth > 10)
+                coverPH.outerHTML = `<img src="https://covers.openlibrary.org/b/isbn/${bookIsbn}-L.jpg" class="w-full block">`;
+            };
+            img.src = `https://covers.openlibrary.org/b/isbn/${bookIsbn}-L.jpg`;
+          }
+        }
+
+        // Publisher
+        const pubEl = document.querySelector('#infoPublisher p:last-child');
+        if (pubEl?.querySelector('.api-pending'))
+          pubEl.innerHTML = data.publisher || '—';
+
+        // Year
+        const yearEl = document.querySelector('#infoYear p:last-child');
+        if (yearEl?.querySelector('.api-pending'))
+          yearEl.innerHTML = data.publish_year || '—';
+
+        // Category
+        const catEl = document.querySelector('#infoCategory > div');
+        if (catEl?.querySelector('.api-pending')) {
+          if (data.category) {
+            catEl.innerHTML = data.category.split(',')
+              .map(c => `<a href="/book/catalog/?category=${encodeURIComponent(c.trim())}" class="text-xs bg-gray-100 hover:bg-gray-800 hover:text-white text-gray-600 px-2.5 py-0.5 rounded-full font-medium transition">${c.trim()}</a>`)
+              .join('');
+          } else {
+            catEl.innerHTML = '<span class="text-sm font-semibold text-gray-700">—</span>';
+          }
+        }
+
+        // Synopsis
+        const synBox = document.getElementById('synopsisBox');
+        const synTxt = document.getElementById('synopsisText');
+        if (synTxt && data.synopsis) {
+          synTxt.textContent = data.synopsis;
+          synBox.classList.remove('hidden');
+        }
+      } catch(e) { console.warn('Enrich fetch failed', e); }
+    })();
+
+    // Delete modal
+    document.getElementById('deleteBtn')?.addEventListener('click', () => {
+      document.getElementById('deleteModal').classList.remove('hidden');
+    });
+    document.getElementById('deleteModal')?.addEventListener('click', e => {
+      if (e.target === document.getElementById('deleteModal'))
+        document.getElementById('deleteModal').classList.add('hidden');
+    });
+
+    // Loan functions
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    function requestBorrow(bookId) {
+        document.getElementById('borrowModal').classList.remove('hidden');
+        document.getElementById('borrowBookId').value = bookId;
+        document.getElementById('borrowDays').value = '7';
+    }
+
+    function submitBorrow() {
+        const bookId = document.getElementById('borrowBookId').value;
+        const durationDays = document.getElementById('borrowDays').value;
+        const csrftoken = getCookie('csrftoken');
+
+        fetch('/loan/api/loans/create/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken,
+            },
+            body: JSON.stringify({
+                book_id: bookId,
+                duration_days: parseInt(durationDays)
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                alert('✓ Peminjaman berhasil diajukan!');
+                document.getElementById('borrowModal').classList.add('hidden');
+                setTimeout(() => location.reload(), 500);
+            } else if (data.is_waitlist_available) {
+                if (confirm('Buku tidak tersedia saat ini. Apakah Anda ingin masuk antrian?')) {
+                    joinWaitlist(bookId);
+                }
+                document.getElementById('borrowModal').classList.add('hidden');
+            } else {
+                alert('Error: ' + (data.message || 'Gagal mengajukan peminjaman'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Terjadi kesalahan saat memproses permintaan');
+        });
+    }
+
+    function joinWaitlist(bookId) {
+        const csrftoken = getCookie('csrftoken');
+
+        fetch('/loan/api/waitlist/create/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken,
+            },
+            body: JSON.stringify({
+                book_id: bookId
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                alert('✓ Anda berhasil masuk antrian! Posisi: #' + data.position);
+                setTimeout(() => location.reload(), 500);
+            } else {
+                alert('Error: ' + (data.message || 'Gagal masuk antrian'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Terjadi kesalahan saat memproses permintaan');
+        });
+    }
+</script>
+
+<!-- Borrow Modal -->
+<div id="borrowModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl">
+        <h3 class="font-display text-xl font-bold text-gray-900 mb-4">Ajukan Peminjaman</h3>
+        
+        <div class="mb-4">
+            <label class="block font-sans text-sm font-semibold text-gray-700 mb-2">Durasi Peminjaman (hari):</label>
+            <input type="number" id="borrowDays" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500" value="7" min="1" max="30">
+            <input type="hidden" id="borrowBookId">
+            <p class="text-xs text-gray-500 mt-2">Durasi maksimal: 30 hari</p>
+        </div>
+
+        <div class="flex gap-3">
+            <button onclick="document.getElementById('borrowModal').classList.add('hidden')" class="flex-1 px-4 py-2 bg-gray-200 text-gray-800 font-sans font-semibold rounded-lg hover:bg-gray-300 transition-colors">
+                Batal
+            </button>
+            <button onclick="submitBorrow()" class="flex-1 px-4 py-2 bg-blue-600 text-white font-sans font-semibold rounded-lg hover:bg-blue-700 transition-colors">
+                Ajukan
+            </button>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
