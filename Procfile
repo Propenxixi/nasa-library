@@ -1,2 +1,2 @@
-release: python manage.py migrate
+release: python manage.py migrate && python manage.py import_students --delete-first --default && python manage.py import_books --update
 web: gunicorn nasa_library.wsgi --log-file -
