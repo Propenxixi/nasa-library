@@ -1,1 +1,1 @@
-web: python manage.py migrate && python manage.py import_students --delete-first --default && python manage.py import_books --update && gunicorn nasa_library.wsgi --log-file -
+web: python manage.py migrate && python manage.py import_students --default && python manage.py import_books && python manage.py shell -c "from django.contrib.auth.models import User; User.objects.filter(username='petugas61').exists() or User.objects.create_superuser('petugas61', 'admin@nasa.com', 'akunadmin123')" && gunicorn nasa_library.wsgi --log-file -
