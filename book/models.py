@@ -20,6 +20,8 @@ class Book(models.Model):
     pages           = models.PositiveIntegerField(null=True, blank=True)
     language        = models.CharField(max_length=100, blank=True, default='Indonesian')
     total_copies    = models.PositiveIntegerField(default=1)
+    damaged_copies  = models.PositiveIntegerField(default=0)  # Track damaged copies
+    lost_copies     = models.PositiveIntegerField(default=0)  # Track lost copies
     shelf_location  = models.CharField(max_length=100, blank=True)
     status          = models.CharField(max_length=20, choices=STATUS_CHOICES, default='tersedia')
 
@@ -46,15 +48,71 @@ class Book(models.Model):
 
     @property
     def available_copies(self):
+        """Calculate available copies: total - borrowed - damaged - lost"""
         try:
-            borrowed = self.loan_set.filter(status='dipinjam').count()
+            borrowed = self.loans.filter(status='sedang_dipinjam').count()
         except AttributeError:
             borrowed = 0
-        return max(self.total_copies - borrowed, 0)
+        good_copies = self.total_copies - self.damaged_copies - self.lost_copies
+        available = good_copies - borrowed
+        return max(available, 0)
+
+    @property
+    def borrowed_copies(self):
+        """Count copies currently borrowed (sedang_dipinjam status)"""
+        try:
+            return self.loans.filter(status='sedang_dipinjam').count()
+        except AttributeError:
+            return 0
+
+    @property
+    def display_status(self):
+        """Calculate display status based on counter values"""
+        if self.status == 'tidak_aktif':
+            return 'tidak_aktif'
+        if self.total_copies == 0:
+            return 'tidak_tersedia'
+        if self.damaged_copies == self.total_copies:
+            return 'rusak'
+        if self.lost_copies == self.total_copies:
+            return 'hilang'
+        if self.available_copies > 0:
+            return 'tersedia'
+        return 'tidak_tersedia'
 
     @property
     def is_available(self):
         return self.status == 'tersedia' and self.available_copies > 0
+
+    def distribute_waiting_list(self):
+        """
+        Distribute book to waiting list members when book becomes available.
+        Based on PBI backlog requirements.
+        """
+        from django.utils import timezone
+        from datetime import timedelta
+        from book_loan.models import WaitingList, Notification
+        
+        try:
+            # Get first person in waiting list (not already marked as ready/cancelled)
+            waiting = self.waiting_lists.filter(
+                status='menunggu'
+            ).order_by('position').first()
+            
+            if waiting:
+                # Mark as ready to claim
+                waiting.mark_ready()
+                
+                # Create notification for the user
+                Notification.objects.create(
+                    user=waiting.user,
+                    notification_type='waitlist_ready',
+                    title='Buku Siap Dipinjam',
+                    message=f'Buku "{self.title}" yang Anda tunggu sekarang tersedia. Silakan ambil dalam 24 jam.',
+                    book=self
+                )
+        except Exception as e:
+            print(f"Error distributing waiting list for book {self.id}: {str(e)}")
 
 
 class Review(models.Model):

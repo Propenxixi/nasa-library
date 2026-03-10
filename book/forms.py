@@ -7,7 +7,7 @@ class BookForm(forms.ModelForm):
         model  = Book
         fields = [
             'title', 'author', 'isbn', 'pages', 'language',
-            'total_copies', 'shelf_location', 'status',
+            'total_copies', 'damaged_copies', 'lost_copies', 'shelf_location',
             'cover_url', 'publisher', 'publish_year', 'category', 'synopsis',
         ]
         widgets = {
@@ -16,7 +16,9 @@ class BookForm(forms.ModelForm):
             'isbn':           forms.TextInput(attrs={'placeholder': '13-digit ISBN'}),
             'pages':          forms.NumberInput(attrs={'placeholder': 'Jumlah halaman'}),
             'language':       forms.TextInput(attrs={'placeholder': 'Indonesian'}),
-            'total_copies':   forms.NumberInput(attrs={'min': 1}),
+            'total_copies':   forms.NumberInput(attrs={'min': 0}),
+            'damaged_copies': forms.NumberInput(attrs={'min': 0}),
+            'lost_copies':    forms.NumberInput(attrs={'min': 0}),
             'shelf_location': forms.TextInput(attrs={'placeholder': 'Contoh: Rak A-3'}),
             'cover_url':      forms.URLInput(attrs={'placeholder': 'https://...'}),
             'publisher':      forms.TextInput(attrs={'placeholder': 'Nama penerbit'}),
@@ -27,17 +29,9 @@ class BookForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Saat tambah buku baru (belum punya pk), status tidak ditampilkan
-        # di form → jangan require, default ke 'tersedia'
+        # Set initial status for new books
         if not self.instance.pk:
-            self.fields['status'].required = False
-            self.fields['status'].initial  = 'tersedia'
-
-    def clean_status(self):
-        status = self.cleaned_data.get('status')
-        if not status:
-            return 'tersedia'  # default untuk buku baru
-        return status
+            self.instance.status = 'tersedia'
 
     def clean_isbn(self):
         isbn = self.cleaned_data['isbn'].strip()

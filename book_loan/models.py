@@ -8,14 +8,13 @@ User = get_user_model()
 
 class Loan(models.Model):
     STATUS_CHOICES = [
-        ('pending_approval', 'Menunggu Persetujuan'),
-        ('borrowed', 'Sedang Dipinjam'),
-        ('pending_extension', 'Menunggu Persetujuan Perpanjangan'),
-        ('extension_approved', 'Perpanjangan Disetujui'),
-        ('extension_rejected', 'Perpanjangan Ditolak'),
-        ('returned', 'Dikembalikan'),
-        ('rejected', 'Ditolak'),
-        ('overdue', 'Terlambat'),
+        ('menunggu_konfirmasi', 'Menunggu Konfirmasi'),
+        ('siap_diambil', 'Siap Diambil'),
+        ('sedang_dipinjam', 'Sedang Dipinjam'),
+        ('menunggu_persetujuan_perpanjangan', 'Menunggu Persetujuan Perpanjangan'),
+        ('terlambat', 'Terlambat'),
+        ('dikembalikan', 'Dikembalikan'),
+        ('ditolak', 'Ditolak'),
     ]
 
     BOOK_CONDITION_CHOICES = [
@@ -26,7 +25,7 @@ class Loan(models.Model):
 
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='loans')
     book = models.ForeignKey('book.Book', on_delete=models.CASCADE, related_name='loans')
-    status = models.CharField(max_length=30, choices=STATUS_CHOICES, default='pending_approval')
+    status = models.CharField(max_length=40, choices=STATUS_CHOICES, default='menunggu_konfirmasi')
     
     # Dates
     loan_date = models.DateTimeField(auto_now_add=True)
@@ -65,7 +64,7 @@ class Loan(models.Model):
     @property
     def days_overdue(self):
         """Calculate days overdue if applicable"""
-        if self.due_date and self.status == 'borrowed':
+        if self.due_date and self.status == 'sedang_dipinjam':
             overdue = (timezone.now().date() - self.due_date).days
             return max(overdue, 0)
         return 0
@@ -73,44 +72,66 @@ class Loan(models.Model):
     @property
     def can_extend(self):
         """Check if loan can be extended"""
-        if self.status != 'borrowed':
+        if self.status != 'sedang_dipinjam':
             return False
         if self.due_date and self.due_date < timezone.now().date():
             return False
         return True
 
     def approve(self):
-        """Approve the loan"""
-        self.status = 'borrowed'
+        """Approve the loan - book becomes ready to pick up"""
+        self.status = 'siap_diambil'
         self.approved_date = timezone.now()
         self.due_date = (timezone.now() + timedelta(days=self.duration_days)).date()
-        self.book.status = 'dipinjam'
-        self.book.save()
+        # Stock will be decreased when book is actually picked up
         self.save()
+
+    def pickup(self):
+        """Student picks up the book - mark as borrowed"""
+        self.status = 'sedang_dipinjam'
+        self.save()
+        
+        # Update book status based on available copies (property calculates this)
+        if self.book.available_copies <= 0:
+            self.book.status = 'tidak_tersedia'
+        else:
+            self.book.status = 'tersedia'
+        self.book.save()
 
     def reject(self, reason=''):
         """Reject the loan"""
-        self.status = 'rejected'
+        self.status = 'ditolak'
         self.rejection_reason = reason
-        self.book.status = 'tersedia'
-        self.book.save()
         self.save()
 
     def process_return(self, condition):
-        """Process book return"""
-        self.status = 'returned'
+        """Process book return - tracks condition of returned copy"""
+        self.status = 'dikembalikan'
         self.return_date = timezone.now()
         self.return_condition = condition
+        self.save()
         
-        if condition == 'baik':
-            self.book.status = 'tersedia'
-        elif condition == 'rusak':
-            self.book.status = 'rusak'
+        # Update book copy condition counters (not the entire book status)
+        if condition == 'rusak':
+            # Increment damaged counter
+            self.book.damaged_copies += 1
         elif condition == 'hilang':
-            self.book.status = 'hilang'
+            # Increment lost counter
+            self.book.lost_copies += 1
+        # If 'baik', no counter changes needed, just mark as returned
+        
+        # Update book status based on good copies availability
+        good_copies = self.book.total_copies - self.book.damaged_copies - self.book.lost_copies
+        if good_copies > 0:
+            self.book.status = 'tersedia'
+        else:
+            self.book.status = 'tidak_tersedia'
         
         self.book.save()
-        self.save()
+        
+        # PBI backlog: Distribute to waiting list when book becomes available
+        if good_copies > 0:
+            self.book.distribute_waiting_list()
 
 
 class LoanExtension(models.Model):
@@ -145,7 +166,7 @@ class LoanExtension(models.Model):
         self.approved_date = timezone.now()
         self.new_due_date = (self.loan.due_date + timedelta(days=self.requested_duration))
         
-        self.loan.status = 'borrowed'
+        self.loan.status = 'sedang_dipinjam'
         self.loan.due_date = self.new_due_date
         self.loan.save()
         
@@ -155,7 +176,7 @@ class LoanExtension(models.Model):
         """Reject extension request"""
         self.status = 'rejected'
         self.rejection_reason = reason
-        self.loan.status = 'borrowed'
+        self.loan.status = 'sedang_dipinjam'
         self.loan.save()
         self.save()
 

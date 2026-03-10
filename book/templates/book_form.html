@@ -113,7 +113,7 @@
         <!-- Data Fisik & Stok -->
         <div class="bg-white border border-gray-100 rounded-2xl p-6 mb-4 shadow-sm">
             <h3 class="text-base font-bold text-gray-700 border-b border-gray-100 pb-3 mb-5">Data Fisik & Stok</h3>
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
                 <div>
                     <label class="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-1.5">Halaman</label>
                     {{ form.pages }}
@@ -124,22 +124,28 @@
                 </div>
                 <div>
                     <label class="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-1.5">
-                        Stok <span class="text-red-500">*</span>
+                        Total Stok <span class="text-red-500">*</span>
                     </label>
                     {{ form.total_copies }}
                     {% if form.total_copies.errors %}<p class="text-xs text-red-500 mt-1">{{ form.total_copies.errors.0 }}</p>{% endif %}
                 </div>
                 <div>
+                    <label class="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-1.5">Rusak</label>
+                    {{ form.damaged_copies }}
+                    {% if form.damaged_copies.errors %}<p class="text-xs text-red-500 mt-1">{{ form.damaged_copies.errors.0 }}</p>{% endif %}
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-1.5">Hilang</label>
+                    {{ form.lost_copies }}
+                    {% if form.lost_copies.errors %}<p class="text-xs text-red-500 mt-1">{{ form.lost_copies.errors.0 }}</p>{% endif %}
+                </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-1 gap-4 mt-4">
+                <div>
                     <label class="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-1.5">Lokasi Rak</label>
                     {{ form.shelf_location }}
                 </div>
             </div>
-            {% if action == 'edit' %}
-            <div class="mt-4 max-w-xs">
-                <label class="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-1.5">Status</label>
-                {{ form.status }}
-            </div>
-            {% endif %}
         </div>
 
         <!-- Cover -->

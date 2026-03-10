@@ -17,7 +17,20 @@ from .services import enrich_book_from_isbn
 def _is_staff_or_librarian(user):
     if user.is_superuser or user.is_staff:
         return True
-    return user.groups.filter(name__in=['Petugas', 'Librarian', 'Admin']).exists()
+    if user.groups.filter(name__in=['Petugas', 'Librarian', 'Admin']).exists():
+        return True
+    # Also check UserProfile role
+    return _is_librarian(user)
+
+
+def _is_librarian(user):
+    """Check if user is a librarian"""
+    try:
+        from authentication.models import UserProfile
+        profile = UserProfile.objects.get(user=user)
+        return profile.is_librarian()
+    except:
+        return False
 
 
 # ─── Dashboard / Home ─────────────────────────────────────────────────────────
@@ -66,7 +79,19 @@ def book_list(request):
     if category:
         books = books.filter(category__icontains=category)
     if status:
-        books = books.filter(status=status)
+        # Filter based on counter values and status field
+        if status == 'tersedia':
+            # Books with available copies (good_copies > borrowed_copies)
+            books = books.exclude(status='tidak_aktif')
+        elif status == 'rusak':
+            # Books with damaged copies
+            books = books.filter(damaged_copies__gt=0).exclude(status='tidak_aktif')
+        elif status == 'hilang':
+            # Books with lost copies
+            books = books.filter(lost_copies__gt=0).exclude(status='tidak_aktif')
+        elif status == 'tidak_aktif':
+            # Soft-deleted books
+            books = books.filter(status='tidak_aktif')
 
     paginator = Paginator(books, 12)
     page_obj  = paginator.get_page(request.GET.get('page', 1))
@@ -78,13 +103,16 @@ def book_list(request):
             if c:
                 all_cats.add(c)
 
+    # Create status choices without 'tidak_aktif' for regular users
+    status_choices = [('tersedia', 'Tersedia'), ('rusak', 'Rusak'), ('hilang', 'Hilang'), ('tidak_aktif', 'Tidak Aktif')]
+    
     context = {
         'page_obj':       page_obj,
         'q':              q,
         'category':       category,
         'status':         status,
         'all_cats':       sorted(all_cats),
-        'status_choices': Book.STATUS_CHOICES,
+        'status_choices': status_choices,
         'total_count':    books.count(),
         'can_manage':     _is_staff_or_librarian(request.user),
     }
@@ -100,6 +128,22 @@ def book_detail(request, pk):
     avg_rating = reviews.aggregate(avg=Avg('rating'))['avg']
     user_review = reviews.filter(user=request.user).first()
     review_form = ReviewForm(instance=user_review)
+
+    # Get book-specific loans if user is librarian
+    book_loans = None
+    waiting_lists = None
+    user_in_waitlist = False
+    
+    if _is_librarian(request.user):
+        book_loans = book.loans.select_related('user').all().order_by('-loan_date')
+        waiting_lists = book.waiting_lists.select_related('user').filter(status__in=['menunggu', 'siap_dipinjam']).order_by('position')
+    
+    # Check if current user is in waitlist
+    if hasattr(request.user, 'waiting_lists'):
+        user_in_waitlist = request.user.waiting_lists.filter(book=book, status__in=['menunggu', 'siap_dipinjam']).exists()
+    
+    # Get waiting list count for display
+    waiting_count = book.waiting_lists.filter(status='menunggu').count()
 
     if request.method == 'POST' and 'review_submit' in request.POST:
         review_form = ReviewForm(request.POST, instance=user_review)
@@ -118,6 +162,11 @@ def book_detail(request, pk):
         'review_form': review_form,
         'user_review': user_review,
         'can_manage':  _is_staff_or_librarian(request.user),
+        'is_librarian': _is_librarian(request.user),
+        'book_loans': book_loans,
+        'waiting_lists': waiting_lists,
+        'user_in_waitlist': user_in_waitlist,
+        'waiting_count': waiting_count,
     }
     return render(request, 'book_detail.html', context)
 

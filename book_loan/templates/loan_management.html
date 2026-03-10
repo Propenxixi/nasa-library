@@ -4,83 +4,198 @@
 {% block title %}Manajemen Peminjaman - SMAN 61 Jakarta Library{% endblock %}
 
 {% block content %}
-<div class="min-h-screen bg-gradient-to-br from-white via-gray-50 to-white">
+<div class="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         
         <!-- Header -->
         <div class="mb-8">
             <h1 class="font-display text-4xl font-bold text-gray-900 mb-2">⚙️ Manajemen Peminjaman</h1>
-            <p class="font-sans text-gray-600">Kelola persetujuan, pengembalian, dan perpanjangan peminjaman buku</p>
+            <p class="font-sans text-gray-600">Kelola persetujuan, pengambilan, pengembalian, dan perpanjangan peminjaman buku</p>
         </div>
 
-        <!-- Tabs -->
-        <div class="flex gap-2 mb-6 border-b border-gray-200">
-            <button onclick="switchTab('pending')" class="tab-btn px-6 py-3 font-sans font-semibold text-gray-700 border-b-2 border-transparent hover:border-blue-600 transition-colors active" data-tab="pending">
-                ⏳ Menunggu Persetujuan ({{ pending_approvals.count }})
-            </button>
-            <button onclick="switchTab('borrowed')" class="tab-btn px-6 py-3 font-sans font-semibold text-gray-700 border-b-2 border-transparent hover:border-blue-600 transition-colors" data-tab="borrowed">
-                📚 Sedang Dipinjam ({{ borrowed.count }})
-            </button>
-            <button onclick="switchTab('overdue')" class="tab-btn px-6 py-3 font-sans font-semibold text-gray-700 border-b-2 border-transparent hover:border-blue-600 transition-colors" data-tab="overdue">
-                🔴 Terlambat ({{ overdue.count }})
-            </button>
+        <!-- Quick Stats -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+            <div class="bg-white border border-yellow-200 rounded-xl p-6 shadow-sm">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="font-sans text-sm text-gray-600 mb-1">Menunggu Konfirmasi</p>
+                        <p class="font-display text-3xl font-bold text-yellow-600">{{ pending_approvals.count }}</p>
+                    </div>
+                    <div class="text-4xl">⏳</div>
+                </div>
+            </div>
+            
+            <div class="bg-white border border-blue-200 rounded-xl p-6 shadow-sm">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="font-sans text-sm text-gray-600 mb-1">Siap Diambil</p>
+                        <p class="font-display text-3xl font-bold text-blue-600">{{ ready_for_pickup.count }}</p>
+                    </div>
+                    <div class="text-4xl">📦</div>
+                </div>
+            </div>
+            
+            <div class="bg-white border border-green-200 rounded-xl p-6 shadow-sm">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="font-sans text-sm text-gray-600 mb-1">Sedang Dipinjam</p>
+                        <p class="font-display text-3xl font-bold text-green-600">{{ borrowed.count }}</p>
+                    </div>
+                    <div class="text-4xl">📚</div>
+                </div>
+            </div>
+            
+            <div class="bg-white border border-red-200 rounded-xl p-6 shadow-sm">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="font-sans text-sm text-gray-600 mb-1">Terlambat</p>
+                        <p class="font-display text-3xl font-bold text-red-600">{{ overdue.count }}</p>
+                    </div>
+                    <div class="text-4xl">🔴</div>
+                </div>
+            </div>
         </div>
 
-        <!-- Content -->
-        <div class="space-y-8">
+        <!-- Tab Navigation -->
+        <div class="bg-white rounded-xl border border-gray-200 shadow-sm mb-8">
+            <div class="flex overflow-x-auto">
+                <button onclick="switchTab('pending')" class="tab-btn flex-1 px-6 py-4 font-sans font-semibold border-b-2 border-yellow-500 text-yellow-600 hover:bg-yellow-50 transition-colors active" data-tab="pending">
+                    ⏳ Menunggu Konfirmasi
+                </button>
+                <button onclick="switchTab('ready')" class="tab-btn flex-1 px-6 py-4 font-sans font-semibold border-b-2 border-transparent text-gray-600 hover:bg-gray-50 transition-colors" data-tab="ready">
+                    📦 Siap Diambil
+                </button>
+                <button onclick="switchTab('borrowed')" class="tab-btn flex-1 px-6 py-4 font-sans font-semibold border-b-2 border-transparent text-gray-600 hover:bg-gray-50 transition-colors" data-tab="borrowed">
+                    📚 Sedang Dipinjam
+                </button>
+                <button onclick="switchTab('overdue')" class="tab-btn flex-1 px-6 py-4 font-sans font-semibold border-b-2 border-transparent text-gray-600 hover:bg-gray-50 transition-colors" data-tab="overdue">
+                    🔴 Terlambat
+                </button>
+            </div>
+        </div>
+
+        <!-- Content Tabs -->
+        <div class="space-y-6">
             
             <!-- Pending Approvals Tab -->
             <div id="pending" class="tab-content">
                 {% if pending_approvals %}
-                <div class="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
-                    <div class="overflow-x-auto">
-                        <table class="w-full">
-                            <thead>
-                                <tr class="bg-yellow-50 border-b border-gray-200">
-                                    <th class="px-6 py-4 text-left font-sans text-sm font-semibold text-gray-700">Anggota</th>
-                                    <th class="px-6 py-4 text-left font-sans text-sm font-semibold text-gray-700">Buku</th>
-                                    <th class="px-6 py-4 text-left font-sans text-sm font-semibold text-gray-700">Durasi</th>
-                                    <th class="px-6 py-4 text-left font-sans text-sm font-semibold text-gray-700">Tanggal Ajuan</th>
-                                    <th class="px-6 py-4 text-left font-sans text-sm font-semibold text-gray-700">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for loan in pending_approvals %}
-                                <tr class="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                                    <td class="px-6 py-4">
-                                        <div class="font-sans font-semibold text-gray-900">{{ loan.user.first_name }} {{ loan.user.last_name }}</div>
-                                        <div class="font-sans text-xs text-gray-500">{{ loan.user.email }}</div>
-                                    </td>
-                                    <td class="px-6 py-4">
-                                        <a href="{% url 'book:book_detail' loan.book.id %}" class="font-sans font-semibold text-gray-900 hover:text-blue-600">
-                                            {{ loan.book.title|truncatechars:35 }}
+                    <div class="space-y-4">
+                        {% for loan in pending_approvals %}
+                        <div class="bg-white border border-yellow-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow">
+                            <div class="flex items-start justify-between mb-4">
+                                <div class="flex-1">
+                                    <h3 class="font-display text-lg font-bold text-gray-900 mb-1">
+                                        <a href="{% url 'book:book_detail' loan.book.id %}" class="hover:text-blue-600 transition-colors">
+                                            {{ loan.book.title|truncatechars:50 }}
                                         </a>
-                                    </td>
-                                    <td class="px-6 py-4 font-sans text-sm text-gray-600">
-                                        {{ loan.duration_days }} hari
-                                    </td>
-                                    <td class="px-6 py-4 font-sans text-sm text-gray-600">
-                                        {{ loan.loan_date|date:"d M Y H:i" }}
-                                    </td>
-                                    <td class="px-6 py-4">
-                                        <div class="flex gap-2">
-                                            <button type="button" data-action="approve" data-loan-id="{{ loan.id }}" class="px-3 py-1 bg-green-100 text-green-700 font-sans text-xs font-semibold rounded hover:bg-green-200 transition-colors">
-                                                ✓ Setujui
-                                            </button>
-                                            <button type="button" data-action="reject" data-loan-id="{{ loan.id }}" class="px-3 py-1 bg-red-100 text-red-700 font-sans text-xs font-semibold rounded hover:bg-red-200 transition-colors">
-                                                ✕ Tolak
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
+                                    </h3>
+                                    <p class="font-sans text-sm text-gray-600">{{ loan.book.author }}</p>
+                                </div>
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-800 ml-4 whitespace-nowrap">
+                                    ⏳ Menunggu Konfirmasi
+                                </span>
+                            </div>
+                            
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 bg-gray-50 rounded-lg p-4">
+                                <div>
+                                    <p class="font-sans text-xs text-gray-500 uppercase mb-1">Peminjam</p>
+                                    <p class="font-sans font-semibold text-gray-900">{{ loan.user.first_name }} {{ loan.user.last_name }}</p>
+                                    <p class="font-sans text-xs text-gray-600">{{ loan.user.email }}</p>
+                                </div>
+                                <div>
+                                    <p class="font-sans text-xs text-gray-500 uppercase mb-1">Tanggal Ajuan</p>
+                                    <p class="font-sans font-semibold text-gray-900">{{ loan.loan_date|date:"d M Y H:i" }}</p>
+                                </div>
+                                <div>
+                                    <p class="font-sans text-xs text-gray-500 uppercase mb-1">Durasi</p>
+                                    <p class="font-sans font-semibold text-gray-900">{{ loan.duration_days }} hari</p>
+                                </div>
+                                <div>
+                                    <p class="font-sans text-xs text-gray-500 uppercase mb-1">Stok Buku</p>
+                                    <p class="font-sans font-semibold text-gray-900">{{ loan.book.available_copies }} tersedia</p>
+                                </div>
+                            </div>
+                            
+                            <div class="flex gap-3">
+                                <form method="POST" action="{% url 'book_loan:loan_approve' loan.id %}" style="flex: 1;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="w-full px-4 py-2 bg-green-600 text-white font-sans font-semibold rounded-lg hover:bg-green-700 transition-colors" onclick="return confirm('Setujui peminjaman ini?')">
+                                        ✓ Setujui Peminjaman
+                                    </button>
+                                </form>
+                                <form method="POST" action="{% url 'book_loan:loan_reject' loan.id %}" style="flex: 1;">
+                                    {% csrf_token %}
+                                    <button type="button" onclick="openRejectModal({{ loan.id }})" class="w-full px-4 py-2 bg-red-600 text-white font-sans font-semibold rounded-lg hover:bg-red-700 transition-colors">
+                                        ✕ Tolak Peminjaman
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                        {% endfor %}
                     </div>
-                </div>
                 {% else %}
-                <div class="bg-white border border-gray-200 rounded-2xl p-8 text-center">
-                    <p class="font-sans text-gray-600">✓ Tidak ada pengajuan peminjaman yang menunggu persetujuan.</p>
+                <div class="bg-white border border-gray-200 rounded-xl p-12 text-center">
+                    <div class="text-5xl mb-4">✓</div>
+                    <p class="font-sans text-gray-600 text-lg">Tidak ada pengajuan peminjaman yang menunggu persetujuan.</p>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Ready for Pickup Tab -->
+            <div id="ready" class="tab-content hidden">
+                {% if ready_for_pickup %}
+                    <div class="space-y-4">
+                        {% for loan in ready_for_pickup %}
+                        <div class="bg-white border border-blue-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow">
+                            <div class="flex items-start justify-between mb-4">
+                                <div class="flex-1">
+                                    <h3 class="font-display text-lg font-bold text-gray-900 mb-1">
+                                        <a href="{% url 'book:book_detail' loan.book.id %}" class="hover:text-blue-600 transition-colors">
+                                            {{ loan.book.title|truncatechars:50 }}
+                                        </a>
+                                    </h3>
+                                    <p class="font-sans text-sm text-gray-600">{{ loan.book.author }}</p>
+                                </div>
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800 ml-4 whitespace-nowrap">
+                                    📦 Siap Diambil
+                                </span>
+                            </div>
+                            
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 bg-gray-50 rounded-lg p-4">
+                                <div>
+                                    <p class="font-sans text-xs text-gray-500 uppercase mb-1">Peminjam</p>
+                                    <p class="font-sans font-semibold text-gray-900">{{ loan.user.first_name }} {{ loan.user.last_name }}</p>
+                                </div>
+                                <div>
+                                    <p class="font-sans text-xs text-gray-500 uppercase mb-1">Disetujui</p>
+                                    <p class="font-sans font-semibold text-gray-900">{{ loan.approved_date|date:"d M Y" }}</p>
+                                </div>
+                                <div>
+                                    <p class="font-sans text-xs text-gray-500 uppercase mb-1">Durasi</p>
+                                    <p class="font-sans font-semibold text-gray-900">{{ loan.duration_days }} hari</p>
+                                </div>
+                                <div>
+                                    <p class="font-sans text-xs text-gray-500 uppercase mb-1">Status</p>
+                                    <p class="font-sans font-semibold text-blue-600">Menunggu Pengambilan</p>
+                                </div>
+                            </div>
+                            
+                            <div class="flex gap-3">
+                                <form method="POST" action="{% url 'book_loan:loan_confirm_pickup' loan.id %}" style="flex: 1;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="w-full px-4 py-2 bg-blue-600 text-white font-sans font-semibold rounded-lg hover:bg-blue-700 transition-colors" onclick="return confirm('Konfirmasi bahwa anggota telah mengambil buku ini?')">
+                                        ✓ Konfirmasi Pengambilan
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                <div class="bg-white border border-gray-200 rounded-xl p-12 text-center">
+                    <div class="text-5xl mb-4">📦</div>
+                    <p class="font-sans text-gray-600 text-lg">Tidak ada buku yang siap diambil.</p>
                 </div>
                 {% endif %}
             </div>
@@ -88,51 +203,56 @@
             <!-- Borrowed Tab -->
             <div id="borrowed" class="tab-content hidden">
                 {% if borrowed %}
-                <div class="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
-                    <div class="overflow-x-auto">
-                        <table class="w-full">
-                            <thead>
-                                <tr class="bg-blue-50 border-b border-gray-200">
-                                    <th class="px-6 py-4 text-left font-sans text-sm font-semibold text-gray-700">Anggota</th>
-                                    <th class="px-6 py-4 text-left font-sans text-sm font-semibold text-gray-700">Buku</th>
-                                    <th class="px-6 py-4 text-left font-sans text-sm font-semibold text-gray-700">Tanggal Pinjam</th>
-                                    <th class="px-6 py-4 text-left font-sans text-sm font-semibold text-gray-700">Jatuh Tempo</th>
-                                    <th class="px-6 py-4 text-left font-sans text-sm font-semibold text-gray-700">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for loan in borrowed %}
-                                <tr class="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                                    <td class="px-6 py-4">
-                                        <div class="font-sans font-semibold text-gray-900">{{ loan.user.first_name }} {{ loan.user.last_name }}</div>
-                                    </td>
-                                    <td class="px-6 py-4">
-                                        <a href="{% url 'book:book_detail' loan.book.id %}" class="font-sans font-semibold text-gray-900 hover:text-blue-600">
-                                            {{ loan.book.title|truncatechars:35 }}
+                    <div class="space-y-4">
+                        {% for loan in borrowed %}
+                        <div class="bg-white border border-green-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow">
+                            <div class="flex items-start justify-between mb-4">
+                                <div class="flex-1">
+                                    <h3 class="font-display text-lg font-bold text-gray-900 mb-1">
+                                        <a href="{% url 'book:book_detail' loan.book.id %}" class="hover:text-blue-600 transition-colors">
+                                            {{ loan.book.title|truncatechars:50 }}
                                         </a>
-                                    </td>
-                                    <td class="px-6 py-4 font-sans text-sm text-gray-600">
-                                        {{ loan.approved_date|date:"d M Y" }}
-                                    </td>
-                                    <td class="px-6 py-4 font-sans text-sm">
-                                        <span class="{% if loan.days_overdue > 0 %}text-red-600 font-semibold{% else %}text-gray-600{% endif %}">
-                                            {{ loan.due_date|date:"d M Y" }}
-                                        </span>
-                                    </td>
-                                    <td class="px-6 py-4">
-                                        <button type="button" data-action="return" data-loan-id="{{ loan.id }}" class="px-3 py-1 bg-orange-100 text-orange-700 font-sans text-xs font-semibold rounded hover:bg-orange-200 transition-colors">
-                                            📥 Proses Pengembalian
-                                        </button>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
+                                    </h3>
+                                    <p class="font-sans text-sm text-gray-600">{{ loan.book.author }}</p>
+                                </div>
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800 ml-4 whitespace-nowrap">
+                                    📚 Sedang Dipinjam
+                                </span>
+                            </div>
+                            
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 bg-gray-50 rounded-lg p-4">
+                                <div>
+                                    <p class="font-sans text-xs text-gray-500 uppercase mb-1">Peminjam</p>
+                                    <p class="font-sans font-semibold text-gray-900">{{ loan.user.first_name }} {{ loan.user.last_name }}</p>
+                                </div>
+                                <div>
+                                    <p class="font-sans text-xs text-gray-500 uppercase mb-1">Tanggal Pinjam</p>
+                                    <p class="font-sans font-semibold text-gray-900">{{ loan.approved_date|date:"d M Y" }}</p>
+                                </div>
+                                <div>
+                                    <p class="font-sans text-xs text-gray-500 uppercase mb-1">Jatuh Tempo</p>
+                                    <p class="font-sans font-semibold text-gray-900">{{ loan.due_date|date:"d M Y" }}</p>
+                                </div>
+                                <div>
+                                    <p class="font-sans text-xs text-gray-500 uppercase mb-1">Sisa Hari</p>
+                                    <p class="font-sans font-semibold text-gray-900">
+                                        0+ hari
+                                    </p>
+                                </div>
+                            </div>
+                            
+                            <div class="flex gap-3">
+                                <button type="button" onclick="openReturnModal({{ loan.id }})" class="flex-1 px-4 py-2 bg-orange-600 text-white font-sans font-semibold rounded-lg hover:bg-orange-700 transition-colors">
+                                    📥 Terima Pengembalian
+                                </button>
+                            </div>
+                        </div>
+                        {% endfor %}
                     </div>
-                </div>
                 {% else %}
-                <div class="bg-white border border-gray-200 rounded-2xl p-8 text-center">
-                    <p class="font-sans text-gray-600">Tidak ada buku yang sedang dipinjam.</p>
+                <div class="bg-white border border-gray-200 rounded-xl p-12 text-center">
+                    <div class="text-5xl mb-4">📚</div>
+                    <p class="font-sans text-gray-600 text-lg">Tidak ada buku yang sedang dipinjam.</p>
                 </div>
                 {% endif %}
             </div>
@@ -140,49 +260,54 @@
             <!-- Overdue Tab -->
             <div id="overdue" class="tab-content hidden">
                 {% if overdue %}
-                <div class="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
-                    <div class="overflow-x-auto">
-                        <table class="w-full">
-                            <thead>
-                                <tr class="bg-red-50 border-b border-gray-200">
-                                    <th class="px-6 py-4 text-left font-sans text-sm font-semibold text-gray-700">Anggota</th>
-                                    <th class="px-6 py-4 text-left font-sans text-sm font-semibold text-gray-700">Buku</th>
-                                    <th class="px-6 py-4 text-left font-sans text-sm font-semibold text-gray-700">Jatuh Tempo</th>
-                                    <th class="px-6 py-4 text-left font-sans text-sm font-semibold text-gray-700">Terlambat</th>
-                                    <th class="px-6 py-4 text-left font-sans text-sm font-semibold text-gray-700">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for loan in overdue %}
-                                <tr class="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                                    <td class="px-6 py-4">
-                                        <div class="font-sans font-semibold text-gray-900">{{ loan.user.first_name }} {{ loan.user.last_name }}</div>
-                                    </td>
-                                    <td class="px-6 py-4">
-                                        <a href="{% url 'book:book_detail' loan.book.id %}" class="font-sans font-semibold text-gray-900 hover:text-blue-600">
-                                            {{ loan.book.title|truncatechars:35 }}
+                    <div class="space-y-4">
+                        {% for loan in overdue %}
+                        <div class="bg-white border border-red-300 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow">
+                            <div class="flex items-start justify-between mb-4">
+                                <div class="flex-1">
+                                    <h3 class="font-display text-lg font-bold text-gray-900 mb-1">
+                                        <a href="{% url 'book:book_detail' loan.book.id %}" class="hover:text-blue-600 transition-colors">
+                                            {{ loan.book.title|truncatechars:50 }}
                                         </a>
-                                    </td>
-                                    <td class="px-6 py-4 font-sans text-sm text-red-600">{{ loan.due_date|date:"d M Y" }}</td>
-                                    <td class="px-6 py-4">
-                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-800">
-                                            +{{ loan.days_overdue }} hari
-                                        </span>
-                                    </td>
-                                    <td class="px-6 py-4">
-                                        <button type="button" data-action="return" data-loan-id="{{ loan.id }}" class="px-3 py-1 bg-orange-100 text-orange-700 font-sans text-xs font-semibold rounded hover:bg-orange-200 transition-colors">
-                                            📥 Proses Pengembalian
-                                        </button>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
+                                    </h3>
+                                    <p class="font-sans text-sm text-gray-600">{{ loan.book.author }}</p>
+                                </div>
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-800 ml-4 whitespace-nowrap">
+                                    🔴 Terlambat {{ loan.days_overdue }} hari
+                                </span>
+                            </div>
+                            
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 bg-red-50 rounded-lg p-4">
+                                <div>
+                                    <p class="font-sans text-xs text-gray-500 uppercase mb-1">Peminjam</p>
+                                    <p class="font-sans font-semibold text-gray-900">{{ loan.user.first_name }} {{ loan.user.last_name }}</p>
+                                </div>
+                                <div>
+                                    <p class="font-sans text-xs text-gray-500 uppercase mb-1">Jatuh Tempo</p>
+                                    <p class="font-sans font-semibold text-red-600">{{ loan.due_date|date:"d M Y" }}</p>
+                                </div>
+                                <div>
+                                    <p class="font-sans text-xs text-gray-500 uppercase mb-1">Terlambat Selama</p>
+                                    <p class="font-sans font-semibold text-red-600">{{ loan.days_overdue }} hari</p>
+                                </div>
+                                <div>
+                                    <p class="font-sans text-xs text-gray-500 uppercase mb-1">Durasi</p>
+                                    <p class="font-sans font-semibold text-gray-900">{{ loan.duration_days }} hari</p>
+                                </div>
+                            </div>
+                            
+                            <div class="flex gap-3">
+                                <button type="button" onclick="openReturnModal({{ loan.id }})" class="flex-1 px-4 py-2 bg-orange-600 text-white font-sans font-semibold rounded-lg hover:bg-orange-700 transition-colors">
+                                    📥 Terima Pengembalian Segera
+                                </button>
+                            </div>
+                        </div>
+                        {% endfor %}
                     </div>
-                </div>
                 {% else %}
-                <div class="bg-white border border-gray-200 rounded-2xl p-8 text-center">
-                    <p class="font-sans text-gray-600">✓ Tidak ada peminjaman yang terlambat.</p>
+                <div class="bg-white border border-gray-200 rounded-xl p-12 text-center">
+                    <div class="text-5xl mb-4">✓</div>
+                    <p class="font-sans text-gray-600 text-lg">Tidak ada peminjaman yang terlambat. Luar biasa!</p>
                 </div>
                 {% endif %}
             </div>
@@ -193,19 +318,20 @@
 <!-- Reject Modal -->
 <div id="rejectModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl">
-        <h3 class="font-display text-lg font-bold text-gray-900 mb-4">Tolak Peminjaman</h3>
+        <h3 class="font-display text-xl font-bold text-gray-900 mb-2">Tolak Peminjaman</h3>
+        <p class="font-sans text-sm text-gray-600 mb-6">Silakan jelaskan alasan penolakan peminjaman ini.</p>
         
-        <div class="mb-4">
+        <div class="mb-6">
             <label class="block font-sans text-sm font-semibold text-gray-700 mb-2">Alasan Penolakan:</label>
-            <textarea id="rejectReason" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500" rows="3" placeholder="Masukkan alasan penolakan..."></textarea>
+            <textarea id="rejectReason" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500" rows="4" placeholder="Masukkan alasan penolakan..."></textarea>
         </div>
 
         <div class="flex gap-3">
-            <button onclick="document.getElementById('rejectModal').classList.add('hidden')" class="flex-1 px-4 py-2 bg-gray-200 text-gray-800 font-sans font-semibold rounded-lg hover:bg-gray-300 transition-colors">
+            <button onclick="document.getElementById('rejectModal').classList.add('hidden')" class="flex-1 px-4 py-3 bg-gray-200 text-gray-800 font-sans font-semibold rounded-lg hover:bg-gray-300 transition-colors">
                 Batal
             </button>
-            <button onclick="confirmReject()" class="flex-1 px-4 py-2 bg-red-600 text-white font-sans font-semibold rounded-lg hover:bg-red-700 transition-colors">
-                Tolak
+            <button onclick="submitRejectForm()" class="flex-1 px-4 py-3 bg-red-600 text-white font-sans font-semibold rounded-lg hover:bg-red-700 transition-colors">
+                Tolak Peminjaman
             </button>
         </div>
     </div>
@@ -214,37 +340,38 @@
 <!-- Return Modal -->
 <div id="returnModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl">
-        <h3 class="font-display text-lg font-bold text-gray-900 mb-4">Proses Pengembalian Buku</h3>
+        <h3 class="font-display text-xl font-bold text-gray-900 mb-2">Proses Pengembalian Buku</h3>
+        <p class="font-sans text-sm text-gray-600 mb-6">Periksa kondisi buku dan catat di sistem.</p>
         
-        <div class="mb-4">
+        <div class="mb-6">
             <label class="block font-sans text-sm font-semibold text-gray-700 mb-3">Kondisi Buku:</label>
             <div class="space-y-2">
-                <label class="flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                <label class="flex items-center gap-3 p-3 border-2 border-gray-200 rounded-lg hover:border-green-400 hover:bg-green-50 cursor-pointer transition-all">
                     <input type="radio" name="condition" value="baik" class="w-4 h-4" checked>
-                    <span class="font-sans font-semibold text-gray-700">✓ Baik</span>
+                    <span class="font-sans font-semibold text-gray-700">✓ Baik - Tidak ada kerusakan</span>
                 </label>
-                <label class="flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                <label class="flex items-center gap-3 p-3 border-2 border-gray-200 rounded-lg hover:border-yellow-400 hover:bg-yellow-50 cursor-pointer transition-all">
                     <input type="radio" name="condition" value="rusak" class="w-4 h-4">
-                    <span class="font-sans font-semibold text-gray-700">⚠️ Rusak</span>
+                    <span class="font-sans font-semibold text-gray-700">⚠️ Rusak - Ada kerusakan</span>
                 </label>
-                <label class="flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                <label class="flex items-center gap-3 p-3 border-2 border-gray-200 rounded-lg hover:border-red-400 hover:bg-red-50 cursor-pointer transition-all">
                     <input type="radio" name="condition" value="hilang" class="w-4 h-4">
-                    <span class="font-sans font-semibold text-gray-700">❌ Hilang</span>
+                    <span class="font-sans font-semibold text-gray-700">❌ Hilang - Anggota wajib ganti</span>
                 </label>
             </div>
         </div>
 
-        <div class="mb-4">
+        <div class="mb-6">
             <label class="block font-sans text-sm font-semibold text-gray-700 mb-2">Catatan (Opsional):</label>
-            <textarea id="returnNotes" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500" rows="3" placeholder="Tambahkan catatan..."></textarea>
+            <textarea id="returnNotes" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" rows="3" placeholder="Tambahkan catatan tambahan..."></textarea>
         </div>
 
         <div class="flex gap-3">
-            <button onclick="document.getElementById('returnModal').classList.add('hidden')" class="flex-1 px-4 py-2 bg-gray-200 text-gray-800 font-sans font-semibold rounded-lg hover:bg-gray-300 transition-colors">
+            <button onclick="document.getElementById('returnModal').classList.add('hidden')" class="flex-1 px-4 py-3 bg-gray-200 text-gray-800 font-sans font-semibold rounded-lg hover:bg-gray-300 transition-colors">
                 Batal
             </button>
-            <button onclick="submitReturn()" class="flex-1 px-4 py-2 bg-blue-600 text-white font-sans font-semibold rounded-lg hover:bg-blue-700 transition-colors">
-                Proses
+            <button onclick="submitReturnForm()" class="flex-1 px-4 py-3 bg-blue-600 text-white font-sans font-semibold rounded-lg hover:bg-blue-700 transition-colors">
+                Proses Pengembalian
             </button>
         </div>
     </div>
@@ -253,22 +380,107 @@
 <script>
 let currentLoanId = null;
 
-// Event delegation for buttons with data attributes
-document.addEventListener('click', function(e) {
-    const btn = e.target.closest('[data-action]');
-    if (!btn) return;
+function switchTab(tabName) {
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+    document.querySelectorAll('.tab-btn').forEach(el => {
+        el.classList.remove('border-yellow-500', 'border-blue-500', 'border-green-500', 'border-red-500', 'text-yellow-600', 'text-blue-600', 'text-green-600', 'text-red-600');
+        el.classList.add('border-transparent', 'text-gray-600');
+    });
+    document.getElementById(tabName).classList.remove('hidden');
+    const activeBtn = document.querySelector(`[data-tab="${tabName}"]`);
+    activeBtn.classList.add('text-gray-900');
     
-    const action = btn.getAttribute('data-action');
-    const loanId = btn.getAttribute('data-loan-id');
-    
-    if (action === 'approve') {
-        approveLoan(loanId);
-    } else if (action === 'reject') {
-        rejectLoan(loanId);
-    } else if (action === 'return') {
-        processReturn(loanId);
+    if (tabName === 'pending') {
+        activeBtn.classList.add('border-yellow-500', 'text-yellow-600');
+    } else if (tabName === 'ready') {
+        activeBtn.classList.add('border-blue-500', 'text-blue-600');
+    } else if (tabName === 'borrowed') {
+        activeBtn.classList.add('border-green-500', 'text-green-600');
+    } else if (tabName === 'overdue') {
+        activeBtn.classList.add('border-red-500', 'text-red-600');
     }
-});
+}
+
+function openRejectModal(loanId) {
+    currentLoanId = loanId;
+    document.getElementById('rejectReason').value = '';
+    document.getElementById('rejectModal').classList.remove('hidden');
+}
+
+function submitRejectForm() {
+    const reason = document.getElementById('rejectReason').value;
+    if (!reason.trim()) {
+        alert('Mohon isi alasan penolakan');
+        return;
+    }
+    
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = `/loan/loans/${currentLoanId}/reject/`;
+    
+    const reasonInput = document.createElement('input');
+    reasonInput.type = 'hidden';
+    reasonInput.name = 'reason';
+    reasonInput.value = reason;
+    
+    const csrfInput = document.createElement('input');
+    csrfInput.type = 'hidden';
+    csrfInput.name = 'csrfmiddlewaretoken';
+    csrfInput.value = getCookie('csrftoken');
+    
+    form.appendChild(reasonInput);
+    form.appendChild(csrfInput);
+    document.body.appendChild(form);
+    form.submit();
+}
+
+function openReturnModal(loanId) {
+    currentLoanId = loanId;
+    document.getElementById('returnNotes').value = '';
+    document.querySelector('input[name="condition"]').checked = true;
+    document.getElementById('returnModal').classList.remove('hidden');
+}
+
+function submitReturnForm() {
+    const condition = document.querySelector('input[name="condition"]:checked').value;
+    const notes = document.getElementById('returnNotes').value;
+    
+    let confirmMessage = 'Konfirmasi pengembalian buku?';
+    if (condition === 'rusak') {
+        confirmMessage = 'Buku akan dicatat sebagai Rusak. Lanjutkan?';
+    } else if (condition === 'hilang') {
+        confirmMessage = 'Buku akan dicatat sebagai Hilang dan anggota wajib mengganti. Lanjutkan?';
+    }
+    
+    if (!confirm(confirmMessage)) {
+        return;
+    }
+    
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = `/loan/loans/${currentLoanId}/return/`;
+    
+    const conditionInput = document.createElement('input');
+    conditionInput.type = 'hidden';
+    conditionInput.name = 'condition';
+    conditionInput.value = condition;
+    
+    const notesInput = document.createElement('input');
+    notesInput.type = 'hidden';
+    notesInput.name = 'notes';
+    notesInput.value = notes;
+    
+    const csrfInput = document.createElement('input');
+    csrfInput.type = 'hidden';
+    csrfInput.name = 'csrfmiddlewaretoken';
+    csrfInput.value = getCookie('csrftoken');
+    
+    form.appendChild(conditionInput);
+    form.appendChild(notesInput);
+    form.appendChild(csrfInput);
+    document.body.appendChild(form);
+    form.submit();
+}
 
 function getCookie(name) {
     let cookieValue = null;
@@ -283,141 +495,6 @@ function getCookie(name) {
         }
     }
     return cookieValue;
-}
-
-function switchTab(tabName) {
-    document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-    document.querySelectorAll('.tab-btn').forEach(el => {
-        el.classList.remove('active');
-        el.classList.add('border-transparent');
-    });
-    document.getElementById(tabName).classList.remove('hidden');
-    const activeBtn = document.querySelector(`[data-tab="${tabName}"]`);
-    activeBtn.classList.add('active');
-    activeBtn.classList.remove('border-transparent');
-}
-
-function approveLoan(loanId) {
-    if (confirm('Setujuior Peminjaman ini?')) {
-        const csrftoken = getCookie('csrftoken');
-        fetch(`/loan/api/loans/${loanId}/approve/`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': csrftoken,
-            },
-            body: JSON.stringify({})
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.status === 'success') {
-                alert('✓ Peminjaman disetujui! Jatuh tempo: ' + data.due_date);
-                location.reload();
-            } else {
-                alert('Error: ' + (data.message || 'Gagal menyetujui peminjaman'));
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Terjadi kesalahan saat memproses permintaan');
-        });
-    }
-}
-
-function rejectLoan(loanId) {
-    currentLoanId = loanId;
-    document.getElementById('rejectReason').value = '';
-    document.getElementById('rejectModal').classList.remove('hidden');
-}
-
-function confirmReject() {
-    const reason = document.getElementById('rejectReason').value;
-    if (!reason.trim()) {
-        alert('Mohon isi alasan penolakan');
-        return;
-    }
-    
-    const csrftoken = getCookie('csrftoken');
-    fetch(`/loan/api/loans/${currentLoanId}/reject/`, {
-        method: 'PUT',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': csrftoken,
-        },
-        body: JSON.stringify({ reason: reason })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.status === 'success') {
-            alert('✓ Peminjaman ditolak');
-            document.getElementById('rejectModal').classList.add('hidden');
-            location.reload();
-        } else {
-            alert('Error: ' + (data.message || 'Gagal menolak peminjaman'));
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('Terjadi kesalahan saat memproses permintaan');
-    });
-}
-
-function processReturn(loanId) {
-    currentLoanId = loanId;
-    document.getElementById('returnNotes').value = '';
-    document.querySelector('input[name="condition"]').checked = true;
-    document.getElementById('returnModal').classList.remove('hidden');
-}
-
-function submitReturn() {
-    const condition = document.querySelector('input[name="condition"]:checked').value;
-    const notes = document.getElementById('returnNotes').value;
-    const csrftoken = getCookie('csrftoken');
-    
-    let confirmMessage = 'Konfirmasi pengembalian buku?';
-    if (condition === 'rusak') {
-        confirmMessage = 'Buku akan dicatat sebagai Rusak. Lanjutkan?';
-    } else if (condition === 'hilang') {
-        confirmMessage = 'Buku akan dicatat sebagai Hilang dan anggota wajib mengganti. Lanjutkan?';
-    }
-    
-    if (!confirm(confirmMessage)) {
-        return;
-    }
-    
-    fetch(`/loan/api/loans/${currentLoanId}/return/`, {
-        method: 'PUT',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': csrftoken,
-        },
-        body: JSON.stringify({ 
-            condition: condition,
-            notes: notes
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.status === 'success') {
-            let message = '✓ Pengembalian buku diproses';
-            if (condition === 'rusak') {
-                message += ' - Buku dicatat sebagai Rusak';
-            } else if (condition === 'hilang') {
-                message += ' - Buku dicatat sebagai Hilang';
-            } else {
-                message += ' - Buku tersedia kembali';
-            }
-            alert(message);
-            document.getElementById('returnModal').classList.add('hidden');
-            location.reload();
-        } else {
-            alert('Error: ' + (data.message || 'Gagal memproses pengembalian'));
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('Terjadi kesalahan saat memproses permintaan');
-    });
 }
 </script>
 

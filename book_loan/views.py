@@ -81,16 +81,145 @@ def loan_management(request):
         messages.error(request, "Anda tidak memiliki akses ke halaman ini.")
         return redirect('main:mainpage')
     
-    pending_approvals = Loan.objects.filter(status='pending_approval').select_related('user', 'book')
-    borrowed = Loan.objects.filter(status='borrowed').select_related('user', 'book')
-    overdue = Loan.objects.filter(status='borrowed', is_overdue=True).select_related('user', 'book')
+    pending_approvals = Loan.objects.filter(status='menunggu_konfirmasi').select_related('user', 'book')
+    borrowed = Loan.objects.filter(status='sedang_dipinjam').select_related('user', 'book')
+    ready_for_pickup = Loan.objects.filter(status='siap_diambil').select_related('user', 'book')
+    overdue = Loan.objects.filter(status='terlambat').select_related('user', 'book')
     
     context = {
         'pending_approvals': pending_approvals,
+        'ready_for_pickup': ready_for_pickup,
         'borrowed': borrowed,
         'overdue': overdue,
     }
     return render(request, 'loan_management.html', context)
+
+
+@login_required
+@require_http_methods(["POST"])
+def loan_approve(request, loan_id):
+    """Approve a loan request"""
+    if not _is_librarian(request.user):
+        messages.error(request, "Anda tidak memiliki akses.")
+        return redirect('book_loan:loan_management')
+    
+    try:
+        loan = get_object_or_404(Loan, id=loan_id)
+        
+        if loan.status != 'menunggu_konfirmasi':
+            messages.error(request, 'Peminjaman ini tidak sedang menunggu persetujuan')
+            return redirect('book_loan:loan_management')
+        
+        loan.approve()
+        
+        Notification.objects.create(
+            user=loan.user,
+            notification_type='loan_approved',
+            title='Peminjaman Disetujui',
+            message=f'Peminjaman {loan.book.title} telah disetujui. Jatuh tempo: {loan.due_date}',
+            loan=loan,
+            book=loan.book
+        )
+        
+        messages.success(request, f'✓ Peminjaman disetujui! Jatuh tempo: {loan.due_date.strftime("%d %b %Y")}')
+        return redirect('book_loan:loan_management')
+    
+    except Exception as e:
+        messages.error(request, f'Terjadi kesalahan: {str(e)}')
+        return redirect('book_loan:loan_management')
+
+
+@login_required
+@require_http_methods(["POST"])
+def loan_reject(request, loan_id):
+    """Reject a loan request"""
+    if not _is_librarian(request.user):
+        messages.error(request, "Anda tidak memiliki akses.")
+        return redirect('book_loan:loan_management')
+    
+    try:
+        loan = get_object_or_404(Loan, id=loan_id)
+        reason = request.POST.get('reason', 'Tidak ada alasan yang diberikan')
+        
+        loan.reject(reason)
+        
+        Notification.objects.create(
+            user=loan.user,
+            notification_type='loan_rejected',
+            title='Peminjaman Ditolak',
+            message=f'Peminjaman {loan.book.title} telah ditolak. Alasan: {reason}',
+            loan=loan,
+            book=loan.book
+        )
+        
+        messages.success(request, '✓ Peminjaman ditolak')
+        return redirect('book_loan:loan_management')
+    
+    except Exception as e:
+        messages.error(request, f'Terjadi kesalahan: {str(e)}')
+        return redirect('book_loan:loan_management')
+
+
+@login_required
+@require_http_methods(["POST"])
+def loan_confirm_pickup(request, loan_id):
+    """Confirm that a user has picked up the book"""
+    if not _is_librarian(request.user):
+        messages.error(request, "Anda tidak memiliki akses.")
+        return redirect('book_loan:loan_management')
+    
+    try:
+        loan = get_object_or_404(Loan, id=loan_id)
+        
+        if loan.status != 'siap_diambil':
+            messages.error(request, 'Peminjaman ini tidak dalam status siap diambil')
+            return redirect('book_loan:loan_management')
+        
+        loan.pickup()
+        
+        messages.success(request, '✓ Pengambilan buku dikonfirmasi')
+        return redirect('book_loan:loan_management')
+    
+    except Exception as e:
+        messages.error(request, f'Terjadi kesalahan: {str(e)}')
+        return redirect('book_loan:loan_management')
+
+
+@login_required
+@require_http_methods(["POST"])
+def loan_process_return(request, loan_id):
+    """Process book return"""
+    if not _is_librarian(request.user):
+        messages.error(request, "Anda tidak memiliki akses.")
+        return redirect('book_loan:loan_management')
+    
+    try:
+        loan = get_object_or_404(Loan, id=loan_id)
+        condition = request.POST.get('condition', 'baik')
+        notes = request.POST.get('notes', '')
+        
+        if loan.status != 'sedang_dipinjam':
+            messages.error(request, 'Peminjaman ini tidak dalam status sedang dipinjam')
+            return redirect('book_loan:loan_management')
+        
+        loan.process_return(condition)
+        loan.return_notes = notes
+        loan.save()
+        
+        # Message based on condition
+        if condition == 'baik':
+            msg = '✓ Pengembalian buku diproses - Buku tersedia kembali'
+        elif condition == 'rusak':
+            msg = '✓ Pengembalian buku diproses - Buku dicatat sebagai Rusak'
+        else:  # hilang
+            msg = '✓ Pengembalian buku diproses - Buku dicatat sebagai Hilang'
+        
+        messages.success(request, msg)
+        return redirect('book_loan:loan_management')
+    
+    except Exception as e:
+        messages.error(request, f'Terjadi kesalahan: {str(e)}')
+        return redirect('book_loan:loan_management')
 
 
 @login_required
@@ -111,6 +240,13 @@ def api_create_loan(request):
         
         book = get_object_or_404(Book, id=book_id)
         
+        # Only students and teachers can borrow, NOT librarians
+        if _is_librarian(request.user):
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Petugas perpustakaan tidak dapat meminjam buku'
+            }, status=403)
+        
         if not (_is_student(request.user) or _is_librarian_or_teacher(request.user)):
             return JsonResponse({
                 'status': 'error',
@@ -120,7 +256,7 @@ def api_create_loan(request):
         active_loan = Loan.objects.filter(
             user=request.user,
             book=book,
-            status__in=['pending_approval', 'borrowed', 'pending_extension']
+            status__in=['menunggu_konfirmasi', 'siap_diambil', 'sedang_dipinjam', 'menunggu_persetujuan_perpanjangan']
         ).first()
         
         if active_loan:
@@ -133,12 +269,9 @@ def api_create_loan(request):
             loan = Loan.objects.create(
                 user=request.user,
                 book=book,
-                status='pending_approval',
+                status='menunggu_konfirmasi',
                 duration_days=duration_days
             )
-            
-            book.status = 'dipesan'
-            book.save()
             
             librarians = UserProfile.objects.filter(role='librarian').values_list('user_id', flat=True)
             for librarian_id in librarians:
@@ -157,12 +290,19 @@ def api_create_loan(request):
                 'loan_id': loan.id
             }, status=201)
         else:
-            return JsonResponse({
-                'status': 'error',
-                'message': 'Buku sedang dipinjam',
-                'is_waitlist_available': True,
-                'waiting_count': book.waiting_lists.filter(status='menunggu').count()
-            }, status=400)
+            # Check if book is active but out of stock
+            if book.is_active and book.available_copies <= 0:
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'Buku sedang tidak tersedia. Anda dapat menambahkan ke antrian.',
+                    'is_waitlist_available': True,
+                    'waiting_count': book.waiting_lists.filter(status='menunggu').count()
+                }, status=400)
+            else:
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'Buku tidak tersedia'
+                }, status=400)
     
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
@@ -221,7 +361,7 @@ def api_approve_loan(request, loan_id):
         
         loan = get_object_or_404(Loan, id=loan_id)
         
-        if loan.status != 'pending_approval':
+        if loan.status != 'menunggu_konfirmasi':
             return JsonResponse({
                 'status': 'error',
                 'message': 'Peminjaman ini tidak sedang menunggu persetujuan'
@@ -250,6 +390,34 @@ def api_approve_loan(request, loan_id):
 
 @login_required
 @require_http_methods(["PUT"])
+def api_pickup_loan(request, loan_id):
+    """Mark loan as picked up"""
+    try:
+        loan = get_object_or_404(Loan, id=loan_id)
+        
+        if loan.user != request.user:
+            return JsonResponse({'status': 'error', 'message': 'Akses ditolak'}, status=403)
+        
+        if loan.status != 'siap_diambil':
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Buku ini belum siap diambil atau sudah diambil'
+            }, status=400)
+        
+        loan.pickup()
+        
+        return JsonResponse({
+            'status': 'success',
+            'message': 'Buku berhasil diambil. Harap kembalikan tepat pada tanggal jatuh tempo.',
+            'due_date': loan.due_date.isoformat()
+        }, status=200)
+    
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+
+@login_required
+@require_http_methods(["PUT"])
 def api_reject_loan(request, loan_id):
     """Reject a loan request"""
     try:
@@ -261,7 +429,7 @@ def api_reject_loan(request, loan_id):
         
         loan = get_object_or_404(Loan, id=loan_id)
         
-        if loan.status != 'pending_approval':
+        if loan.status != 'menunggu_konfirmasi':
             return JsonResponse({
                 'status': 'error',
                 'message': 'Peminjaman ini tidak sedang menunggu persetujuan'
@@ -301,7 +469,7 @@ def api_return_loan(request, loan_id):
         
         loan = get_object_or_404(Loan, id=loan_id)
         
-        if loan.status != 'borrowed':
+        if loan.status != 'sedang_dipinjam':
             return JsonResponse({
                 'status': 'error',
                 'message': 'Peminjaman ini tidak sedang dipinjam'
@@ -372,7 +540,7 @@ def api_request_extension(request, loan_id):
             status='pending'
         )
         
-        loan.status = 'pending_extension'
+        loan.status = 'menunggu_persetujuan_perpanjangan'
         loan.save()
         
         librarians = UserProfile.objects.filter(role='librarian').values_list('user_id', flat=True)
@@ -520,6 +688,13 @@ def api_mark_notification_read(request, notification_id):
 def api_create_waiting_list(request):
     """Join waiting list for a book"""
     try:
+        # Librarians cannot join waiting lists
+        if _is_librarian(request.user):
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Petugas perpustakaan tidak dapat masuk antrian'
+            }, status=403)
+        
         data = json.loads(request.body)
         book_id = data.get('book_id')
         
@@ -550,7 +725,7 @@ def api_create_waiting_list(request):
         active_loan = Loan.objects.filter(
             user=request.user,
             book=book,
-            status__in=['pending_approval', 'borrowed']
+            status__in=['menunggu_konfirmasi', 'siap_diambil', 'sedang_dipinjam']
         ).first()
         
         if active_loan:
@@ -630,6 +805,8 @@ def api_cancel_waiting_list(request, waiting_id):
 
 @login_required
 @require_http_methods(["POST"])
+@login_required
+@require_http_methods(["POST"])
 def api_claim_waiting_list(request, waiting_id):
     """
     Claim a waiting list spot and create a loan
@@ -656,7 +833,7 @@ def api_claim_waiting_list(request, waiting_id):
         active_loan = Loan.objects.filter(
             user=request.user,
             book=waiting.book,
-            status__in=['pending_approval', 'borrowed', 'pending_extension']
+            status__in=['menunggu_konfirmasi', 'siap_diambil', 'sedang_dipinjam', 'menunggu_persetujuan_perpanjangan']
         ).first()
         
         if active_loan:
@@ -670,19 +847,15 @@ def api_claim_waiting_list(request, waiting_id):
         loan = Loan.objects.create(
             user=request.user,
             book=waiting.book,
-            status='pending_approval',
+            status='menunggu_konfirmasi',
             duration_days=duration_days
         )
         
         # Mark waiting as claimed
         waiting.claim()
         
-        # Update book status
-        waiting.book.status = 'dipesan'
-        waiting.book.save()
-        
         # Notify librarians
-        librarians = UserProfile.objects.filter(role='librarian').values_list('user_id', flat=True)
+        librarians = UserProfile.objects.filter(is_staff=True).values_list('user_id', flat=True)
         for librarian_id in librarians:
             Notification.objects.create(
                 user_id=librarian_id,
@@ -699,6 +872,77 @@ def api_claim_waiting_list(request, waiting_id):
             'loan_id': loan.id,
             'due_date': loan.due_date.isoformat() if loan.due_date else None
         }, status=201)
+    
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+
+@login_required
+@require_http_methods(["GET"])
+def api_get_waiting_list_by_book(request, book_id):
+    """
+    Get waiting list for a specific book (Librarian only)
+    GET /api/waitlist/book/<book_id>/
+    """
+    try:
+        if not _is_librarian(request.user):
+            return JsonResponse({'status': 'error', 'message': 'Akses ditolak'}, status=403)
+        
+        book = get_object_or_404(Book, id=book_id)
+        waiting_lists = WaitingList.objects.filter(book=book).select_related('user').order_by('position')
+        
+        data = [{
+            'id': w.id,
+            'position': w.position,
+            'user_name': f"{w.user.first_name} {w.user.last_name}",
+            'user_class': getattr(w.user.profile, 'grade', ''),
+            'user_role': getattr(w.user.profile, 'role', ''),
+            'registered_date': w.registered_date.isoformat(),
+            'status': w.status,
+            'status_display': w.get_status_display(),
+            'claim_deadline': w.claim_deadline.isoformat() if w.claim_deadline else None,
+            'is_expired': w.is_expired,
+            'is_claimed': w.is_claimed,
+        } for w in waiting_lists]
+        
+        return JsonResponse({
+            'status': 'success',
+            'book_title': book.title,
+            'book_id': book.id,
+            'count': waiting_lists.count(),
+            'waiting_lists': data
+        }, status=200)
+    
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+
+@login_required
+@require_http_methods(["POST"])
+def api_notify_waiting_list(request, waiting_id):
+    """
+    Resend notification to waiting list user (Librarian only)
+    POST /api/waitlist/<waiting_id>/notify/
+    """
+    try:
+        if not _is_librarian(request.user):
+            return JsonResponse({'status': 'error', 'message': 'Akses ditolak'}, status=403)
+        
+        waiting = get_object_or_404(WaitingList, id=waiting_id)
+        
+        # Create notification
+        Notification.objects.create(
+            user=waiting.user,
+            notification_type='waitlist_ready',
+            title='Pengingatan Antrian Anda',
+            message=f'Giliran Anda untuk "{waiting.book.title}" sudah tiba. Silakan klaim dalam 24 jam.',
+            book=waiting.book
+        )
+        
+        return JsonResponse({
+            'status': 'success',
+            'message': f'Notifikasi telah dikirim ke {waiting.user.first_name}'
+        }, status=200)
     
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)}, status=500)

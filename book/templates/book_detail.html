@@ -40,12 +40,14 @@
                 <div class="flex-1 p-6 pl-2">
                     <div class="flex items-start justify-between gap-3 mb-2">
                         <h1 class="text-2xl font-bold text-gray-800 leading-tight" style="font-family:'Playfair Display',serif">{{ book.title }}</h1>
-                        {% if book.status == 'tersedia' %}
+                        {% if book.display_status == 'tersedia' %}
                         <span class="flex-shrink-0 text-xs bg-green-50 text-green-700 px-3 py-1 rounded-full font-semibold">Tersedia</span>
-                        {% elif book.status == 'rusak' %}
+                        {% elif book.display_status == 'rusak' %}
                         <span class="flex-shrink-0 text-xs bg-orange-50 text-orange-700 px-3 py-1 rounded-full font-semibold">Rusak</span>
-                        {% elif book.status == 'hilang' %}
+                        {% elif book.display_status == 'hilang' %}
                         <span class="flex-shrink-0 text-xs bg-red-50 text-red-700 px-3 py-1 rounded-full font-semibold">Hilang</span>
+                        {% elif book.display_status == 'tidak_tersedia' %}
+                        <span class="flex-shrink-0 text-xs bg-yellow-50 text-yellow-700 px-3 py-1 rounded-full font-semibold">Tidak Tersedia</span>
                         {% else %}
                         <span class="flex-shrink-0 text-xs bg-gray-100 text-gray-500 px-3 py-1 rounded-full font-semibold">Tidak Aktif</span>
                         {% endif %}
@@ -124,27 +126,60 @@
                     </div>
                     {% endif %}
 
+                    <!-- Librarian Stock Info -->
+                    {% if is_librarian %}
+                    <div class="bg-white border border-gray-200 rounded-xl px-5 py-4 mb-5">
+                        <p class="text-xs font-bold uppercase tracking-widest text-gray-600 mb-4">📊 Detail Stok Buku</p>
+                        <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+                            <div class="text-center">
+                                <p class="text-3xl font-bold text-gray-900">{{ book.total_copies }}</p>
+                                <p class="text-xs text-gray-500 mt-1">Total</p>
+                            </div>
+                            <div class="text-center border-l border-r border-gray-200">
+                                <p class="text-3xl font-bold text-gray-900">{{ book.available_copies }}</p>
+                                <p class="text-xs text-gray-500 mt-1">Tersedia</p>
+                            </div>
+                            <div class="text-center">
+                                <p class="text-3xl font-bold text-gray-900">{{ book.borrowed_copies }}</p>
+                                <p class="text-xs text-gray-500 mt-1">Dipinjam</p>
+                            </div>
+                            <div class="text-center border-l border-r border-gray-200">
+                                <p class="text-3xl font-bold text-gray-900">{{ book.damaged_copies }}</p>
+                                <p class="text-xs text-gray-500 mt-1">Rusak</p>
+                            </div>
+                            <div class="text-center">
+                                <p class="text-3xl font-bold text-gray-900">{{ book.lost_copies }}</p>
+                                <p class="text-xs text-gray-500 mt-1">Hilang</p>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
                     <!-- Actions -->
                     <div class="flex gap-2 flex-wrap">
-                        {% if book.status == 'tersedia' and book.available_copies > 0 %}
-                        <button type="button" onclick="requestBorrow('{{ book.id }}')"
-                                class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-5 py-2.5 rounded-lg transition">
-                            📚 Pinjam Buku
-                        </button>
-                        {% elif book.status != 'tersedia' and book.status != 'tidak_aktif' %}
-                        <button type="button" onclick="joinWaitlist('{{ book.id }}')"
-                                class="inline-flex items-center gap-2 bg-orange-600 hover:bg-orange-700 text-white text-sm font-semibold px-5 py-2.5 rounded-lg transition">
-                            📋 Masuk Antrian
-                        </button>
+                        {% if not is_librarian %}
+                            {% if book.display_status == 'tersedia' and book.available_copies > 0 %}
+                            <button type="button" onclick="requestBorrow('{{ book.id }}')"
+                                    class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-5 py-2.5 rounded-lg transition">
+                                📚 Pinjam Buku
+                            </button>
+                            {% elif book.display_status != 'tersedia' and book.status != 'tidak_aktif' %}
+                            <button type="button" onclick="joinWaitlist('{{ book.id }}')"
+                                    class="inline-flex items-center gap-2 bg-orange-600 hover:bg-orange-700 text-white text-sm font-semibold px-5 py-2.5 rounded-lg transition">
+                                📋 Masuk Antrian
+                            </button>
+                            {% endif %}
                         {% endif %}
-                        <a href="{% url 'book_loan:loan_history' %}"
+                        {% if is_librarian %}
+                        <a href="#book-loan-history"
                            class="inline-flex items-center gap-2 bg-gray-600 hover:bg-gray-700 text-white text-sm font-semibold px-5 py-2.5 rounded-lg transition">
-                            Riwayat Peminjaman
+                            Riwayat Peminjaman Buku
                         </a>
-                        {% if perms.book.change_book %}
+                        {% endif %}
+                        {% if perms.book.change_book or is_librarian %}
                         <a href="{% url 'book:book_edit' book.pk %}"
                            class="inline-flex items-center gap-2 bg-gray-800 hover:bg-gray-700 text-white text-sm font-semibold px-5 py-2.5 rounded-lg transition">
-                            Edit Detail Buku
+                            ✏️ Edit Detail Buku
                         </a>
                         {% endif %}
                         {% if perms.book.delete_book and book.status != 'tidak_aktif' %}
@@ -223,6 +258,148 @@
         </div>
 
     </div>
+
+    <!-- Book-Specific Loan History Section (For Librarians Only) -->
+    {% if is_librarian and book_loans %}
+    <div id="book-loan-history" class="max-w-6xl mx-auto px-6 py-8 mt-8">
+        <div class="bg-white border border-gray-100 rounded-2xl shadow-sm p-6">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6" style="font-family:'Playfair Display',serif">📋 Riwayat Peminjaman Buku {{ book.title }}</h2>
+            
+            {% if book_loans %}
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="border-b border-gray-200">
+                            <th class="text-left py-3 px-4 font-semibold text-gray-700">Peminjam</th>
+                            <th class="text-left py-3 px-4 font-semibold text-gray-700">Tanggal Peminjaman</th>
+                            <th class="text-left py-3 px-4 font-semibold text-gray-700">Jatuh Tempo</th>
+                            <th class="text-left py-3 px-4 font-semibold text-gray-700">Tanggal Kembali</th>
+                            <th class="text-left py-3 px-4 font-semibold text-gray-700">Status</th>
+                            <th class="text-left py-3 px-4 font-semibold text-gray-700">Durasi (hari)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for loan in book_loans %}
+                        <tr class="border-b border-gray-100 hover:bg-gray-50 transition">
+                            <td class="py-3 px-4">
+                                <div>
+                                    <p class="font-medium text-gray-800">{{ loan.user.get_full_name|default:loan.user.username }}</p>
+                                    <p class="text-xs text-gray-500">{{ loan.user.email }}</p>
+                                </div>
+                            </td>
+                            <td class="py-3 px-4 text-gray-700">{{ loan.loan_date|date:"d M Y" }}</td>
+                            <td class="py-3 px-4 text-gray-700">
+                                {% if loan.due_date %}
+                                    <span class="{% if loan.status == 'terlambat' %}text-red-600 font-semibold{% else %}text-gray-700{% endif %}">
+                                        {{ loan.due_date|date:"d M Y" }}
+                                    </span>
+                                {% else %}
+                                    <span class="text-gray-400">—</span>
+                                {% endif %}
+                            </td>
+                            <td class="py-3 px-4 text-gray-700">
+                                {% if loan.return_date %}
+                                    {{ loan.return_date|date:"d M Y" }}
+                                {% else %}
+                                    <span class="text-gray-400">—</span>
+                                {% endif %}
+                            </td>
+                            <td class="py-3 px-4">
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold
+                                    {% if loan.status == 'menunggu_konfirmasi' %}bg-yellow-100 text-yellow-800
+                                    {% elif loan.status == 'siap_diambil' %}bg-blue-100 text-blue-800
+                                    {% elif loan.status == 'sedang_dipinjam' %}bg-green-100 text-green-800
+                                    {% elif loan.status == 'dikembalikan' %}bg-indigo-100 text-indigo-800
+                                    {% elif loan.status == 'terlambat' %}bg-red-100 text-red-800
+                                    {% elif loan.status == 'ditolak' %}bg-gray-100 text-gray-800
+                                    {% else %}bg-gray-100 text-gray-800
+                                    {% endif %}
+                                ">
+                                    {{ loan.get_status_display }}
+                                </span>
+                            </td>
+                            <td class="py-3 px-4 text-gray-700">{{ loan.duration_days }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-sm text-gray-500 text-center py-8">Belum ada riwayat peminjaman untuk buku ini.</p>
+            {% endif %}
+        </div>
+        
+        <!-- Waiting List Management Section (Librarian Only) -->
+        <div class="mt-12">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6" style="font-family:'Playfair Display',serif">📋 Daftar Antrian</h2>
+            
+            {% if waiting_lists %}
+            <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead class="bg-gray-50 border-b border-gray-200">
+                            <tr>
+                                <th class="py-3 px-4 text-left font-semibold text-gray-700">No</th>
+                                <th class="py-3 px-4 text-left font-semibold text-gray-700">Nama Anggota</th>
+                                <th class="py-3 px-4 text-left font-semibold text-gray-700">Kelas/Role</th>
+                                <th class="py-3 px-4 text-left font-semibold text-gray-700">Tanggal Daftar</th>
+                                <th class="py-3 px-4 text-left font-semibold text-gray-700">Status</th>
+                                <th class="py-3 px-4 text-center font-semibold text-gray-700">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-200">
+                            {% for waiting in waiting_lists %}
+                            <tr class="hover:bg-gray-50 transition">
+                                <td class="py-3 px-4 text-gray-900 font-semibold">{{ waiting.position }}</td>
+                                <td class="py-3 px-4 text-gray-900">{{ waiting.user.first_name }} {{ waiting.user.last_name }}</td>
+                                <td class="py-3 px-4 text-gray-700">
+                                    {% if waiting.user.profile.role %}
+                                        <span class="inline-block px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
+                                            {{ waiting.user.profile.get_role_display }}
+                                        </span>
+                                    {% else %}
+                                        <span class="text-gray-500">-</span>
+                                    {% endif %}
+                                </td>
+                                <td class="py-3 px-4 text-gray-700">{{ waiting.registered_date|date:"d M Y H:i" }}</td>
+                                <td class="py-3 px-4">
+                                    <span class="inline-block px-2 py-1 text-xs font-semibold rounded-full
+                                        {% if waiting.status == 'menunggu' %}bg-yellow-100 text-yellow-800
+                                        {% elif waiting.status == 'siap_dipinjam' %}bg-green-100 text-green-800
+                                        {% elif waiting.status == 'dibatalkan' %}bg-red-100 text-red-800
+                                        {% else %}bg-gray-100 text-gray-800
+                                        {% endif %}
+                                    ">
+                                        {{ waiting.get_status_display }}
+                                    </span>
+                                </td>
+                                <td class="py-3 px-4 text-center">
+                                    <div class="flex justify-center gap-2">
+                                        {% if waiting.status == 'siap_dipinjam' %}
+                                        <button onclick="notifyWaitlist({{ waiting.id }})" 
+                                                class="px-3 py-1.5 bg-blue-100 hover:bg-blue-200 text-blue-700 text-xs font-semibold rounded transition" title="Kirim notifikasi ulang">
+                                            🔔 Notify
+                                        </button>
+                                        {% endif %}
+                                        <button onclick="removeFromWaitlist({{ waiting.id }})" 
+                                                class="px-3 py-1.5 bg-red-100 hover:bg-red-200 text-red-700 text-xs font-semibold rounded transition" title="Hapus dari antrian">
+                                            🗑️ Hapus
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% else %}
+            <p class="text-sm text-gray-500 text-center py-8">Tidak ada antrian untuk buku ini.</p>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
 </div>
 
 <!-- Delete Modal -->
@@ -379,6 +556,10 @@
 
     function joinWaitlist(bookId) {
         const csrftoken = getCookie('csrftoken');
+        
+        // Show queue information
+        const queueCount = {{ waiting_count }};
+        const estimatedDays = Math.ceil((queueCount + 1) * 3.5); // Rough estimate
 
         fetch('/loan/api/waitlist/create/', {
             method: 'POST',
@@ -393,15 +574,98 @@
         .then(response => response.json())
         .then(data => {
             if (data.status === 'success') {
-                alert('✓ Anda berhasil masuk antrian! Posisi: #' + data.position);
-                setTimeout(() => location.reload(), 500);
+                // Show success toast with position and queue info
+                const toast = document.createElement('div');
+                toast.className = 'fixed bottom-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 animate-pulse';
+                toast.innerHTML = `
+                    <div class="font-semibold">✓ Berhasil masuk antrian!</div>
+                    <div class="text-sm mt-1">Posisi antrian kamu: #${data.position}</div>
+                    <div class="text-sm">Perkiraan tunggu: ~${estimatedDays} hari (antrian: ${queueCount} orang lainnya)</div>
+                `;
+                document.body.appendChild(toast);
+                setTimeout(() => {
+                    toast.remove();
+                    location.reload();
+                }, 3000);
             } else {
-                alert('Error: ' + (data.message || 'Gagal masuk antrian'));
+                // Show error toast
+                const toast = document.createElement('div');
+                toast.className = 'fixed bottom-4 right-4 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg z-50';
+                toast.innerHTML = `<div class="font-semibold">✗ ${data.message || 'Gagal masuk antrian'}</div>`;
+                document.body.appendChild(toast);
+                setTimeout(() => toast.remove(), 3000);
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('Terjadi kesalahan saat memproses permintaan');
+            const toast = document.createElement('div');
+            toast.className = 'fixed bottom-4 right-4 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg z-50';
+            toast.innerHTML = '<div class="font-semibold">✗ Terjadi kesalahan</div>';
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        });
+    }
+
+    function notifyWaitlist(waitingId) {
+        const csrftoken = getCookie('csrftoken');
+
+        fetch(`/loan/api/waitlist/${waitingId}/notify/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken,
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                const toast = document.createElement('div');
+                toast.className = 'fixed bottom-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50';
+                toast.innerHTML = `<div class="font-semibold">✓ ${data.message}</div>`;
+                document.body.appendChild(toast);
+                setTimeout(() => toast.remove(), 3000);
+            } else {
+                alert('Error: ' + (data.message || 'Gagal mengirim notifikasi'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Terjadi kesalahan saat mengirim notifikasi');
+        });
+    }
+
+    function removeFromWaitlist(waitingId) {
+        if (!confirm('Apakah Anda yakin ingin menghapus anggota ini dari antrian?')) {
+            return;
+        }
+
+        const csrftoken = getCookie('csrftoken');
+
+        fetch(`/loan/api/waitlist/${waitingId}/cancel/`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken,
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                const toast = document.createElement('div');
+                toast.className = 'fixed bottom-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50';
+                toast.innerHTML = `<div class="font-semibold">✓ ${data.message}</div>`;
+                document.body.appendChild(toast);
+                setTimeout(() => {
+                    toast.remove();
+                    location.reload();
+                }, 2000);
+            } else {
+                alert('Error: ' + (data.message || 'Gagal menghapus dari antrian'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Terjadi kesalahan saat menghapus');
         });
     }
 </script>

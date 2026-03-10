@@ -9,10 +9,17 @@ urlpatterns = [
     path('waiting-list/', views.waiting_list_view, name='waiting_list'),
     path('management/', views.loan_management, name='loan_management'),
     
+    # Loan Management Forms
+    path('loans/<int:loan_id>/approve/', views.loan_approve, name='loan_approve'),
+    path('loans/<int:loan_id>/reject/', views.loan_reject, name='loan_reject'),
+    path('loans/<int:loan_id>/pickup/', views.loan_confirm_pickup, name='loan_confirm_pickup'),
+    path('loans/<int:loan_id>/return/', views.loan_process_return, name='loan_process_return'),
+    
     # API - Loans
     path('api/loans/', views.api_list_loans, name='api_list_loans'),
     path('api/loans/create/', views.api_create_loan, name='api_create_loan'),
     path('api/loans/<int:loan_id>/approve/', views.api_approve_loan, name='api_approve_loan'),
+    path('api/loans/<int:loan_id>/pickup/', views.api_pickup_loan, name='api_pickup_loan'),
     path('api/loans/<int:loan_id>/reject/', views.api_reject_loan, name='api_reject_loan'),
     path('api/loans/<int:loan_id>/return/', views.api_return_loan, name='api_return_loan'),
     path('api/loans/<int:loan_id>/extend/', views.api_request_extension, name='api_request_extension'),
@@ -23,8 +30,10 @@ urlpatterns = [
     # API - Waiting List
     path('api/waitlist/create/', views.api_create_waiting_list, name='api_create_waiting_list'),
     path('api/waitlist/my-list/', views.api_my_waiting_list, name='api_my_waiting_list'),
+    path('api/waitlist/book/<int:book_id>/', views.api_get_waiting_list_by_book, name='api_get_waiting_list_by_book'),
     path('api/waitlist/<int:waiting_id>/cancel/', views.api_cancel_waiting_list, name='api_cancel_waiting_list'),
     path('api/waitlist/<int:waiting_id>/claim/', views.api_claim_waiting_list, name='api_claim_waiting_list'),
+    path('api/waitlist/<int:waiting_id>/notify/', views.api_notify_waiting_list, name='api_notify_waiting_list'),
     
     # API - Notifications
     path('api/notifications/', views.api_get_notifications, name='api_get_notifications'),
