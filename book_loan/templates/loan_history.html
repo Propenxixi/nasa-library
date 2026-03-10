@@ -1,157 +1,147 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Riwayat Peminjaman - SMAN 61 Jakarta Library{% endblock %}
+{% block title %}Riwayat Peminjaman — Nasa Library{% endblock %}
 
 {% block content %}
-<div class="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        
-        <!-- Header -->
-        <div class="mb-8">
-            <div class="flex items-center justify-between mb-4">
-                <div>
-                    <h1 class="font-display text-4xl font-bold text-gray-900"> Riwayat Peminjaman</h1>
-                    <p class="font-sans text-gray-600 mt-1">Kelola peminjaman dan riwayat buku Anda</p>
-                </div>
-                <a href="{% url 'book_loan:waiting_list' %}" class="px-6 py-3 bg-indigo-600 text-white font-sans font-semibold rounded-xl hover:bg-indigo-700 transition-all shadow-md hover:shadow-lg">
-                    📋 Antrian Saya
-                </a>
-            </div>
-        </div>
+<div class="max-w-6xl mx-auto px-6 py-8">
 
-        <!-- Status Pills Filter -->
-        <div class="mb-8">
-            <div class="flex flex-wrap gap-3 bg-white rounded-xl p-4 shadow-sm border border-gray-200">
-                <a href="{% url 'book_loan:loan_history' %}" class="px-4 py-2 rounded-full font-sans text-sm font-semibold transition-all {% if not status_filter %}bg-gray-900 text-white shadow-md{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %}">
-                    ✓ Semua Peminjaman
-                </a>
-                
-                <a href="?status=menunggu_konfirmasi" class="px-4 py-2 rounded-full font-sans text-sm font-semibold transition-all {% if status_filter == 'menunggu_konfirmasi' %}bg-yellow-500 text-white shadow-md{% else %}bg-yellow-100 text-yellow-700 hover:bg-yellow-200{% endif %}">
-                    ⏳ Menunggu Konfirmasi
-                </a>
-                
-                <a href="?status=siap_diambil" class="px-4 py-2 rounded-full font-sans text-sm font-semibold transition-all {% if status_filter == 'siap_diambil' %}bg-blue-500 text-white shadow-md{% else %}bg-blue-100 text-blue-700 hover:bg-blue-200{% endif %}">
-                    📦 Siap Diambil
-                </a>
-                
-                <a href="?status=sedang_dipinjam" class="px-4 py-2 rounded-full font-sans text-sm font-semibold transition-all {% if status_filter == 'sedang_dipinjam' %}bg-green-500 text-white shadow-md{% else %}bg-green-100 text-green-700 hover:bg-green-200{% endif %}">
-                    ✋ Sedang Dipinjam
-                </a>
-                
-                <a href="?status=terlambat" class="px-4 py-2 rounded-full font-sans text-sm font-semibold transition-all {% if status_filter == 'terlambat' %}bg-red-500 text-white shadow-md{% else %}bg-red-100 text-red-700 hover:bg-red-200{% endif %}">
-                    🔴 Terlambat
-                </a>
-                
-                <a href="?status=dikembalikan" class="px-4 py-2 rounded-full font-sans text-sm font-semibold transition-all {% if status_filter == 'dikembalikan' %}bg-indigo-500 text-white shadow-md{% else %}bg-indigo-100 text-indigo-700 hover:bg-indigo-200{% endif %}">
-                    ✔️ Dikembalikan
-                </a>
-                
-                <a href="?status=ditolak" class="px-4 py-2 rounded-full font-sans text-sm font-semibold transition-all {% if status_filter == 'ditolak' %}bg-gray-500 text-white shadow-md{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %}">
-                    ❌ Ditolak
-                </a>
+    <!-- Header -->
+    <div class="mb-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-800 mb-1" style="font-family:'Playfair Display',serif">Riwayat Peminjaman</h1>
+                <p class="text-sm text-gray-500">Kelola peminjaman dan riwayat buku Anda</p>
             </div>
-        </div>
-
-        <!-- Loans Entries -->
-        {% if loans %}
-            <div class="space-y-4">
-                {% for loan in loans %}
-                <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm hover:shadow-md hover:border-gray-300 transition-all">
-                    <div class="flex items-start justify-between mb-4">
-                        <div class="flex-1">
-                            <h3 class="font-display text-lg font-bold text-gray-900 mb-1">
-                                <a href="{% url 'book:book_detail' loan.book.id %}" class="hover:text-blue-600 transition-colors">
-                                    {{ loan.book.title|truncatechars:50 }}
-                                </a>
-                            </h3>
-                            <p class="font-sans text-sm text-gray-600">{{ loan.book.author|truncatechars:40 }}</p>
-                        </div>
-                        
-                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ml-4 whitespace-nowrap
-                            {% if loan.status == 'menunggu_konfirmasi' %}bg-yellow-100 text-yellow-800
-                            {% elif loan.status == 'siap_diambil' %}bg-blue-100 text-blue-800
-                            {% elif loan.status == 'sedang_dipinjam' %}bg-green-100 text-green-800
-                            {% elif loan.status == 'dikembalikan' %}bg-indigo-100 text-indigo-800
-                            {% elif loan.status == 'terlambat' %}bg-red-100 text-red-800
-                            {% elif loan.status == 'ditolak' %}bg-gray-100 text-gray-800
-                            {% else %}bg-gray-100 text-gray-800
-                            {% endif %}
-                        ">
-                            {{ loan.get_status_display }}
-                        </span>
-                    </div>
-                    
-                    <!-- Timeline Info -->
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 bg-gray-50 rounded-lg p-4">
-                        <div>
-                            <p class="font-sans text-xs text-gray-500 uppercase mb-1">Tanggal Peminjaman</p>
-                            <p class="font-sans font-semibold text-gray-900">{{ loan.loan_date|date:"d M Y" }}</p>
-                        </div>
-                        
-                        {% if loan.due_date %}
-                        <div>
-                            <p class="font-sans text-xs text-gray-500 uppercase mb-1">Jatuh Tempo</p>
-                            <p class="font-sans font-semibold {% if loan.days_overdue > 0 %}text-red-600{% else %}text-gray-900{% endif %}">
-                                {{ loan.due_date|date:"d M Y" }}
-                                {% if loan.days_overdue > 0 %}
-                                    <span class="text-xs text-red-600 ml-1">(+{{ loan.days_overdue }} hari)</span>
-                                {% endif %}
-                            </p>
-                        </div>
-                        {% endif %}
-                        
-                        {% if loan.return_date %}
-                        <div>
-                            <p class="font-sans text-xs text-gray-500 uppercase mb-1">Dikembalikan</p>
-                            <p class="font-sans font-semibold text-gray-900">{{ loan.return_date|date:"d M Y" }}</p>
-                        </div>
-                        {% endif %}
-                        
-                        <div>
-                            <p class="font-sans text-xs text-gray-500 uppercase mb-1">Durasi</p>
-                            <p class="font-sans font-semibold text-gray-900">{{ loan.duration_days }} hari</p>
-                        </div>
-                    </div>
-                    
-                    <!-- Actions -->
-                    <div class="flex gap-3">
-                        {% if loan.status == 'siap_diambil' %}
-                        <button type="button" data-action="pickup" data-loan-id="{{ loan.id }}" class="px-4 py-2 bg-green-600 text-white font-sans text-sm font-semibold rounded-lg hover:bg-green-700 transition-colors">
-                            📦 Ambil Buku
-                        </button>
-                        {% endif %}
-                        
-                        {% if loan.can_extend %}
-                        <button type="button" data-action="extend" data-loan-id="{{ loan.id }}" class="px-4 py-2 bg-blue-600 text-white font-sans text-sm font-semibold rounded-lg hover:bg-blue-700 transition-colors">
-                            ⏱️ Perpanjang Peminjaman
-                        </button>
-                        {% endif %}
-                        
-                        <button type="button" data-action="detail" data-loan-id="{{ loan.id }}" class="px-4 py-2 bg-gray-200 text-gray-700 font-sans text-sm font-semibold rounded-lg hover:bg-gray-300 transition-colors">
-                            ℹ️ Detail
-                        </button>
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-        {% else %}
-        <div class="text-center py-16">
-            <div class="text-5xl mb-4">📭</div>
-            <h3 class="font-display text-xl font-bold text-gray-900 mb-2">Belum Ada Peminjaman</h3>
-            <p class="font-sans text-gray-600 mb-6">
-                {% if status_filter %}
-                    Anda tidak memiliki peminjaman dengan status ini
-                {% else %}
-                    Mulai jelajani koleksi buku kami dan pinjam buku favorit Anda
-                {% endif %}
-            </p>
-            <a href="{% url 'book:book_list' %}" class="inline-block px-6 py-3 bg-blue-600 text-white font-sans font-semibold rounded-lg hover:bg-blue-700 transition-colors">
-                🔍 Jelajahi Koleksi Buku
+            <a href="{% url 'book_loan:waiting_list' %}" class="px-4 py-2 bg-gray-800 text-white text-sm font-semibold rounded-lg hover:bg-gray-700 transition">
+                Antrian Peminjaman
             </a>
         </div>
-        {% endif %}
     </div>
+
+    <!-- Status Pills Filter -->
+    <div class="mb-6">
+        <div class="flex flex-wrap gap-2 bg-white border border-gray-100 rounded-lg p-3 shadow-sm">
+            <a href="{% url 'book_loan:loan_history' %}" class="px-3 py-1.5 rounded-full text-xs font-semibold transition-all {% if not status_filter %}bg-gray-800 text-white{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %}">
+                Semua
+            </a>
+            
+            <a href="?status=menunggu_konfirmasi" class="px-3 py-1.5 rounded-full text-xs font-semibold transition-all {% if status_filter == 'menunggu_konfirmasi' %}bg-yellow-600 text-white{% else %}bg-yellow-50 text-yellow-700 hover:bg-yellow-100{% endif %}">
+                Menunggu
+            </a>
+            
+            <a href="?status=siap_diambil" class="px-3 py-1.5 rounded-full text-xs font-semibold transition-all {% if status_filter == 'siap_diambil' %}bg-blue-600 text-white{% else %}bg-blue-50 text-blue-700 hover:bg-blue-100{% endif %}">
+                Siap Diambil
+            </a>
+            
+            <a href="?status=sedang_dipinjam" class="px-3 py-1.5 rounded-full text-xs font-semibold transition-all {% if status_filter == 'sedang_dipinjam' %}bg-green-600 text-white{% else %}bg-green-50 text-green-700 hover:bg-green-100{% endif %}">
+                Sedang Dipinjam
+            </a>
+            
+            <a href="?status=terlambat" class="px-3 py-1.5 rounded-full text-xs font-semibold transition-all {% if status_filter == 'terlambat' %}bg-red-600 text-white{% else %}bg-red-50 text-red-700 hover:bg-red-100{% endif %}">
+                Terlambat
+            </a>
+            
+            <a href="?status=dikembalikan" class="px-3 py-1.5 rounded-full text-xs font-semibold transition-all {% if status_filter == 'dikembalikan' %}bg-indigo-600 text-white{% else %}bg-indigo-50 text-indigo-700 hover:bg-indigo-100{% endif %}">
+                Dikembalikan
+            </a>
+            
+            <a href="?status=ditolak" class="px-3 py-1.5 rounded-full text-xs font-semibold transition-all {% if status_filter == 'ditolak' %}bg-gray-600 text-white{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %}">
+                Ditolak
+            </a>
+        </div>
+    </div>
+
+    <!-- Loans Entries -->
+    {% if loans %}
+        <div class="space-y-3">
+            {% for loan in loans %}
+            <div class="bg-white border border-gray-100 rounded-lg p-5 shadow-sm hover:shadow-md transition-all">
+                <div class="flex items-start justify-between mb-4">
+                    <div class="flex-1">
+                        <h3 class="font-semibold text-gray-900 mb-0.5" style="font-family:'Playfair Display',serif">
+                            <a href="{% url 'book:book_detail' loan.book.id %}" class="hover:text-blue-600 transition-colors">
+                                {{ loan.book.title|truncatechars:50 }}
+                            </a>
+                        </h3>
+                        <p class="text-sm text-gray-500">{{ loan.book.author|truncatechars:40 }}</p>
+                    </div>
+                    
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ml-4 whitespace-nowrap
+                        {% if loan.status == 'menunggu_konfirmasi' %}bg-yellow-50 text-yellow-700
+                        {% elif loan.status == 'siap_diambil' %}bg-blue-50 text-blue-700
+                        {% elif loan.status == 'sedang_dipinjam' %}bg-green-50 text-green-700
+                        {% elif loan.status == 'dikembalikan' %}bg-indigo-50 text-indigo-700
+                        {% elif loan.status == 'terlambat' %}bg-red-50 text-red-700
+                        {% elif loan.status == 'ditolak' %}bg-gray-100 text-gray-700
+                        {% else %}bg-gray-100 text-gray-700
+                        {% endif %}
+                    ">
+                        {{ loan.get_status_display }}
+                    </span>
+                </div>
+                
+                <!-- Timeline Info -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4 bg-gray-50 rounded-lg p-3">
+                    <div>
+                        <p class="text-xs text-gray-500 uppercase mb-0.5 font-medium">Tanggal Peminjaman</p>
+                        <p class="font-semibold text-gray-900 text-sm">{{ loan.loan_date|date:"d M Y" }}</p>
+                    </div>
+                    
+                    {% if loan.due_date %}
+                    <div>
+                        <p class="text-xs text-gray-500 uppercase mb-0.5 font-medium">Jatuh Tempo</p>
+                        <p class="font-semibold {% if loan.days_overdue > 0 %}text-red-700{% else %}text-gray-900{% endif %} text-sm">
+                            {{ loan.due_date|date:"d M Y" }}
+                            {% if loan.days_overdue > 0 %}
+                                <span class="text-xs text-red-700 ml-1">(+{{ loan.days_overdue }} hari)</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                    {% endif %}
+                    
+                    {% if loan.return_date %}
+                    <div>
+                        <p class="text-xs text-gray-500 uppercase mb-0.5 font-medium">Dikembalikan</p>
+                        <p class="font-semibold text-gray-900 text-sm">{{ loan.return_date|date:"d M Y" }}</p>
+                    </div>
+                    {% endif %}
+                    
+                    <div>
+                        <p class="text-xs text-gray-500 uppercase mb-0.5 font-medium">Durasi</p>
+                        <p class="font-semibold text-gray-900 text-sm">{{ loan.duration_days }} hari</p>
+                    </div>
+                </div>
+                
+                <!-- Actions -->
+                <div class="flex gap-2 flex-wrap">
+                    {% if loan.can_extend %}
+                    <button type="button" data-action="extend" data-loan-id="{{ loan.id }}" class="px-3 py-2 bg-indigo-600 text-white text-sm font-semibold rounded-lg hover:bg-indigo-700 transition-colors">
+                        Perpanjang
+                    </button>
+                    {% endif %}
+                    
+                    <button type="button" data-action="detail" data-loan-id="{{ loan.id }}" class="px-3 py-2 bg-gray-100 text-gray-700 text-sm font-semibold rounded-lg hover:bg-gray-200 transition-colors">
+                        Detail
+                    </button>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+    <div class="bg-white border border-gray-100 rounded-lg p-12 text-center shadow-sm">
+        <p class="text-gray-500 text-base mb-4">
+            {% if status_filter %}
+                Anda tidak memiliki peminjaman dengan status ini
+            {% else %}
+                Belum ada riwayat peminjaman
+            {% endif %}
+        </p>
+        <a href="{% url 'book:book_list' %}" class="inline-block px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition-colors">
+            Jelajahi Koleksi Buku
+        </a>
+    </div>
+    {% endif %}
 </div>
 
 <script>
