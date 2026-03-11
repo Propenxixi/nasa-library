@@ -52,13 +52,21 @@ def request_list_view(request):
         all_requests.filter(
             notification_seen=False,
             status__in=['approved', 'rejected'],
-        ).values('id', 'title', 'status', 'rejection_reason')
+        ).values('id', 'title', 'status', 'reason')
     )
+
+    counts = {
+        'pending':  all_requests.filter(status='pending').count(),
+        'approved': all_requests.filter(status='approved').count(),
+        'rejected': all_requests.filter(status='rejected').count(),
+        'total':    all_requests.count(),
+    }
 
     return render(request, 'book_request/request_list.html', {
         'requests': all_requests,
         'unseen_notifications': unseen,
         'user_profile': profile,
+        'counts': counts,
     })
 
 
@@ -165,7 +173,7 @@ def staff_review_view(request, pk):
 
     if action == 'approve':
         book_request.status = 'approved'
-        book_request.rejection_reason = ''
+        book_request.reason = ''
         book_request.reviewed_by = request.user
         book_request.notification_seen = False
         book_request.save()
@@ -176,7 +184,7 @@ def staff_review_view(request, pk):
             messages.error(request, 'Please provide a reason for rejection.')
             return redirect('book_request:staff_dashboard')
         book_request.status = 'rejected'
-        book_request.rejection_reason = rejection_reason
+        book_request.reason = rejection_reason
         book_request.reviewed_by = request.user
         book_request.notification_seen = False
         book_request.save()
