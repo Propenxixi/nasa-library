@@ -169,22 +169,24 @@ def staff_review_view(request, pk):
 
     book_request = get_object_or_404(BookRequest, pk=pk)
     action = request.POST.get('action', '')  # 'approve' or 'reject'
-    rejection_reason = request.POST.get('rejection_reason', '').strip()
+    catatan = request.POST.get('catatan_petugas', '').strip()
 
     if action == 'approve':
         book_request.status = 'approved'
         book_request.reason = ''
+        book_request.catatan_petugas = catatan if catatan else ''
         book_request.reviewed_by = request.user
         book_request.notification_seen = False
         book_request.save()
         messages.success(request, f'✅ "{book_request.title}" has been approved.')
 
     elif action == 'reject':
-        if not rejection_reason:
+        if not catatan:
             messages.error(request, 'Please provide a reason for rejection.')
             return redirect('book_request:staff_dashboard')
         book_request.status = 'rejected'
-        book_request.reason = rejection_reason
+        book_request.reason = catatan
+        book_request.catatan_petugas = catatan
         book_request.reviewed_by = request.user
         book_request.notification_seen = False
         book_request.save()
