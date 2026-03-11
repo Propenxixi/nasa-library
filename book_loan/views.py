@@ -44,9 +44,9 @@ def _is_student(user):
 def loan_history(request):
     """Display user's loan history page"""
     if _is_librarian(request.user):
-        loans = Loan.objects.all().select_related('user', 'book')
+        loans = Loan.objects.all().select_related('user', 'book').prefetch_related('extensions')
     else:
-        loans = Loan.objects.filter(user=request.user).select_related('book')
+        loans = Loan.objects.filter(user=request.user).select_related('book').prefetch_related('extensions')
     
     status_filter = request.GET.get('status', '')
     if status_filter:
@@ -86,11 +86,30 @@ def loan_management(request):
     ready_for_pickup = Loan.objects.filter(status='siap_diambil').select_related('user', 'book')
     overdue = Loan.objects.filter(status='terlambat').select_related('user', 'book')
     
+    # Get pending extension requests
+    pending_extensions = Loan.objects.filter(status='menunggu_persetujuan_perpanjangan').select_related('user', 'book').prefetch_related('extensions')
+    
+    # Transform to extension objects with extra data for the template
+    extensions_data = []
+    for loan in pending_extensions:
+        ext = loan.extensions.filter(status='pending').first()
+        if ext:
+            extensions_data.append({
+                'id': ext.id,
+                'loan_id': loan.id,
+                'user': loan.user,
+                'book': loan.book,
+                'due_date': loan.due_date,
+                'requested_extension_days': ext.requested_duration,
+                'new_due_date': ext.new_due_date,
+            })
+    
     context = {
         'pending_approvals': pending_approvals,
         'ready_for_pickup': ready_for_pickup,
         'borrowed': borrowed,
         'overdue': overdue,
+        'pending_extensions': extensions_data,
     }
     return render(request, 'loan_management.html', context)
 
@@ -572,12 +591,12 @@ def api_approve_extension(request, loan_id):
         if not _is_librarian(request.user):
             return JsonResponse({'status': 'error', 'message': 'Akses ditolak'}, status=403)
         
-        extension = get_object_or_404(LoanExtension, loan_id=loan_id, status='pending')
+        extension = LoanExtension.objects.filter(loan_id=loan_id, status='pending').first()
         
-        if extension.status != 'pending':
+        if not extension:
             return JsonResponse({
                 'status': 'error',
-                'message': 'Perpanjangan ini tidak sedang menunggu persetujuan'
+                'message': 'Tidak ada permintaan perpanjangan yang menunggu persetujuan'
             }, status=400)
         
         extension.approve()
@@ -612,12 +631,12 @@ def api_reject_extension(request, loan_id):
         data = json.loads(request.body)
         reason = data.get('reason', '')
         
-        extension = get_object_or_404(LoanExtension, loan_id=loan_id, status='pending')
+        extension = LoanExtension.objects.filter(loan_id=loan_id, status='pending').first()
         
-        if extension.status != 'pending':
+        if not extension:
             return JsonResponse({
                 'status': 'error',
-                'message': 'Perpanjangan ini tidak sedang menunggu persetujuan'
+                'message': 'Tidak ada permintaan perpanjangan yang menunggu persetujuan'
             }, status=400)
         
         extension.reject(reason)
@@ -950,13 +969,34 @@ def api_notify_waiting_list(request, waiting_id):
 
 @login_required
 @require_http_methods(["GET"])
+def api_check_waiting_list(request, book_id):
+    """
+    Check if a book has active waiting list (for extension request)
+    GET /api/waitlist/check/<book_id>/
+    """
+    try:
+        book = get_object_or_404(Book, id=book_id)
+        waiting_count = WaitingList.objects.filter(book=book, status='menunggu').count()
+        
+        return JsonResponse({
+            'status': 'success',
+            'has_waiting_list': waiting_count > 0,
+            'waiting_count': waiting_count
+        }, status=200)
+    
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+
+@login_required
+@require_http_methods(["GET"])
 def api_get_active_loans(request):
     """Get active borrowed loans (for librarians)"""
     try:
         if not _is_librarian(request.user):
             return JsonResponse({'status': 'error', 'message': 'Akses ditolak'}, status=403)
         
-        loans = Loan.objects.filter(status='borrowed').select_related('user', 'book').order_by('due_date')
+        loans = Loan.objects.filter(status='sedang_dipinjam').select_related('user', 'book').order_by('due_date')
         
         data = [{
             'id': loan.id,

@@ -92,8 +92,7 @@
                                 Batas klaim: {{ waiting.claim_deadline|date:"d M Y H:i" }}
                             </div>
                             {% endif %}
-                            <button type="button" onclick="claimWaitlist({{ waiting.id }})"
-                                    class="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold px-3 py-1.5 rounded-lg transition">
+                            <button type="button" class="claim-btn" data-waiting-id="{{ waiting.id }}" class="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold px-3 py-1.5 rounded-lg transition">
                                 Pinjam Sekarang
                             </button>
                         </div>
@@ -124,14 +123,14 @@
                 <!-- Actions -->
                 <div class="flex gap-2">
                     {% if waiting.status == 'menunggu' %}
-                    <button type="button" onclick="cancelWaitlist({{ waiting.id }})" class="flex-1 px-3 py-2 bg-red-100 hover:bg-red-200 text-red-700 text-sm font-semibold rounded-lg transition-all">
+                    <button type="button" class="cancel-btn" data-waiting-id="{{ waiting.id }}" class="flex-1 px-3 py-2 bg-red-100 hover:bg-red-200 text-red-700 text-sm font-semibold rounded-lg transition-all">
                         Batalkan Antrian
                     </button>
                     {% elif waiting.status == 'siap_dipinjam' %}
-                    <button type="button" onclick="claimWaitlist({{ waiting.id }})" class="flex-1 px-3 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold rounded-lg transition-all">
+                    <button type="button" class="claim-btn" data-waiting-id="{{ waiting.id }}" class="flex-1 px-3 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold rounded-lg transition-all">
                         Pinjam Sekarang
                     </button>
-                    <button type="button" onclick="cancelWaitlist({{ waiting.id }})" class="flex-1 px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-semibold rounded-lg transition-all">
+                    <button type="button" class="cancel-btn" data-waiting-id="{{ waiting.id }}" class="flex-1 px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-semibold rounded-lg transition-all">
                         Lewati Kesempatan
                     </button>
                     {% endif %}
@@ -165,6 +164,20 @@
         }
         return cookieValue;
     }
+
+    // Handle button clicks via data attributes
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.claim-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                claimWaitlist(this.dataset.waitingId);
+            });
+        });
+        document.querySelectorAll('.cancel-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                cancelWaitlist(this.dataset.waitingId);
+            });
+        });
+    });
 
     function claimWaitlist(waitingId) {
         const csrftoken = getCookie('csrftoken');

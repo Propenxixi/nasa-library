@@ -1,79 +1,122 @@
 {% extends 'base.html' %}
 
-{% block title %}My Book Requests — NASA Library{% endblock %}
+{% block title %}Usulan Buku Saya — NASA Library{% endblock %}
 
 {% block content %}
 <div class="min-h-screen bg-gradient-to-br from-white via-gray-50 to-white">
-  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+  <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
 
     <!-- Header -->
     <div class="flex items-center justify-between mb-10">
       <div>
-        <h1 class="font-display text-4xl md:text-5xl font-bold text-gray-900">📚 Book Requests</h1>
-        <p class="font-sans text-gray-600 mt-2">Suggest new books for the library collection</p>
+        <h1 class="font-display text-4xl md:text-5xl font-bold text-gray-900">📚 Usulan Buku</h1>
+        <p class="font-sans text-gray-600 mt-2">Usulkan buku baru untuk koleksi perpustakaan</p>
       </div>
     </div>
 
-    <!-- Create Request Button -->
-    <div class="mb-8">
+    <!-- Ringkasan Statistik -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+      <div class="bg-white border border-gray-200 rounded-xl p-5 text-center shadow-sm">
+        <p class="font-display text-3xl font-bold text-gray-900">{{ counts.total }}</p>
+        <p class="font-sans text-xs text-gray-500 mt-1 uppercase tracking-wide">Total</p>
+      </div>
+      <div class="bg-amber-50 border border-amber-200 rounded-xl p-5 text-center shadow-sm">
+        <p class="font-display text-3xl font-bold text-amber-800">{{ counts.pending }}</p>
+        <p class="font-sans text-xs text-amber-700 mt-1 uppercase tracking-wide">Menunggu</p>
+      </div>
+      <div class="bg-green-50 border border-green-200 rounded-xl p-5 text-center shadow-sm">
+        <p class="font-display text-3xl font-bold text-green-800">{{ counts.approved }}</p>
+        <p class="font-sans text-xs text-green-700 mt-1 uppercase tracking-wide">Disetujui</p>
+      </div>
+      <div class="bg-red-50 border border-red-200 rounded-xl p-5 text-center shadow-sm">
+        <p class="font-display text-3xl font-bold text-red-800">{{ counts.rejected }}</p>
+        <p class="font-sans text-xs text-red-700 mt-1 uppercase tracking-wide">Ditolak</p>
+      </div>
+    </div>
+
+    <!-- Tombol Ajukan Baru -->
+    <div class="mb-6">
       <a href="{% url 'book_request:request_create' %}"
          class="inline-flex items-center gap-2 px-6 py-3 bg-gray-900 text-white font-sans font-semibold rounded-xl hover:bg-gray-800 transition-colors shadow-lg">
-        <span class="text-lg">＋</span> New Book Request
+        <span class="text-lg">＋</span> Ajukan Usulan Buku
       </a>
     </div>
 
-    <!-- Request History -->
+    <!-- Tabel Riwayat Usulan -->
     <div class="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
       <div class="bg-gradient-to-r from-gray-50 to-white border-b border-gray-200 p-6">
-        <h2 class="font-display text-2xl font-bold text-gray-900">My Request History</h2>
-        <p class="font-sans text-sm text-gray-600 mt-1">Track the status of all your submitted requests</p>
+        <h2 class="font-display text-2xl font-bold text-gray-900">Riwayat Usulan Saya</h2>
+        <p class="font-sans text-sm text-gray-600 mt-1">Pantau status semua usulan yang telah kamu kirimkan</p>
       </div>
 
       {% if requests %}
-        <div class="divide-y divide-gray-100">
-          {% for req in requests %}
-          <div class="p-6 hover:bg-gray-50 transition-colors">
-            <div class="flex items-start justify-between gap-4">
-              <div class="flex-1 min-w-0">
-                <p class="font-display text-lg font-bold text-gray-900 truncate">{{ req.title }}</p>
-                <p class="font-sans text-sm text-gray-600 mt-0.5">by {{ req.author }}
-                  {% if req.category %}· <span class="text-gray-500">{{ req.category }}</span>{% endif %}
-                </p>
-                <p class="font-sans text-xs text-gray-400 mt-2">Submitted {{ req.created_at|date:"d M Y" }}</p>
-                {% if req.status == 'rejected' and req.rejection_reason %}
-                <div class="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
-                  <p class="font-sans text-xs text-red-700 font-semibold uppercase tracking-wide mb-1">Rejection Reason</p>
-                  <p class="font-sans text-sm text-red-800">{{ req.rejection_reason }}</p>
-                </div>
-                {% endif %}
-              </div>
-              <div class="flex-shrink-0">
-                {% if req.status == 'pending' %}
-                  <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-800">
-                    ⏳ Waiting Approval
-                  </span>
-                {% elif req.status == 'approved' %}
-                  <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800">
-                    ✓ Approved
-                  </span>
-                {% else %}
-                  <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-800">
-                    ✕ Declined
-                  </span>
-                {% endif %}
-              </div>
-            </div>
-          </div>
-          {% endfor %}
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm font-sans">
+            <thead>
+              <tr class="bg-gray-50 border-b border-gray-200">
+                <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide w-10">No</th>
+                <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Judul Buku</th>
+                <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Penulis</th>
+                <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Tanggal Ajukan</th>
+                <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Status</th>
+                <th class="text-center px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Aksi</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+              {% for req in requests %}
+              <tr class="hover:bg-gray-50 transition-colors">
+                <td class="px-4 py-4 text-gray-500 font-medium">{{ forloop.counter }}</td>
+                <td class="px-4 py-4">
+                  <p class="font-semibold text-gray-900">{{ req.title }}</p>
+                  {% if req.category %}
+                    <p class="text-xs text-gray-400 mt-0.5">{{ req.category }}</p>
+                  {% endif %}
+                </td>
+                <td class="px-4 py-4 text-gray-700">{{ req.author }}</td>
+                <td class="px-4 py-4 text-gray-500 whitespace-nowrap">{{ req.created_at|date:"d M Y" }}</td>
+                <td class="px-4 py-4">
+                  {% if req.status == 'pending' %}
+                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-800">
+                      ⏳ Menunggu
+                    </span>
+                  {% elif req.status == 'approved' %}
+                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800">
+                      ✓ Disetujui
+                    </span>
+                  {% else %}
+                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-800">
+                      ✕ Ditolak
+                    </span>
+                  {% endif %}
+                </td>
+                <td class="px-4 py-4 text-center">
+                  <button
+                    type="button"
+                    class="detail-btn px-3 py-1.5 text-xs font-semibold bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                    data-title="{{ req.title }}"
+                    data-author="{{ req.author }}"
+                    data-publisher="{{ req.publisher }}"
+                    data-category="{{ req.category }}"
+                    data-reason="{{ req.reason }}"
+                    data-status="{{ req.status }}"
+                    data-catatan="{{ req.catatan_petugas }}"
+                    data-date="{{ req.created_at|date:'d M Y' }}">
+                    Lihat Detail
+                  </button>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
         </div>
       {% else %}
         <div class="px-6 py-16 text-center">
           <div class="text-5xl mb-4">📭</div>
-          <p class="font-sans text-gray-600 mb-2">You haven't requested any books yet.</p>
-          <p class="font-sans text-sm text-gray-500">Help us grow the library collection by suggesting books!</p>
+          <p class="font-sans text-gray-600 mb-2 font-semibold">Anda belum mengajukan usulan buku.</p>
+          <p class="font-sans text-sm text-gray-500">Bantu kami memperkaya koleksi perpustakaan dengan mengusulkan buku!</p>
           <a href="{% url 'book_request:request_create' %}"
              class="inline-block mt-6 px-6 py-2 bg-gray-100 text-gray-700 font-sans font-semibold rounded-lg hover:bg-gray-200 transition-colors">
-            Make Your First Request
+            Buat Usulan Pertama
           </a>
         </div>
       {% endif %}
@@ -82,11 +125,61 @@
   </div>
 </div>
 
+<!-- ── Modal Detail Usulan ────────────────────────────────────────────────── -->
+<div id="detail-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-6">
+  <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" id="modal-backdrop"></div>
+  <div class="relative bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 z-10">
+    <button id="modal-close" class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 transition-colors text-gray-500 text-lg">&times;</button>
+
+    <h3 class="font-display text-xl font-bold text-gray-900 mb-1" id="modal-title">—</h3>
+    <p class="font-sans text-sm text-gray-600 mb-4" id="modal-author">—</p>
+
+    <div class="space-y-3">
+      <div id="modal-category-row" class="hidden">
+        <p class="font-sans text-xs text-gray-500 uppercase tracking-wide font-semibold mb-0.5">Kategori</p>
+        <p class="font-sans text-sm text-gray-800" id="modal-category">—</p>
+      </div>
+
+      <div id="modal-publisher-row" class="hidden">
+        <p class="font-sans text-xs text-gray-500 uppercase tracking-wide font-semibold mb-0.5">Penerbit</p>
+        <p class="font-sans text-sm text-gray-800" id="modal-publisher">—</p>
+      </div>
+
+      <div>
+        <p class="font-sans text-xs text-gray-500 uppercase tracking-wide font-semibold mb-0.5">Tanggal Ajukan</p>
+        <p class="font-sans text-sm text-gray-800" id="modal-date">—</p>
+      </div>
+
+      <div>
+        <p class="font-sans text-xs text-gray-500 uppercase tracking-wide font-semibold mb-0.5">Status</p>
+        <p id="modal-status-badge">—</p>
+      </div>
+
+      <div>
+        <p class="font-sans text-xs text-gray-500 uppercase tracking-wide font-semibold mb-1">Alasan Pengajuan</p>
+        <div class="bg-gray-50 border border-gray-100 rounded-lg p-3">
+          <p class="font-sans text-sm text-gray-700" id="modal-reason">—</p>
+        </div>
+      </div>
+
+      <div id="modal-catatan-row" class="hidden">
+        <p class="font-sans text-xs uppercase tracking-wide font-semibold mb-1" id="modal-catatan-label">Catatan Petugas</p>
+        <div class="rounded-lg p-3 border" id="modal-catatan-box">
+          <p class="font-sans text-sm" id="modal-catatan">—</p>
+        </div>
+      </div>
+    </div>
+
+    <button id="modal-close-btn"
+            class="mt-6 w-full py-3 bg-gray-900 text-white font-sans font-semibold rounded-xl hover:bg-gray-800 transition-colors">
+      Tutup
+    </button>
+  </div>
+</div>
+
 <!-- ── Status Notification Pop-ups ─────────────────────────────────────── -->
 {% if unseen_notifications %}
-<!-- Single wrapper: backdrop + centered card together, all at z-50 -->
 <div id="notif-wrapper" class="fixed inset-0 z-50 flex items-center justify-center p-6">
-  <!-- Backdrop sits behind the card but inside same stacking context -->
   <div class="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
 
   {% for notif in unseen_notifications %}
@@ -97,29 +190,35 @@
       <div class="inline-flex items-center justify-center w-20 h-20 bg-green-100 rounded-full mb-4">
         <span class="text-4xl">✓</span>
       </div>
-      <h3 class="font-display text-2xl font-bold text-gray-900 mb-2">Request Approved! 🎉</h3>
+      <h3 class="font-display text-2xl font-bold text-gray-900 mb-2">Usulan Disetujui! 🎉</h3>
       <p class="font-sans text-gray-700 mb-1 font-semibold">{{ notif.title }}</p>
       <p class="font-sans text-sm text-gray-600 mb-6">
-        Great news! Your book request has been approved by the librarian. The book may be added to the collection soon.
+        Kabar baik! Usulan buku Anda telah disetujui oleh petugas perpustakaan. Buku mungkin segera ditambahkan ke koleksi.
       </p>
+      {% if notif.catatan_petugas %}
+      <div class="bg-green-50 border border-green-200 rounded-lg p-3 mb-4 text-left">
+        <p class="font-sans text-xs text-green-700 font-semibold uppercase tracking-wide mb-1">Catatan Petugas</p>
+        <p class="font-sans text-sm text-green-800">{{ notif.catatan_petugas }}</p>
+      </div>
+      {% endif %}
       <button class="notif-next-btn w-full py-3 px-6 bg-green-600 hover:bg-green-700 text-white font-sans font-semibold rounded-xl transition-colors">
-        {% if forloop.last %}Got it{% else %}Next ({{ forloop.counter }}/{{ unseen_notifications|length }}){% endif %}
+        {% if forloop.last %}Mengerti{% else %}Selanjutnya ({{ forloop.counter }}/{{ unseen_notifications|length }}){% endif %}
       </button>
     {% else %}
       <div class="inline-flex items-center justify-center w-20 h-20 bg-red-100 rounded-full mb-4">
         <span class="text-4xl">✕</span>
       </div>
-      <h3 class="font-display text-2xl font-bold text-gray-900 mb-2">Request Declined</h3>
+      <h3 class="font-display text-2xl font-bold text-gray-900 mb-2">Usulan Ditolak</h3>
       <p class="font-sans text-gray-700 mb-1 font-semibold">{{ notif.title }}</p>
-      {% if notif.rejection_reason %}
+      {% if notif.catatan_petugas %}
       <div class="bg-red-50 border border-red-200 rounded-lg p-3 mb-4 text-left">
-        <p class="font-sans text-xs text-red-700 font-semibold uppercase tracking-wide mb-1">Reason</p>
-        <p class="font-sans text-sm text-red-800">{{ notif.rejection_reason }}</p>
+        <p class="font-sans text-xs text-red-700 font-semibold uppercase tracking-wide mb-1">Alasan Penolakan</p>
+        <p class="font-sans text-sm text-red-800">{{ notif.catatan_petugas }}</p>
       </div>
       {% endif %}
-      <p class="font-sans text-sm text-gray-600 mb-6">You can always submit a new request for a different book.</p>
+      <p class="font-sans text-sm text-gray-600 mb-6">Anda dapat mengajukan usulan baru untuk buku lain.</p>
       <button class="notif-next-btn w-full py-3 px-6 bg-gray-800 hover:bg-gray-700 text-white font-sans font-semibold rounded-xl transition-colors">
-        {% if forloop.last %}Got it{% else %}Next ({{ forloop.counter }}/{{ unseen_notifications|length }}){% endif %}
+        {% if forloop.last %}Mengerti{% else %}Selanjutnya ({{ forloop.counter }}/{{ unseen_notifications|length }}){% endif %}
       </button>
     {% endif %}
   </div>
@@ -129,6 +228,77 @@
 
 <script>
 (function () {
+  /* ── Detail Modal ── */
+  const modal    = document.getElementById('detail-modal');
+  const backdrop = document.getElementById('modal-backdrop');
+  const closeBtn = document.getElementById('modal-close');
+  const closeBtnBottom = document.getElementById('modal-close-btn');
+
+  const STATUS_BADGE = {
+    pending:  '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-800">⏳ Menunggu</span>',
+    approved: '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800">✓ Disetujui</span>',
+    rejected: '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-800">✕ Ditolak</span>',
+  };
+
+  document.querySelectorAll('.detail-btn').forEach(btn => {
+    btn.addEventListener('click', function () {
+      const status   = this.dataset.status;
+      const catatan  = this.dataset.catatan;
+
+      document.getElementById('modal-title').textContent  = this.dataset.title;
+      document.getElementById('modal-author').textContent = 'oleh ' + this.dataset.author;
+      document.getElementById('modal-reason').textContent = this.dataset.reason;
+      document.getElementById('modal-date').textContent   = this.dataset.date;
+      document.getElementById('modal-status-badge').innerHTML = STATUS_BADGE[status] || status;
+
+      // Kategori
+      const catRow = document.getElementById('modal-category-row');
+      if (this.dataset.category) {
+        document.getElementById('modal-category').textContent = this.dataset.category;
+        catRow.classList.remove('hidden');
+      } else {
+        catRow.classList.add('hidden');
+      }
+
+      // Penerbit
+      const pubRow = document.getElementById('modal-publisher-row');
+      if (this.dataset.publisher) {
+        document.getElementById('modal-publisher').textContent = this.dataset.publisher;
+        pubRow.classList.remove('hidden');
+      } else {
+        pubRow.classList.add('hidden');
+      }
+
+      // Catatan petugas
+      const catatanRow = document.getElementById('modal-catatan-row');
+      if (catatan) {
+        document.getElementById('modal-catatan').textContent = catatan;
+        const label = document.getElementById('modal-catatan-label');
+        const box   = document.getElementById('modal-catatan-box');
+        if (status === 'rejected') {
+          label.className = 'font-sans text-xs text-red-700 uppercase tracking-wide font-semibold mb-1';
+          box.className   = 'rounded-lg p-3 border bg-red-50 border-red-200';
+          document.getElementById('modal-catatan').className = 'font-sans text-sm text-red-800';
+        } else {
+          label.className = 'font-sans text-xs text-green-700 uppercase tracking-wide font-semibold mb-1';
+          box.className   = 'rounded-lg p-3 border bg-green-50 border-green-200';
+          document.getElementById('modal-catatan').className = 'font-sans text-sm text-green-800';
+        }
+        catatanRow.classList.remove('hidden');
+      } else {
+        catatanRow.classList.add('hidden');
+      }
+
+      modal.classList.remove('hidden');
+    });
+  });
+
+  function closeModal() { modal.classList.add('hidden'); }
+  if (backdrop)     backdrop.addEventListener('click', closeModal);
+  if (closeBtn)     closeBtn.addEventListener('click', closeModal);
+  if (closeBtnBottom) closeBtnBottom.addEventListener('click', closeModal);
+
+  /* ── Notifikasi Pop-up ── */
   const wrapper = document.getElementById('notif-wrapper');
   if (!wrapper) return;
 
@@ -137,9 +307,7 @@
 
   function showCard(idx) {
     cards.forEach(c => c.classList.add('hidden'));
-    if (idx < cards.length) {
-      cards[idx].classList.remove('hidden');
-    }
+    if (idx < cards.length) cards[idx].classList.remove('hidden');
   }
 
   function markSeen() {
@@ -151,24 +319,17 @@
 
   function getCsrf() {
     for (const c of document.cookie.split(';')) {
-      const trimmed = c.trim();
-      if (trimmed.startsWith('csrftoken=')) {
-        return decodeURIComponent(trimmed.slice('csrftoken='.length));
-      }
+      const t = c.trim();
+      if (t.startsWith('csrftoken=')) return decodeURIComponent(t.slice('csrftoken='.length));
     }
     return '';
   }
 
-  // Use event delegation on the wrapper — no inline onclick needed
   wrapper.addEventListener('click', function (e) {
     if (!e.target.closest('.notif-next-btn')) return;
     current++;
-    if (current >= cards.length) {
-      wrapper.remove();
-      markSeen();
-    } else {
-      showCard(current);
-    }
+    if (current >= cards.length) { wrapper.remove(); markSeen(); }
+    else showCard(current);
   });
 
   showCard(0);

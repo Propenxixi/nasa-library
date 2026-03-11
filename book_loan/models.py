@@ -70,6 +70,14 @@ class Loan(models.Model):
         return 0
 
     @property
+    def days_remaining(self):
+        """Calculate days remaining until due date"""
+        if self.due_date:
+            remaining = (self.due_date - timezone.now().date()).days
+            return max(remaining, 0)
+        return 0
+
+    @property
     def can_extend(self):
         """Check if loan can be extended"""
         if self.status != 'sedang_dipinjam':

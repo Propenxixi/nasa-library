@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}Request a Book — NASA Library{% endblock %}
+{% block title %}Ajukan Usulan Buku — NASA Library{% endblock %}
 
 {% block content %}
 <div class="min-h-screen bg-gradient-to-br from-white via-gray-50 to-white">
@@ -10,18 +10,18 @@
     <div class="mb-10">
       <a href="{% url 'book_request:request_list' %}"
          class="inline-flex items-center gap-2 text-sm font-sans text-gray-500 hover:text-gray-900 transition-colors mb-4">
-        ← Back to My Requests
+        ← Kembali ke Riwayat Saya
       </a>
-      <h1 class="font-display text-4xl md:text-5xl font-bold text-gray-900">📖 Request a Book</h1>
-      <p class="font-sans text-gray-600 mt-2">Tell us what book you'd like to see in the library</p>
+      <h1 class="font-display text-4xl md:text-5xl font-bold text-gray-900">📖 Ajukan Usulan Buku</h1>
+      <p class="font-sans text-gray-600 mt-2">Beritahu kami buku apa yang ingin Anda lihat di perpustakaan</p>
     </div>
 
     <!-- Info Banner -->
     <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-8 flex gap-3">
       <span class="text-2xl flex-shrink-0">💡</span>
       <div>
-        <p class="font-sans text-sm text-blue-900 font-semibold">How it works</p>
-        <p class="font-sans text-sm text-blue-800">Fill in the details below. A librarian will review your request and approve or decline it. You'll be notified of the outcome on your request history page.</p>
+        <p class="font-sans text-sm text-blue-900 font-semibold">Cara kerja</p>
+        <p class="font-sans text-sm text-blue-800">Isi detail di bawah ini. Petugas perpustakaan akan meninjau usulan Anda dan menyetujui atau menolaknya. Anda akan mendapat notifikasi hasilnya di halaman riwayat usulan.</p>
       </div>
     </div>
 
@@ -30,67 +30,88 @@
       <form method="POST" class="space-y-6">
         {% csrf_token %}
 
-        <!-- Title -->
+        <!-- Judul -->
         <div>
           <label for="title" class="block font-sans font-semibold text-gray-900 mb-2 text-sm">
-            Book Title <span class="text-red-500">*</span>
+            Judul Buku <span class="text-red-500">*</span>
           </label>
           <input type="text" id="title" name="title"
                  value="{{ form_data.title|default:'' }}"
-                 placeholder="e.g. Atomic Habits"
+                 placeholder="cth. Laskar Pelangi"
                  class="w-full px-4 py-3 border {% if errors.title %}border-red-400 bg-red-50{% else %}border-gray-300{% endif %} rounded-xl font-sans text-gray-900 focus:outline-none focus:border-gray-700 focus:ring-2 focus:ring-gray-100 transition-all">
           {% if errors.title %}
             <p class="text-red-600 text-sm mt-1">{{ errors.title }}</p>
           {% endif %}
         </div>
 
-        <!-- Author -->
+        <!-- Penulis -->
         <div>
           <label for="author" class="block font-sans font-semibold text-gray-900 mb-2 text-sm">
-            Author <span class="text-red-500">*</span>
+            Penulis <span class="text-red-500">*</span>
           </label>
           <input type="text" id="author" name="author"
                  value="{{ form_data.author|default:'' }}"
-                 placeholder="e.g. James Clear"
+                 placeholder="cth. Andrea Hirata"
                  class="w-full px-4 py-3 border {% if errors.author %}border-red-400 bg-red-50{% else %}border-gray-300{% endif %} rounded-xl font-sans text-gray-900 focus:outline-none focus:border-gray-700 focus:ring-2 focus:ring-gray-100 transition-all">
           {% if errors.author %}
             <p class="text-red-600 text-sm mt-1">{{ errors.author }}</p>
           {% endif %}
         </div>
 
-        <!-- Category -->
+        <!-- Penerbit -->
+        <div>
+          <label for="publisher" class="block font-sans font-semibold text-gray-900 mb-2 text-sm">
+            Penerbit <span class="text-gray-400 font-normal">(opsional)</span>
+          </label>
+          <input type="text" id="publisher" name="publisher"
+                value="{{ form_data.publisher|default:'' }}"
+                placeholder="cth. Gramedia, Erlangga…"
+                class="w-full px-4 py-3 border border-gray-300 rounded-xl font-sans text-gray-900 focus:outline-none focus:border-gray-700 focus:ring-2 focus:ring-gray-100 transition-all">
+        </div>
+
+        <!-- Kategori -->
         <div>
           <label for="category" class="block font-sans font-semibold text-gray-900 mb-2 text-sm">
-            Category <span class="text-gray-400 font-normal">(optional)</span>
+            Kategori <span class="text-gray-400 font-normal">(opsional)</span>
           </label>
           <input type="text" id="category" name="category"
                  value="{{ form_data.category|default:'' }}"
-                 placeholder="e.g. Self-help, Novel, Sains…"
+                 placeholder="cth. Fiksi, Novel, Sains, Motivasi…"
                  class="w-full px-4 py-3 border border-gray-300 rounded-xl font-sans text-gray-900 focus:outline-none focus:border-gray-700 focus:ring-2 focus:ring-gray-100 transition-all">
         </div>
 
-        <!-- Reason -->
+        <!-- Alasan Pengajuan -->
         <div>
           <label for="reason" class="block font-sans font-semibold text-gray-900 mb-2 text-sm">
-            Reason for Request <span class="text-red-500">*</span>
+            Alasan Pengajuan <span class="text-red-500">*</span>
           </label>
           <textarea id="reason" name="reason" rows="4"
-                    placeholder="Why should this book be added to the library? How will it benefit students?"
+                    maxlength="500"
+                    placeholder="Mengapa buku ini perlu ditambahkan ke perpustakaan? Apa manfaatnya bagi siswa?"
                     class="w-full px-4 py-3 border {% if errors.reason %}border-red-400 bg-red-50{% else %}border-gray-300{% endif %} rounded-xl font-sans text-gray-900 focus:outline-none focus:border-gray-700 focus:ring-2 focus:ring-gray-100 transition-all resize-none">{{ form_data.reason|default:'' }}</textarea>
-          {% if errors.reason %}
-            <p class="text-red-600 text-sm mt-1">{{ errors.reason }}</p>
-          {% endif %}
+          <!-- Character counter -->
+          <div class="flex items-center justify-between mt-1">
+            {% if errors.reason %}
+              <p class="text-red-600 text-sm">{{ errors.reason }}</p>
+            {% else %}
+              <p class="text-gray-400 text-xs">Jelaskan secara singkat dan jelas.</p>
+            {% endif %}
+            <p class="text-xs font-sans ml-auto pl-4">
+              <span id="reason-count" class="font-semibold text-gray-600">{{ form_data.reason|default:''|length }}</span>
+              <span class="text-gray-400">/500</span>
+            </p>
+          </div>
         </div>
 
         <!-- Actions -->
         <div class="flex gap-4 pt-2">
           <button type="submit"
                   class="flex-1 py-3 px-6 bg-gray-900 text-white font-sans font-semibold rounded-xl hover:bg-gray-800 transition-colors shadow-lg">
-            Submit Request
+            Ajukan Usulan
           </button>
           <a href="{% url 'book_request:request_list' %}"
              class="flex-1 py-3 px-6 text-center bg-gray-100 text-gray-700 font-sans font-semibold rounded-xl hover:bg-gray-200 transition-colors">
-            Cancel
+            Batal
           </a>
         </div>
       </form>
@@ -98,4 +119,30 @@
 
   </div>
 </div>
+
+<script>
+(function () {
+  const textarea = document.getElementById('reason');
+  const counter  = document.getElementById('reason-count');
+  if (!textarea || !counter) return;
+
+  function update() {
+    const len = textarea.value.length;
+    counter.textContent = len;
+    if (len >= 480) {
+      counter.classList.add('text-red-500');
+      counter.classList.remove('text-gray-600');
+    } else if (len >= 400) {
+      counter.classList.add('text-amber-500');
+      counter.classList.remove('text-gray-600', 'text-red-500');
+    } else {
+      counter.classList.add('text-gray-600');
+      counter.classList.remove('text-amber-500', 'text-red-500');
+    }
+  }
+
+  textarea.addEventListener('input', update);
+  update();
+})();
+</script>
 {% endblock %}

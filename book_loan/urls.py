@@ -31,6 +31,7 @@ urlpatterns = [
     path('api/waitlist/create/', views.api_create_waiting_list, name='api_create_waiting_list'),
     path('api/waitlist/my-list/', views.api_my_waiting_list, name='api_my_waiting_list'),
     path('api/waitlist/book/<int:book_id>/', views.api_get_waiting_list_by_book, name='api_get_waiting_list_by_book'),
+    path('api/waitlist/check/<int:book_id>/', views.api_check_waiting_list, name='api_check_waiting_list'),
     path('api/waitlist/<int:waiting_id>/cancel/', views.api_cancel_waiting_list, name='api_cancel_waiting_list'),
     path('api/waitlist/<int:waiting_id>/claim/', views.api_claim_waiting_list, name='api_claim_waiting_list'),
     path('api/waitlist/<int:waiting_id>/notify/', views.api_notify_waiting_list, name='api_notify_waiting_list'),

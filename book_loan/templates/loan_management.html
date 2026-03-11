@@ -47,6 +47,9 @@
             <button onclick="switchTab('borrowed')" class="tab-btn flex-1 px-4 py-3 font-sans text-sm font-semibold border-b-2 border-transparent text-gray-600 hover:bg-gray-50 transition-colors" data-tab="borrowed">
                 Sedang Dipinjam
             </button>
+            <button onclick="switchTab('extensions')" class="tab-btn flex-1 px-4 py-3 font-sans text-sm font-semibold border-b-2 border-transparent text-gray-600 hover:bg-gray-50 transition-colors" data-tab="extensions">
+                Perpanjangan
+            </button>
             <button onclick="switchTab('overdue')" class="tab-btn flex-1 px-4 py-3 font-sans text-sm font-semibold border-b-2 border-transparent text-gray-600 hover:bg-gray-50 transition-colors" data-tab="overdue">
                 Terlambat
             </button>
@@ -103,7 +106,7 @@
                                     Setujui Peminjaman
                                 </button>
                             </form>
-                            <button type="button" onclick="openRejectModal({{ loan.id }})" class="flex-1 px-4 py-2 bg-red-600 text-white text-sm font-semibold rounded-lg hover:bg-red-700 transition-colors">
+                            <button type="button" class="reject-loan-btn" data-loan-id="{{ loan.id }}" class="flex-1 px-4 py-2 bg-red-600 text-white text-sm font-semibold rounded-lg hover:bg-red-700 transition-colors">
                                 Tolak Peminjaman
                             </button>
                         </div>
@@ -211,7 +214,7 @@
                                 </div>
                             </div>
                             
-                            <button type="button" onclick="openReturnModal({{ loan.id }})" class="px-4 py-2 bg-orange-600 text-white text-sm font-semibold rounded-lg hover:bg-orange-700 transition-colors">
+                            <button type="button" class="return-btn" data-loan-id="{{ loan.id }}" class="px-4 py-2 bg-orange-600 text-white text-sm font-semibold rounded-lg hover:bg-orange-700 transition-colors">
                                 Terima Pengembalian
                             </button>
                         </div>
@@ -263,7 +266,7 @@
                                 </div>
                             </div>
                             
-                            <button type="button" onclick="openReturnModal({{ loan.id }})" class="px-4 py-2 bg-orange-600 text-white text-sm font-semibold rounded-lg hover:bg-orange-700 transition-colors">
+                            <button type="button" class="return-btn" data-loan-id="{{ loan.id }}" class="px-4 py-2 bg-orange-600 text-white text-sm font-semibold rounded-lg hover:bg-orange-700 transition-colors">
                                 Terima Pengembalian Segera
                             </button>
                         </div>
@@ -272,6 +275,66 @@
                 {% else %}
                 <div class="bg-white border border-gray-100 rounded-lg p-12 text-center shadow-sm">
                     <p class="text-gray-500 text-base">Tidak ada peminjaman yang terlambat. Luar biasa!</p>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Extensions Tab -->
+            <div id="extensions" class="tab-content hidden">
+                {% if pending_extensions %}
+                    <div class="space-y-3">
+                        {% for extension in pending_extensions %}
+                        <div class="bg-white border border-gray-100 rounded-lg p-5 shadow-sm hover:shadow-md transition-shadow">
+                            <div class="flex items-start justify-between mb-4">
+                                <div class="flex-1">
+                                    <h3 class="font-semibold text-gray-900 mb-0.5" style="font-family:'Playfair Display',serif">
+                                        <a href="{% url 'book:book_detail' extension.book.id %}" class="hover:text-blue-600 transition-colors">
+                                            {{ extension.book.title|truncatechars:50 }}
+                                        </a>
+                                    </h3>
+                                    <p class="text-sm text-gray-500">{{ extension.book.author }}</p>
+                                </div>
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-purple-50 text-purple-700 ml-4 whitespace-nowrap">
+                                    Menunggu Persetujuan
+                                </span>
+                            </div>
+                            
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4 bg-gray-50 rounded-lg p-3">
+                                <div>
+                                    <p class="text-xs text-gray-500 uppercase mb-0.5 font-medium">Peminjam</p>
+                                    <p class="font-semibold text-gray-900 text-sm">{{ extension.user.first_name }} {{ extension.user.last_name }}</p>
+                                </div>
+                                <div>
+                                    <p class="text-xs text-gray-500 uppercase mb-0.5 font-medium">Jatuh Tempo Saat Ini</p>
+                                    <p class="font-semibold text-gray-900 text-sm">{{ extension.due_date|date:"d M Y" }}</p>
+                                </div>
+                                <div>
+                                    <p class="text-xs text-gray-500 uppercase mb-0.5 font-medium">Durasi Perpanjangan</p>
+                                    <p class="font-semibold text-gray-900 text-sm">{{ extension.requested_extension_days }} hari</p>
+                                </div>
+                                <div>
+                                    <p class="text-xs text-gray-500 uppercase mb-0.5 font-medium">Tanggal Jatuh Tempo Baru</p>
+                                    <p class="font-semibold text-gray-900 text-sm">{{ extension.new_due_date|date:"d M Y" }}</p>
+                                </div>
+                            </div>
+                            
+                            <div class="flex gap-2">
+                                <form method="POST" action="/loan/api/loans/{{ extension.loan_id }}/approve-extend/" style="flex: 1;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="w-full px-4 py-2 bg-green-600 text-white text-sm font-semibold rounded-lg hover:bg-green-700 transition-colors" onclick="return confirm('Setujui perpanjangan ini?')">
+                                        Setujui Perpanjangan
+                                    </button>
+                                </form>
+                                <button type="button" class="reject-extension-btn" data-extension-loan-id="{{ extension.loan_id }}" class="flex-1 px-4 py-2 bg-red-600 text-white text-sm font-semibold rounded-lg hover:bg-red-700 transition-colors">
+                                    Tolak Perpanjangan
+                                </button>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                <div class="bg-white border border-gray-100 rounded-lg p-12 text-center shadow-sm">
+                    <p class="text-gray-500 text-base">Tidak ada permintaan perpanjangan yang menunggu persetujuan.</p>
                 </div>
                 {% endif %}
             </div>
@@ -341,27 +404,56 @@
     </div>
 </div>
 
+<!-- Reject Extension Modal -->
+<div id="rejectExtensionModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-lg p-6 max-w-md w-full shadow-lg">
+        <h3 class="font-semibold text-gray-900 mb-2" style="font-family:'Playfair Display',serif">Tolak Perpanjangan Peminjaman</h3>
+        <p class="text-sm text-gray-500 mb-6">Silakan jelaskan alasan penolakan perpanjangan.</p>
+        
+        <form id="rejectExtensionForm" method="POST" action="">
+            {% csrf_token %}
+            <div class="mb-6">
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Alasan Penolakan (Opsional):</label>
+                <textarea name="rejection_reason" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-gray-400" rows="3" placeholder="Jelaskan alasan penolakan..."></textarea>
+            </div>
+
+            <div class="flex gap-2">
+                <button type="button" onclick="document.getElementById('rejectExtensionModal').classList.add('hidden')" class="flex-1 px-4 py-2 bg-gray-100 text-gray-700 text-sm font-semibold rounded-lg hover:bg-gray-200 transition-colors">
+                    Batal
+                </button>
+                <button type="submit" class="flex-1 px-4 py-2 bg-red-600 text-white text-sm font-semibold rounded-lg hover:bg-red-700 transition-colors">
+                    Tolak Perpanjangan
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <script>
 let currentLoanId = null;
+let currentExtensionId = null;
 
 function switchTab(tabName) {
+    // Hide all tabs
     document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+    
+    // Reset all buttons to inactive state
     document.querySelectorAll('.tab-btn').forEach(el => {
-        el.classList.remove('border-yellow-500', 'border-blue-500', 'border-green-500', 'border-red-500', 'text-yellow-600', 'text-blue-600', 'text-green-600', 'text-red-600');
+        el.classList.remove('border-gray-800', 'text-gray-800', 'active');
         el.classList.add('border-transparent', 'text-gray-600');
     });
-    document.getElementById(tabName).classList.remove('hidden');
-    const activeBtn = document.querySelector(`[data-tab="${tabName}"]`);
-    activeBtn.classList.add('text-gray-900');
     
-    if (tabName === 'pending') {
-        activeBtn.classList.add('border-yellow-500', 'text-yellow-600');
-    } else if (tabName === 'ready') {
-        activeBtn.classList.add('border-blue-500', 'text-blue-600');
-    } else if (tabName === 'borrowed') {
-        activeBtn.classList.add('border-green-500', 'text-green-600');
-    } else if (tabName === 'overdue') {
-        activeBtn.classList.add('border-red-500', 'text-red-600');
+    // Show the active tab
+    const tabElement = document.getElementById(tabName);
+    if (tabElement) {
+        tabElement.classList.remove('hidden');
+    }
+    
+    // Set the active button
+    const activeBtn = document.querySelector(`[data-tab="${tabName}"]`);
+    if (activeBtn) {
+        activeBtn.classList.remove('border-transparent', 'text-gray-600');
+        activeBtn.classList.add('border-gray-800', 'text-gray-800', 'active');
     }
 }
 
@@ -460,6 +552,86 @@ function getCookie(name) {
     }
     return cookieValue;
 }
+
+// Handle button clicks via data attributes
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.reject-loan-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            openRejectModal(this.dataset.loanId);
+        });
+    });
+    document.querySelectorAll('.return-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            openReturnModal(this.dataset.loanId);
+        });
+    });
+    document.querySelectorAll('.reject-extension-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            openRejectExtensionModal(this.dataset.extensionLoanId);
+        });
+    });
+});
+
+function openRejectExtensionModal(loanId) {
+    currentExtensionId = loanId;
+    const form = document.getElementById('rejectExtensionForm');
+    form.action = `/loan/api/loans/${loanId}/reject-extend/`;
+    document.getElementById('rejectExtensionModal').classList.remove('hidden');
+}
+
+function approveExtension(loanId) {
+    if (!confirm('Setuju perpanjangan ini?')) return;
+    
+    fetch(`/loan/api/loans/${loanId}/approve-extend/`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        }
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.status === 'success') {
+            alert('Perpanjangan disetujui!');
+            location.reload();
+        } else {
+            alert(data.message || 'Terjadi kesalahan');
+        }
+    })
+    .catch(e => {
+        console.error('Error:', e);
+        alert('Terjadi kesalahan saat menyetujui perpanjangan');
+    });
+}
+
+document.getElementById('rejectExtensionForm')?.addEventListener('submit', function(e) {
+    e.preventDefault();
+    if (!currentExtensionId) return;
+    
+    const reason = this.querySelector('textarea[name="rejection_reason"]').value;
+    
+    fetch(`/loan/api/loans/${currentExtensionId}/reject-extend/`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({ reason: reason })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.status === 'success') {
+            alert('Perpanjangan ditolak!');
+            location.reload();
+        } else {
+            alert(data.message || 'Terjadi kesalahan');
+        }
+    })
+    .catch(e => {
+        console.error('Error:', e);
+        alert('Terjadi kesalahan saat menolak perpanjangan');
+    });
+});
 </script>
 
 {% endblock %}

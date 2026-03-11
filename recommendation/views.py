@@ -7,8 +7,9 @@ from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
 from django.db.models import Avg, Count, Q
 
-from .models import UserPreference, Loan
+from .models import UserPreference
 from book.models import Book
+from book_loan.models import Loan as BookLoan
 
 
 # Category mapping: Indonesian -> English (for matching user preferences with book categories)
@@ -434,8 +435,8 @@ def get_personalized_recommendations(request):
             'message': 'Atur preferensi minat kamu untuk mendapatkan rekomendasi buku yang lebih personal!'
         })
     
-    # Get books already borrowed by user
-    borrowed_book_ids = Loan.objects.filter(
+    # Get books already borrowed by user (from book_loan system)
+    borrowed_book_ids = BookLoan.objects.filter(
         user=request.user
     ).values_list('book_id', flat=True).distinct()
     
@@ -459,10 +460,10 @@ def get_personalized_recommendations(request):
         books = books.filter(category_filter)
         logger.info(f"Books after category filter: {books.count()}")
     
-    # Annotate with review statistics
+    # Annotate with review statistics and loan count from book_loan
     books = books.annotate(
         avg_rating=Avg('reviews__rating'),
-        loan_count=Count('recommendation_loans')
+        loan_count=Count('loans')
     ).order_by('-loan_count', '-avg_rating')
     
     # Get top 10
@@ -475,8 +476,8 @@ def get_personalized_recommendations(request):
         reviews = book.reviews.all()
         avg_rating = reviews.aggregate(Avg('rating'))['rating__avg']
         
-        # Get loan count
-        loan_count = Loan.objects.filter(book=book).count()
+        # Get loan count from annotated data or calculate
+        loan_count = book.loan_count if hasattr(book, 'loan_count') else BookLoan.objects.filter(book=book).count()
         
         recommendations.append({
             'id': book.id,
@@ -519,28 +520,15 @@ def get_popular_books_internal(limit=10, category=None):
     if category:
         books = books.filter(category__icontains=category)
     
-    # Filter by recent loans
-    recent_loans = Loan.objects.filter(
-        borrowed_at__gte=three_months_ago
-    ).values('book').annotate(count=Count('id'))
-    
-    # Get books with recent loans, ordered by count
-    popular_book_ids = [item['book'] for item in recent_loans.order_by('-count')]
-    
-    # If we have popular books, order by that, otherwise order by total loans
-    if popular_book_ids:
-        # Custom ordering to prioritize recent popularity
-        from django.db import connection
-        books = books.annotate(
-            recent_count=Count(
-                'recommendation_loans',
-                filter=Q(recommendation_loans__borrowed_at__gte=three_months_ago)
-            )
-        ).order_by('-recent_count', '-recommendation_loans__count')
-    else:
-        books = books.annotate(
-            total_loans=Count('recommendation_loans')
-        ).order_by('-total_loans')
+    # Count loans from book_loan app (the actual loan system)
+    # Annotate with loan counts - both recent and total
+    books = books.annotate(
+        recent_count=Count(
+            'loans',
+            filter=Q(loans__loan_date__gte=three_months_ago)
+        ),
+        total_loans=Count('loans')
+    ).order_by('-recent_count', '-total_loans', '-title')
     
     books = books[:limit]
     
@@ -550,11 +538,8 @@ def get_popular_books_internal(limit=10, category=None):
         reviews = book.reviews.all()
         avg_rating = reviews.aggregate(Avg('rating'))['rating__avg']
         
-        # Count loans in last 3 months
-        recent_loan_count = Loan.objects.filter(
-            book=book,
-            borrowed_at__gte=three_months_ago
-        ).count()
+        # Get recent loan count from annotated data
+        recent_loan_count = book.recent_count if hasattr(book, 'recent_count') else 0
         
         result.append({
             'id': book.id,

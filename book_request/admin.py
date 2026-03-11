@@ -19,11 +19,11 @@ class BookRequestAdmin(admin.ModelAdmin):
     ordering = ['-created_at']
 
     fieldsets = (
-        ('Request Details', {
-            'fields': ('requester', 'title', 'author', 'category', 'reason'),
+        ('Detail Usulan', {
+            'fields': ('requester', 'title', 'author', 'publisher', 'category', 'reason'),
         }),
-        ('Review', {
-            'fields': ('status', 'reviewed_by', 'rejection_reason'),
+        ('Tinjauan', {
+            'fields': ('status', 'reviewed_by', 'catatan_petugas'),
         }),
         ('Metadata', {
             'fields': ('notification_seen', 'created_at', 'updated_at'),
@@ -33,7 +33,7 @@ class BookRequestAdmin(admin.ModelAdmin):
 
     def requester_name(self, obj):
         return obj.requester.get_full_name() or obj.requester.username
-    requester_name.short_description = 'Requester'
+    requester_name.short_description = 'Pengaju'
 
     def status_badge(self, obj):
         colors = {
