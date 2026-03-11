@@ -10,6 +10,7 @@ urlpatterns = [
     path("add/", views.user_create, name="user_create"),
     path("<int:user_id>/edit/", views.user_update, name="user_update"),
     path("<int:user_id>/deactivate/", views.user_deactivate, name="user_deactivate"),
+    path("<int:user_id>/activate/", views.user_activate, name="user_activate"),
 
     # REST API
     path("api/users/", api_views.api_user_list_create, name="api_user_list_create"),

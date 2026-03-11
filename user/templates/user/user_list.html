@@ -20,9 +20,9 @@
         {% if messages %}
             {% for msg in messages %}
                 <div class="mb-4 px-4 py-3 rounded-lg text-sm font-medium
-        {% if 'success' in msg.tags %}bg-green-50 text-green-700 border border-green-200
-        {% elif 'error' in msg.tags %}bg-red-50 text-red-700 border border-red-200
-        {% else %}bg-gray-50 text-gray-700 border border-gray-200{% endif %}">
+                    {% if 'success' in msg.tags %}bg-green-50 text-green-700 border border-green-200
+                    {% elif 'error' in msg.tags %}bg-red-50 text-red-700 border border-red-200
+                    {% else %}bg-gray-50 text-gray-700 border border-gray-200{% endif %}">
                     {{ msg }}
                 </div>
             {% endfor %}
@@ -74,12 +74,12 @@
                     <div class="flex items-center gap-4 bg-white border border-gray-100 rounded-lg px-4 py-3 hover:bg-gray-50 hover:border-gray-300 transition-all duration-150 group">
 
                         <!-- Avatar -->
-                        <div class="w-10 h-10 flex-shrink-0 rounded-full bg-gradient-to-br from-gray-700 to-gray-500 flex items-center justify-center text-white font-bold text-sm">
+                        <div class="w-10 h-10 flex-shrink-0 rounded-full bg-gradient-to-br from-gray-700 to-gray-500 flex items-center justify-center text-white font-bold text-sm{% if not u.is_active %} opacity-50{% endif %}">
                             {{ u.first_name|make_list|first|upper }}
                         </div>
 
                         <!-- Info -->
-                        <div class="flex-1 min-w-0">
+                        <div class="flex-1 min-w-0{% if not u.is_active %} opacity-50{% endif %}">
                             <p class="text-sm font-semibold text-gray-800 truncate">
                                 {{ u.first_name }} {{ u.last_name }}
                                 {% if u.is_superuser %}
@@ -122,11 +122,24 @@
                                    class="text-xs font-semibold text-gray-600 border border-gray-200 px-3 py-1.5 rounded-lg hover:bg-gray-800 hover:text-white hover:border-gray-800 transition">
                                     Edit
                                 </a>
-                                {% if u.is_active and u != user and not u.is_superuser %}
+
+                                {% if u.is_active and u != request.user and not u.is_superuser %}
+                                    <!-- Tombol Nonaktifkan -->
                                     <button type="button"
-                                            class="text-xs font-semibold text-red-600 border border-red-200 px-3 py-1.5 rounded-lg hover:bg-red-600 hover:text-white hover:border-red-600 transition"
-                                            onclick="openConfirm('{% url 'user:user_deactivate' u.pk %}', '{{ u.first_name }} {{ u.last_name }}')">
+                                            class="deactivate-btn text-xs font-semibold text-red-600 border border-red-200 px-3 py-1.5 rounded-lg hover:bg-red-600 hover:text-white hover:border-red-600 transition"
+                                            data-url="{% url 'user:user_deactivate' u.pk %}"
+                                            data-name="{{ u.first_name }} {{ u.last_name }}">
                                         Nonaktifkan
+                                    </button>
+                                {% endif %}
+
+                                {% if not u.is_active and not u.is_superuser %}
+                                    <!-- Tombol Aktifkan Kembali -->
+                                    <button type="button"
+                                            class="activate-btn text-xs font-semibold text-green-700 border border-green-300 px-3 py-1.5 rounded-lg hover:bg-green-600 hover:text-white hover:border-green-600 transition"
+                                            data-url="{% url 'user:user_activate' u.pk %}"
+                                            data-name="{{ u.first_name }} {{ u.last_name }}">
+                                        Aktifkan
                                     </button>
                                 {% endif %}
                             </div>
@@ -172,19 +185,22 @@
     </div>
 
     <!-- Modal Konfirmasi Nonaktifkan -->
-    <div id="confirmModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40">
+    <div id="deactivateModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40">
         <div class="bg-white rounded-xl shadow-xl w-full max-w-md mx-4 p-6">
-            <h2 class="text-lg font-bold text-gray-800 mb-2">Nonaktifkan Pengguna</h2>
+            <div class="flex items-center gap-3 mb-3">
+                <div class="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center text-red-600 text-lg">⚠️</div>
+                <h2 class="text-lg font-bold text-gray-800">Nonaktifkan Pengguna</h2>
+            </div>
             <p class="text-sm text-gray-500 mb-6">
-                Yakin ingin menonaktifkan <span id="modalNama" class="font-semibold text-gray-800"></span>?
+                Yakin ingin menonaktifkan <span id="deactivateNama" class="font-semibold text-gray-800"></span>?
                 Pengguna tidak akan bisa login setelah dinonaktifkan.
             </p>
             <div class="flex gap-3 justify-end">
-                <button onclick="closeConfirm()"
+                <button onclick="closeDeactivate()"
                         class="px-4 py-2 text-sm font-semibold border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50 transition">
                     Batal
                 </button>
-                <form id="confirmForm" method="post">
+                <form id="deactivateForm" method="post">
                     {% csrf_token %}
                     <button type="submit"
                             class="px-4 py-2 text-sm font-semibold bg-red-600 hover:bg-red-700 text-white rounded-lg transition">
@@ -195,19 +211,77 @@
         </div>
     </div>
 
+    <!-- Modal Konfirmasi Aktifkan Kembali -->
+    <div id="activateModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-md mx-4 p-6">
+            <div class="flex items-center gap-3 mb-3">
+                <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600 text-lg">✅</div>
+                <h2 class="text-lg font-bold text-gray-800">Aktifkan Kembali Pengguna</h2>
+            </div>
+            <p class="text-sm text-gray-500 mb-6">
+                Yakin ingin mengaktifkan kembali <span id="activateNama" class="font-semibold text-gray-800"></span>?
+                Pengguna akan dapat login dan menggunakan layanan perpustakaan kembali.
+            </p>
+            <div class="flex gap-3 justify-end">
+                <button onclick="closeActivate()"
+                        class="px-4 py-2 text-sm font-semibold border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50 transition">
+                    Batal
+                </button>
+                <form id="activateForm" method="post">
+                    {% csrf_token %}
+                    <button type="submit"
+                            class="px-4 py-2 text-sm font-semibold bg-green-600 hover:bg-green-700 text-white rounded-lg transition">
+                        Aktifkan Kembali
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <script>
-        function openConfirm(url, nama) {
-            document.getElementById('modalNama').textContent = nama;
-            document.getElementById('confirmForm').action = url;
-            document.getElementById('confirmModal').classList.remove('hidden');
-            document.getElementById('confirmModal').classList.add('flex');
+        // Deactivate modal
+        function openDeactivate(url, nama) {
+            document.getElementById('deactivateNama').textContent = nama;
+            document.getElementById('deactivateForm').action = url;
+            document.getElementById('deactivateModal').classList.remove('hidden');
+            document.getElementById('deactivateModal').classList.add('flex');
         }
-        function closeConfirm() {
-            document.getElementById('confirmModal').classList.add('hidden');
-            document.getElementById('confirmModal').classList.remove('flex');
+        function closeDeactivate() {
+            document.getElementById('deactivateModal').classList.add('hidden');
+            document.getElementById('deactivateModal').classList.remove('flex');
         }
-        document.getElementById('confirmModal').addEventListener('click', function(e) {
-            if (e.target === this) closeConfirm();
+        document.getElementById('deactivateModal').addEventListener('click', function(e) {
+            if (e.target === this) closeDeactivate();
+        });
+
+        // Activate modal
+        function openActivate(url, nama) {
+            document.getElementById('activateNama').textContent = nama;
+            document.getElementById('activateForm').action = url;
+            document.getElementById('activateModal').classList.remove('hidden');
+            document.getElementById('activateModal').classList.add('flex');
+        }
+        function closeActivate() {
+            document.getElementById('activateModal').classList.add('hidden');
+            document.getElementById('activateModal').classList.remove('flex');
+        }
+        document.getElementById('activateModal').addEventListener('click', function(e) {
+            if (e.target === this) closeActivate();
+        });
+
+        // Handle deactivate button clicks via data attributes
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.deactivate-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    openDeactivate(this.dataset.url, this.dataset.name);
+                });
+            });
+
+            document.querySelectorAll('.activate-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    openActivate(this.dataset.url, this.dataset.name);
+                });
+            });
         });
     </script>
 {% endblock %}

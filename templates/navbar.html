@@ -19,40 +19,41 @@
             <div class="hidden md:flex items-center space-x-8">
                 <a href="{% url 'main:mainpage' %}" class="text-gray-700 hover:text-gray-900 font-sans text-sm font-medium transition-colors duration-200">Home</a>
                 <a href="{% url 'book:dashboard' %}" class="text-gray-700 hover:text-gray-900 font-sans text-sm font-medium transition-colors duration-200">Explore Books</a>
-                
+
                 {% if user.is_authenticated %}
-                <!-- Tools Dropdown -->
-                <div class="relative group">
-                    <button class="flex items-center gap-1.5 text-gray-700 hover:text-gray-900 font-sans text-sm font-medium transition-colors duration-200">
-                        Tools
-                        <svg class="w-4 h-4 group-hover:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                        </svg>
-                    </button>
-                    
-                    <div class="absolute left-0 mt-0 w-52 bg-white rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 border border-gray-100">
-                        {% if user.profile.is_student or user.profile.is_teacher %}
-                        <a href="{% url 'book_loan:loan_history' %}" class="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 border-b border-gray-100">📋 My Borrowing</a>
-                        <a href="{% url 'book_loan:waiting_list' %}" class="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 border-b border-gray-100">⏳ Waiting List</a>
-                        <a href="{% url 'attendance:check_in' %}" class="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 border-b border-gray-100">📍 Check-in</a>
-                        {% endif %}
-                        
-                        <a href="{% url 'literacy:leaderboard' %}" class="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 border-b border-gray-100">🏆 Leaderboard</a>
-                        
-                        {% if user.profile.is_student %}
-                        <a href="{% url 'literacy:forum' %}" class="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 border-b border-gray-100">💬 Forum</a>
-                        {% endif %}
-                        
-                        {% if user.profile.is_librarian %}
-                        <a href="{% url 'book_loan:loan_management' %}" class="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 border-b border-gray-100">📚 Loan Management</a>
-                        {% endif %}
-                        
-                        {% if user.profile.is_librarian or user.profile.is_teacher %}
-                        <a href="{% url 'attendance:report' %}" class="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 border-b border-gray-100">📋 Attendance Report</a>
-                        <a href="{% url 'literacy:teacher_verify_reviews' %}" class="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">✓ Verify Reviews</a>
-                        {% endif %}
+                    <!-- Tools Dropdown -->
+                    <div class="relative group">
+                        <button class="flex items-center gap-1.5 text-gray-700 hover:text-gray-900 font-sans text-sm font-medium transition-colors duration-200">
+                            Tools
+                            <svg class="w-4 h-4 group-hover:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
+
+                        <div class="absolute left-0 mt-0 w-52 bg-white rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 border border-gray-100">
+                            {% if user.profile.is_student or user.profile.is_teacher %}
+                                <a href="{% url 'book_loan:loan_history' %}" class="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 border-b border-gray-100">📋 My Borrowing</a>
+                                <a href="{% url 'book_loan:waiting_list' %}" class="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 border-b border-gray-100">⏳ Waiting List</a>
+                                <a href="{% url 'attendance:check_in' %}" class="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 border-b border-gray-100">📍 Check-in</a>
+                            {% endif %}
+
+                            <a href="{% url 'literacy:leaderboard' %}" class="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 border-b border-gray-100">🏆 Leaderboard</a>
+
+                            {% if user.profile.is_student %}
+                                <a href="{% url 'literacy:forum' %}" class="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 border-b border-gray-100">💬 Forum</a>
+                            {% endif %}
+
+                            {% if user.profile.is_librarian %}
+                                <a href="{% url 'book_loan:loan_management' %}" class="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 border-b border-gray-100">📚 Loan Management</a>
+                                <a href="{% url 'user:user_list' %}" class="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 border-b border-gray-100">👥 User Management</a>
+                            {% endif %}
+
+                            {% if user.profile.is_librarian or user.profile.is_teacher %}
+                                <a href="{% url 'attendance:report' %}" class="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 border-b border-gray-100">📋 Attendance Report</a>
+                                <a href="{% url 'literacy:teacher_verify_reviews' %}" class="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">✓ Verify Reviews</a>
+                            {% endif %}
+                        </div>
                     </div>
-                </div>
                 {% endif %}
             </div>
 
@@ -62,49 +63,52 @@
                 {% if user.is_authenticated %}
                     <!-- Authenticated User Section -->
                     <div class="flex items-center space-x-3 md:space-x-4">
-                        <!-- User Profile Dropdown -->
-                        <div class="relative group">
-                            <button class="flex items-center space-x-2 hover:opacity-75 transition-opacity">
-                                <div class="w-8 h-8 md:w-9 md:h-9 bg-gradient-to-br from-gray-400 to-gray-600 rounded-full flex items-center justify-center text-white font-sans font-bold text-sm">
-                                    {{ user.first_name|make_list|first|upper }}
-                                </div>
-                                <span class="hidden md:block text-sm font-sans text-gray-700">{{ user.first_name }}</span>
-                                <svg class="hidden md:block w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                                </svg>
-                            </button>
+                    <!-- User Profile Dropdown -->
+                    <div class="relative group">
+                        <button class="flex items-center space-x-2 hover:opacity-75 transition-opacity">
+                            <div class="w-8 h-8 md:w-9 md:h-9 bg-gradient-to-br from-gray-400 to-gray-600 rounded-full flex items-center justify-center text-white font-sans font-bold text-sm">
+                                {{ user.first_name|make_list|first|upper }}
+                            </div>
+                            <span class="hidden md:block text-sm font-sans text-gray-700">{{ user.first_name }}</span>
+                            <svg class="hidden md:block w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
 
-                            <!-- Dropdown Menu -->
-                            <div class="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 border border-gray-100">
-                                <div class="px-4 py-3 border-b border-gray-100">
-                                    <p class="text-sm font-sans text-gray-900 font-medium">{{ user.first_name }} {{ user.last_name }}</p>
-                                    <p class="text-xs font-sans text-gray-500">
-                                        {% if user.profile.role == 'student' %}Student
-                                        {% elif user.profile.role == 'teacher' %}Teacher
-                                        {% elif user.profile.role == 'librarian' %}Librarian
-                                        {% else %}{{ user.profile.role }}{% endif %}
-                                    </p>
-                                </div>
-                                <a href="#" class="block px-4 py-3 text-sm font-sans text-gray-700 hover:bg-gray-50 border-b border-gray-100">My Profile</a>
-                                {% if user.profile.is_student %}
+                        <!-- Dropdown Menu -->
+                        <div class="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 border border-gray-100">
+                            <div class="px-4 py-3 border-b border-gray-100">
+                                <p class="text-sm font-sans text-gray-900 font-medium">{{ user.first_name }} {{ user.last_name }}</p>
+                                <p class="text-xs font-sans text-gray-500">
+                                    {% if user.profile.role == 'student' %}Student
+                                    {% elif user.profile.role == 'teacher' %}Teacher
+                                    {% elif user.profile.role == 'librarian' %}Librarian
+                                    {% else %}{{ user.profile.role }}{% endif %}
+                                </p>
+                            </div>
+                            <a href="#" class="block px-4 py-3 text-sm font-sans text-gray-700 hover:bg-gray-50 border-b border-gray-100">My Profile</a>
+                            {% if user.profile.is_student %}
                                 <button onclick="showPreferenceModal()" class="w-full text-left px-4 py-3 text-sm font-sans text-gray-700 hover:bg-gray-50 border-b border-gray-100 flex items-center justify-between">
                                     <span>📚 Minat Baca</span>
                                     <span id="preferenceCount" class="text-xs bg-gray-200 text-gray-600 px-2 py-0.5 rounded-full">-</span>
                                 </button>
-                                {% endif %}
-                                {% if user.profile.is_student or user.profile.is_teacher %}
+                            {% endif %}
+                            {% if user.profile.is_student or user.profile.is_teacher %}
                                 <a href="{% url 'book_loan:loan_history' %}" class="block px-4 py-3 text-sm font-sans text-gray-700 hover:bg-gray-50 border-b border-gray-100">📋 My Borrowing</a>
                                 <a href="{% url 'book_loan:waiting_list' %}" class="block px-4 py-3 text-sm font-sans text-gray-700 hover:bg-gray-50 border-b border-gray-100">⏳ Waiting List</a>
-                                {% endif %}
-                                <a href="{% url 'attendance:check_in' %}" class="block px-4 py-3 text-sm font-sans text-gray-700 hover:bg-gray-50 border-b border-gray-100">📍 Attendance</a>
-                                <a href="{% url 'authentication:change_password' %}" class="block px-4 py-3 text-sm font-sans text-gray-700 hover:bg-gray-50 border-b border-gray-100">Change Password</a>
-                                <form method="post" action="{% url 'authentication:logout' %}" class="m-0">
-                                    {% csrf_token %}
-                                    <button type="submit" class="w-full text-left px-4 py-3 text-sm font-sans text-red-600 hover:bg-red-50">
-                                        Logout
-                                    </button>
-                                </form>
-                            </div>
+                            {% endif %}
+                            <a href="{% url 'attendance:check_in' %}" class="block px-4 py-3 text-sm font-sans text-gray-700 hover:bg-gray-50 border-b border-gray-100">📍 Attendance</a>
+                            {% if user.profile.is_librarian %}
+                                <a href="{% url 'user:user_list' %}" class="block px-4 py-3 text-sm font-sans text-gray-700 hover:bg-gray-50 border-b border-gray-100">👥 User Management</a>
+                            {% endif %}
+                            <a href="{% url 'authentication:change_password' %}" class="block px-4 py-3 text-sm font-sans text-gray-700 hover:bg-gray-50 border-b border-gray-100">Change Password</a>
+                            <form method="post" action="{% url 'authentication:logout' %}" class="m-0">
+                                {% csrf_token %}
+                                <button type="submit" class="w-full text-left px-4 py-3 text-sm font-sans text-red-600 hover:bg-red-50">
+                                    Logout
+                                </button>
+                            </form>
+                        </div>
                     </div>
                 {% else %}
                     <!-- Guest User Section - Login Button -->
@@ -119,70 +123,74 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
                     </svg>
                 </button>
+                </div>
+            </div>
+
+            <!-- Mobile Navigation Menu -->
+            <div id="mobile-menu" class="hidden md:hidden border-t border-gray-100 pb-4">
+                <a href="{% url 'main:mainpage' %}" class="block px-4 py-3 text-gray-700 hover:text-gray-900 hover:bg-gray-50 font-sans text-sm font-medium">Home</a>
+                <a href="{% url 'book:dashboard' %}" class="block px-4 py-3 text-gray-700 hover:text-gray-900 hover:bg-gray-50 font-sans text-sm font-medium">Explore Books</a>
+                {% if user.is_authenticated %}
+                    <!-- Mobile Tools Dropdown -->
+                    <button id="mobile-tools-btn" class="w-full text-left px-4 py-3 text-gray-700 hover:text-gray-900 hover:bg-gray-50 font-sans text-sm font-medium flex items-center justify-between">
+                        Tools
+                        <svg class="w-4 h-4" id="mobile-tools-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </button>
+
+                    <div id="mobile-tools-menu" class="hidden bg-gray-50 border-t border-gray-100">
+                        {% if user.profile.is_student or user.profile.is_teacher %}
+                            <a href="{% url 'book_loan:loan_history' %}" class="block px-6 py-2.5 text-gray-700 hover:text-gray-900 hover:bg-gray-100 font-sans text-sm">📋 My Borrowing</a>
+                            <a href="{% url 'book_loan:waiting_list' %}" class="block px-6 py-2.5 text-gray-700 hover:text-gray-900 hover:bg-gray-100 font-sans text-sm">⏳ Waiting List</a>
+                            <a href="{% url 'attendance:check_in' %}" class="block px-6 py-2.5 text-gray-700 hover:text-gray-900 hover:bg-gray-100 font-sans text-sm">📍 Check-in</a>
+                        {% endif %}
+
+                        <a href="{% url 'literacy:leaderboard' %}" class="block px-6 py-2.5 text-gray-700 hover:text-gray-900 hover:bg-gray-100 font-sans text-sm">🏆 Leaderboard</a>
+
+                        {% if user.profile.is_student %}
+                            <a href="{% url 'literacy:forum' %}" class="block px-6 py-2.5 text-gray-700 hover:text-gray-900 hover:bg-gray-100 font-sans text-sm">💬 Forum</a>
+                        {% endif %}
+
+                        {% if user.profile.is_librarian %}
+                            <a href="{% url 'book_loan:loan_management' %}" class="block px-6 py-2.5 text-gray-700 hover:text-gray-900 hover:bg-gray-100 font-sans text-sm">📚 Loan Management</a>
+                            <a href="{% url 'user:user_list' %}" class="block px-6 py-2.5 text-gray-700 hover:text-gray-900 hover:bg-gray-100 font-sans text-sm">👥 User Management</a>
+                        {% endif %}
+
+                        {% if user.profile.is_librarian or user.profile.is_teacher %}
+                            <a href="{% url 'attendance:report' %}" class="block px-6 py-2.5 text-gray-700 hover:text-gray-900 hover:bg-gray-100 font-sans text-sm">📋 Attendance Report</a>
+                            <a href="{% url 'literacy:teacher_verify_reviews' %}" class="block px-6 py-2.5 text-gray-700 hover:text-gray-900 hover:bg-gray-100 font-sans text-sm">✓ Verify Reviews</a>
+                        {% endif %}
+                    </div>
+
+                    <div class="border-t border-gray-100 mt-2 pt-2">
+                        <p class="px-4 py-2 text-xs font-sans text-gray-500">Signed in as {{ user.first_name }}</p>
+                        {% if user.profile.is_student %}
+                            <button onclick="showPreferenceModal()" class="w-full text-left block px-4 py-3 text-gray-700 hover:text-gray-900 hover:bg-gray-50 font-sans text-sm font-medium">📚 Minat Baca</button>
+                        {% endif %}
+                        {% if user.profile.is_librarian %}
+                            <a href="{% url 'user:user_list' %}" class="block px-4 py-3 text-gray-700 hover:text-gray-900 hover:bg-gray-50 font-sans text-sm font-medium">👥 User Management</a>
+                        {% endif %}
+                        <a href="{% url 'authentication:change_password' %}" class="block px-4 py-3 text-gray-700 hover:text-gray-900 hover:bg-gray-50 font-sans text-sm font-medium">Change Password</a>
+                        <form method="post" action="{% url 'authentication:logout' %}" class="m-0">
+                            {% csrf_token %}
+                            <button type="submit" class="w-full text-left px-4 py-3 text-red-600 hover:bg-red-50 font-sans text-sm font-medium">
+                                Logout
+                            </button>
+                        </form>
+                    </div>
+                {% else %}
+                    <a href="{% url 'authentication:login' %}" class="block px-4 py-3 text-gray-700 hover:text-gray-900 hover:bg-gray-50 font-sans text-sm font-medium">Login</a>
+                {% endif %}
             </div>
         </div>
-
-        <!-- Mobile Navigation Menu -->
-        <div id="mobile-menu" class="hidden md:hidden border-t border-gray-100 pb-4">
-            <a href="{% url 'main:mainpage' %}" class="block px-4 py-3 text-gray-700 hover:text-gray-900 hover:bg-gray-50 font-sans text-sm font-medium">Home</a>
-            <a href="{% url 'book:dashboard' %}" class="block px-4 py-3 text-gray-700 hover:text-gray-900 hover:bg-gray-50 font-sans text-sm font-medium">Explore Books</a>
-            {% if user.is_authenticated %}
-                <!-- Mobile Tools Dropdown -->
-                <button id="mobile-tools-btn" class="w-full text-left px-4 py-3 text-gray-700 hover:text-gray-900 hover:bg-gray-50 font-sans text-sm font-medium flex items-center justify-between">
-                    Tools
-                    <svg class="w-4 h-4" id="mobile-tools-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                    </svg>
-                </button>
-                
-                <div id="mobile-tools-menu" class="hidden bg-gray-50 border-t border-gray-100">
-                    {% if user.profile.is_student or user.profile.is_teacher %}
-                    <a href="{% url 'book_loan:loan_history' %}" class="block px-6 py-2.5 text-gray-700 hover:text-gray-900 hover:bg-gray-100 font-sans text-sm">📋 My Borrowing</a>
-                    <a href="{% url 'book_loan:waiting_list' %}" class="block px-6 py-2.5 text-gray-700 hover:text-gray-900 hover:bg-gray-100 font-sans text-sm">⏳ Waiting List</a>
-                    <a href="{% url 'attendance:check_in' %}" class="block px-6 py-2.5 text-gray-700 hover:text-gray-900 hover:bg-gray-100 font-sans text-sm">📍 Check-in</a>
-                    {% endif %}
-                    
-                    <a href="{% url 'literacy:leaderboard' %}" class="block px-6 py-2.5 text-gray-700 hover:text-gray-900 hover:bg-gray-100 font-sans text-sm">🏆 Leaderboard</a>
-                    
-                    {% if user.profile.is_student %}
-                    <a href="{% url 'literacy:forum' %}" class="block px-6 py-2.5 text-gray-700 hover:text-gray-900 hover:bg-gray-100 font-sans text-sm">💬 Forum</a>
-                    {% endif %}
-                    
-                    {% if user.profile.is_librarian %}
-                    <a href="{% url 'book_loan:loan_management' %}" class="block px-6 py-2.5 text-gray-700 hover:text-gray-900 hover:bg-gray-100 font-sans text-sm">📚 Loan Management</a>
-                    {% endif %}
-                    
-                    {% if user.profile.is_librarian or user.profile.is_teacher %}
-                    <a href="{% url 'attendance:report' %}" class="block px-6 py-2.5 text-gray-700 hover:text-gray-900 hover:bg-gray-100 font-sans text-sm">📋 Attendance Report</a>
-                    <a href="{% url 'literacy:teacher_verify_reviews' %}" class="block px-6 py-2.5 text-gray-700 hover:text-gray-900 hover:bg-gray-100 font-sans text-sm">✓ Verify Reviews</a>
-                    {% endif %}
-                </div>
-                
-                <div class="border-t border-gray-100 mt-2 pt-2">
-                    <p class="px-4 py-2 text-xs font-sans text-gray-500">Signed in as {{ user.first_name }}</p>
-                    {% if user.profile.is_student %}
-                    <button onclick="showPreferenceModal()" class="w-full text-left block px-4 py-3 text-gray-700 hover:text-gray-900 hover:bg-gray-50 font-sans text-sm font-medium">📚 Minat Baca</button>
-                    {% endif %}
-                    <a href="{% url 'authentication:change_password' %}" class="block px-4 py-3 text-gray-700 hover:text-gray-900 hover:bg-gray-50 font-sans text-sm font-medium">Change Password</a>
-                    <form method="post" action="{% url 'authentication:logout' %}" class="m-0">
-                        {% csrf_token %}
-                        <button type="submit" class="w-full text-left px-4 py-3 text-red-600 hover:bg-red-50 font-sans text-sm font-medium">
-                            Logout
-                        </button>
-                    </form>
-                </div>
-            {% else %}
-                <a href="{% url 'authentication:login' %}" class="block px-4 py-3 text-gray-700 hover:text-gray-900 hover:bg-gray-50 font-sans text-sm font-medium">Login</a>
-            {% endif %}
-        </div>
-    </div>
 </nav>
 
 <!-- Preference Modal (available from navbar) -->
 <div id="preferenceModal" class="fixed inset-0 z-50 hidden">
     <!-- Backdrop -->
     <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="closePreferenceModal()"></div>
-    
+
     <!-- Modal Content -->
     <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-lg mx-4">
         <div class="bg-white rounded-2xl shadow-2xl overflow-hidden">
@@ -191,7 +199,7 @@
                 <h2 class="font-display text-2xl font-bold">Atur Preferensi Minat Baca</h2>
                 <p class="text-gray-300 text-sm mt-1">Pilih minimal 1 dan maksimal 5 kategori buku yang kamu suka</p>
             </div>
-            
+
             <!-- Body -->
             <div class="p-6 max-h-[60vh] overflow-y-auto">
                 <div id="categoryLoading" class="text-center py-4">
@@ -201,18 +209,18 @@
                     </svg>
                     <p class="text-gray-500 mt-2">Memuat kategori...</p>
                 </div>
-                
+
                 <div id="categoryList" class="grid grid-cols-2 gap-3 hidden">
                     <!-- Categories will be loaded dynamically -->
                 </div>
-                
+
                 <p id="categoryCount" class="text-center text-sm text-gray-500 mt-4">
                     Dipilih: <span id="selectedCount">0</span>/5
                 </p>
-                
+
                 <p id="errorMessage" class="text-red-500 text-sm text-center mt-3 hidden"></p>
             </div>
-            
+
             <!-- Footer -->
             <div class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-end gap-3">
                 <button onclick="closePreferenceModal()" class="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors font-sans text-sm font-semibold">
@@ -260,247 +268,199 @@
 
 <!-- Preference Modal Scripts -->
 <script>
-let selectedCategories = [];
-let availableCategories = [];
+    let selectedCategories = [];
+    let availableCategories = [];
 
-// Load user preferences count for navbar display
-async function loadPreferenceCount() {
-    try {
-        const response = await fetch('/recommendation/api/users/preferences', {
-            headers: {
-                'X-CSRFToken': getCookie('csrftoken')
+    async function loadPreferenceCount() {
+        try {
+            const response = await fetch('/recommendation/api/users/preferences', {
+                headers: { 'X-CSRFToken': getCookie('csrftoken') }
+            });
+            const data = await response.json();
+            const count = data.categories ? data.categories.length : 0;
+            const countEl = document.getElementById('preferenceCount');
+            if (countEl) {
+                countEl.textContent = count > 0 ? count + ' kategori' : 'Belum diatur';
             }
-        });
-        const data = await response.json();
-        const count = data.categories ? data.categories.length : 0;
-        
-        const countEl = document.getElementById('preferenceCount');
-        if (countEl) {
-            countEl.textContent = count > 0 ? count + ' kategori' : 'Belum diatur';
+        } catch (error) {
+            console.error('Error loading preference count:', error);
         }
-    } catch (error) {
-        console.error('Error loading preference count:', error);
     }
-}
 
-// Check if user needs to set preferences
-async function checkPreferences() {
-    try {
-        const response = await fetch('/recommendation/api/users/preferences/check', {
-            headers: {
-                'X-CSRFToken': getCookie('csrftoken')
+    async function checkPreferences() {
+        try {
+            const response = await fetch('/recommendation/api/users/preferences/check', {
+                headers: { 'X-CSRFToken': getCookie('csrftoken') }
+            });
+            const data = await response.json();
+            if (!data.has_preferences) {
+                showPreferenceModal();
             }
-        });
-        const data = await response.json();
-        
-        if (!data.has_preferences) {
-            showPreferenceModal();
+        } catch (error) {
+            console.error('Error checking preferences:', error);
         }
-    } catch (error) {
-        console.error('Error checking preferences:', error);
     }
-}
 
-// Show preference modal
-function showPreferenceModal() {
-    const modal = document.getElementById('preferenceModal');
-    modal.classList.remove('hidden');
-    loadCategories();
-}
+    function showPreferenceModal() {
+        document.getElementById('preferenceModal').classList.remove('hidden');
+        loadCategories();
+    }
 
-// Close preference modal
-function closePreferenceModal() {
-    document.getElementById('preferenceModal').classList.add('hidden');
-}
+    function closePreferenceModal() {
+        document.getElementById('preferenceModal').classList.add('hidden');
+    }
 
-// Load available categories
-async function loadCategories() {
-    try {
-        const response = await fetch('/recommendation/api/categories');
-        const data = await response.json();
-        
-        availableCategories = data.categories || [];
-        
-        // Check if user already has preferences
-        const prefResponse = await fetch('/recommendation/api/users/preferences', {
-            headers: {
-                'X-CSRFToken': getCookie('csrftoken')
+    async function loadCategories() {
+        try {
+            const response = await fetch('/recommendation/api/categories');
+            const data = await response.json();
+            availableCategories = data.categories || [];
+
+            const prefResponse = await fetch('/recommendation/api/users/preferences', {
+                headers: { 'X-CSRFToken': getCookie('csrftoken') }
+            });
+            const prefData = await prefResponse.json();
+            selectedCategories = prefData.categories || [];
+
+            renderCategories();
+        } catch (error) {
+            console.error('Error loading categories:', error);
+            document.getElementById('errorMessage').textContent = 'Gagal memuat kategori. Silakan coba lagi.';
+            document.getElementById('errorMessage').classList.remove('hidden');
+        }
+    }
+
+    function renderCategories() {
+        const container = document.getElementById('categoryList');
+        const loading = document.getElementById('categoryLoading');
+        loading.classList.add('hidden');
+        container.classList.remove('hidden');
+        container.innerHTML = availableCategories.map(category => `
+            <label class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors ${selectedCategories.includes(category) ? 'border-gray-900 bg-gray-50' : 'border-gray-200'}">
+                <input type="checkbox"
+                       value="${category}"
+                       ${selectedCategories.includes(category) ? 'checked' : ''}
+                       onchange="toggleCategory(this)"
+                       class="w-4 h-4 text-gray-900 border-gray-300 rounded focus:ring-gray-900">
+                <span class="ml-2 text-sm font-sans text-gray-700">${category}</span>
+            </label>
+        `).join('');
+        updateCount();
+    }
+
+    function toggleCategory(checkbox) {
+        const category = checkbox.value;
+        if (checkbox.checked) {
+            if (selectedCategories.length >= 5) {
+                checkbox.checked = false;
+                showError('Maksimal 5 kategori yang dapat dipilih');
+                return;
+            }
+            selectedCategories.push(category);
+        } else {
+            selectedCategories = selectedCategories.filter(c => c !== category);
+        }
+        updateCount();
+        updateCheckboxStyles();
+        hideError();
+    }
+
+    function updateCount() {
+        document.getElementById('selectedCount').textContent = selectedCategories.length;
+        document.getElementById('saveBtn').disabled = selectedCategories.length === 0;
+    }
+
+    function updateCheckboxStyles() {
+        document.querySelectorAll('#categoryList input[type="checkbox"]').forEach(checkbox => {
+            const label = checkbox.closest('label');
+            if (checkbox.checked) {
+                label.classList.add('border-gray-900', 'bg-gray-50');
+                label.classList.remove('border-gray-200');
+            } else {
+                label.classList.remove('border-gray-900', 'bg-gray-50');
+                label.classList.add('border-gray-200');
             }
         });
-        const prefData = await prefResponse.json();
-        selectedCategories = prefData.categories || [];
-        
-        renderCategories();
-    } catch (error) {
-        console.error('Error loading categories:', error);
-        document.getElementById('errorMessage').textContent = 'Gagal memuat kategori. Silakan coba lagi.';
-        document.getElementById('errorMessage').classList.remove('hidden');
     }
-}
 
-// Render category checkboxes
-function renderCategories() {
-    const container = document.getElementById('categoryList');
-    const loading = document.getElementById('categoryLoading');
-    
-    loading.classList.add('hidden');
-    container.classList.remove('hidden');
-    
-    container.innerHTML = availableCategories.map(category => `
-        <label class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors ${selectedCategories.includes(category) ? 'border-gray-900 bg-gray-50' : 'border-gray-200'}">
-            <input type="checkbox" 
-                   value="${category}" 
-                   ${selectedCategories.includes(category) ? 'checked' : ''}
-                   onchange="toggleCategory(this)"
-                   class="w-4 h-4 text-gray-900 border-gray-300 rounded focus:ring-gray-900">
-            <span class="ml-2 text-sm font-sans text-gray-700">${category}</span>
-        </label>
-    `).join('');
-    
-    updateCount();
-}
+    function showError(message) {
+        const errorEl = document.getElementById('errorMessage');
+        errorEl.textContent = message;
+        errorEl.classList.remove('hidden');
+    }
 
-// Toggle category selection
-function toggleCategory(checkbox) {
-    const category = checkbox.value;
-    
-    if (checkbox.checked) {
-        if (selectedCategories.length >= 5) {
-            checkbox.checked = false;
-            showError('Maksimal 5 kategori yang dapat dipilih');
+    function hideError() {
+        document.getElementById('errorMessage').classList.add('hidden');
+    }
+
+    async function savePreferences() {
+        if (selectedCategories.length === 0) {
+            showError('Minimal pilih 1 kategori');
             return;
         }
-        selectedCategories.push(category);
-    } else {
-        selectedCategories = selectedCategories.filter(c => c !== category);
-    }
-    
-    updateCount();
-    updateCheckboxStyles();
-    hideError();
-}
-
-// Update selected count display
-function updateCount() {
-    document.getElementById('selectedCount').textContent = selectedCategories.length;
-    
-    const saveBtn = document.getElementById('saveBtn');
-    saveBtn.disabled = selectedCategories.length === 0;
-}
-
-// Update checkbox styles
-function updateCheckboxStyles() {
-    const checkboxes = document.querySelectorAll('#categoryList input[type="checkbox"]');
-    checkboxes.forEach(checkbox => {
-        const label = checkbox.closest('label');
-        if (checkbox.checked) {
-            label.classList.add('border-gray-900', 'bg-gray-50');
-            label.classList.remove('border-gray-200');
-        } else {
-            label.classList.remove('border-gray-900', 'bg-gray-50');
-            label.classList.add('border-gray-200');
+        const saveBtn = document.getElementById('saveBtn');
+        saveBtn.disabled = true;
+        saveBtn.textContent = 'Menyimpan...';
+        try {
+            const response = await fetch('/recommendation/api/users/preferences', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({ categories: selectedCategories })
+            });
+            const data = await response.json();
+            if (response.ok) {
+                closePreferenceModal();
+                showToast('Preferensi minat berhasil disimpan');
+                loadPreferenceCount();
+                window.dispatchEvent(new CustomEvent('preferencesSaved'));
+            } else {
+                showError(data.error || 'Gagal menyimpan preferensi');
+            }
+        } catch (error) {
+            console.error('Error saving preferences:', error);
+            showError('Terjadi kesalahan. Silakan coba lagi.');
+        } finally {
+            saveBtn.disabled = false;
+            saveBtn.textContent = 'Simpan Preferensi';
         }
-    });
-}
-
-// Show error message
-function showError(message) {
-    const errorEl = document.getElementById('errorMessage');
-    errorEl.textContent = message;
-    errorEl.classList.remove('hidden');
-}
-
-// Hide error message
-function hideError() {
-    document.getElementById('errorMessage').classList.add('hidden');
-}
-
-// Save preferences
-async function savePreferences() {
-    if (selectedCategories.length === 0) {
-        showError('Minimal pilih 1 kategori');
-        return;
     }
-    
-    const saveBtn = document.getElementById('saveBtn');
-    saveBtn.disabled = true;
-    saveBtn.textContent = 'Menyimpan...';
-    
-    try {
-        const response = await fetch('/recommendation/api/users/preferences', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': getCookie('csrftoken')
-            },
-            body: JSON.stringify({
-                categories: selectedCategories
-            })
-        });
-        
-        const data = await response.json();
-        
-        if (response.ok) {
-            closePreferenceModal();
-            showToast('Preferensi minat berhasil disimpan');
-            // Update the count in navbar
-            loadPreferenceCount();
-            // Trigger event to refresh recommendations
-            window.dispatchEvent(new CustomEvent('preferencesSaved'));
-        } else {
-            showError(data.error || 'Gagal menyimpan preferensi');
-        }
-    } catch (error) {
-        console.error('Error saving preferences:', error);
-        showError('Terjadi kesalahan. Silakan coba lagi.');
-    } finally {
-        saveBtn.disabled = false;
-        saveBtn.textContent = 'Simpan Preferensi';
+
+    function showToast(message) {
+        const toast = document.getElementById('toast');
+        document.getElementById('toastMessage').textContent = message;
+        toast.classList.remove('translate-y-full', 'opacity-0');
+        setTimeout(() => {
+            toast.classList.add('translate-y-full', 'opacity-0');
+        }, 3000);
     }
-}
 
-// Show toast notification
-function showToast(message) {
-    const toast = document.getElementById('toast');
-    const toastMessage = document.getElementById('toastMessage');
-    
-    toastMessage.textContent = message;
-    toast.classList.remove('translate-y-full', 'opacity-0');
-    
-    setTimeout(() => {
-        toast.classList.add('translate-y-full', 'opacity-0');
-    }, 3000);
-}
-
-// Get CSRF token
-function getCookie(name) {
-    let cookieValue = null;
-    if (document.cookie && document.cookie !== '') {
-        const cookies = document.cookie.split(';');
-        for (let i = 0; i < cookies.length; i++) {
-            const cookie = cookies[i].trim();
-            if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                break;
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
             }
         }
+        return cookieValue;
     }
-    return cookieValue;
-}
 
-// Initialize on page load
-document.addEventListener('DOMContentLoaded', function() {
-    // Load preference count for navbar display
-    loadPreferenceCount();
-    
-    // Check preferences for students on first load
-    /* {% if user.is_authenticated and user.profile.role == 'student' %} */
-    var isStudent = true;
-    /* {% else %} */
-    var isStudent = false;
-    /* {% endif %} */
-    if (isStudent) {
-        checkPreferences();
-    }
-});
+    document.addEventListener('DOMContentLoaded', function() {
+        loadPreferenceCount();
+        /* {% if user.is_authenticated and user.profile.role == 'student' %} */
+            var isStudent = true;
+            /* {% else %} */
+            var isStudent = false;
+            /* {% endif %} */
+        if (isStudent) {
+            checkPreferences();
+        }
+    });
 </script>

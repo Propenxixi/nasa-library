@@ -99,9 +99,29 @@ def user_deactivate(request, user_id):
     if user_obj == request.user:
         messages.error(request, "You cannot deactivate your own account.")
         return redirect("user:user_list")
+    if not user_obj.is_active:
+        messages.error(request, "User is already inactive.")
+        return redirect("user:user_list")
     before = _snapshot(user_obj)
     user_obj.is_active = False
     user_obj.save()
     _log(request.user, "DELETE", target=user_obj, before=before, after=_snapshot(user_obj))
-    messages.success(request, f"User '{user_obj.first_name} {user_obj.last_name}' has been deactivated.")
+    messages.success(request, f"Pengguna '{user_obj.first_name} {user_obj.last_name}' berhasil dinonaktifkan.")
+    return redirect("user:user_list")
+
+
+@login_required
+@require_POST
+def user_activate(request, user_id):
+    _require_librarian(request.user)
+    user_obj = get_object_or_404(User, pk=user_id)
+    if user_obj.is_active:
+        messages.error(request, "User is already active.")
+        return redirect("user:user_list")
+    before = _snapshot(user_obj)
+    user_obj.is_active = True
+    user_obj.save()
+    _log(request.user, "UPDATE", target=user_obj, before=before, after=_snapshot(user_obj),
+         notes="Reactivated by librarian")
+    messages.success(request, f"Pengguna '{user_obj.first_name} {user_obj.last_name}' berhasil diaktifkan kembali.")
     return redirect("user:user_list")
