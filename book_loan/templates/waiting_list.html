@@ -92,7 +92,7 @@
                                 Batas klaim: {{ waiting.claim_deadline|date:"d M Y H:i" }}
                             </div>
                             {% endif %}
-                            <button type="button" class="claim-btn" data-waiting-id="{{ waiting.id }}" class="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold px-3 py-1.5 rounded-lg transition">
+                            <button type="button" class="claim-btn inline-flex items-center gap-2 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 text-sm font-semibold px-3 py-1.5 rounded-lg transition" data-waiting-id="{{ waiting.id }}">
                                 Pinjam Sekarang
                             </button>
                         </div>
@@ -120,17 +120,16 @@
                 </div>
                 {% endif %}
 
-                <!-- Actions -->
                 <div class="flex gap-2">
                     {% if waiting.status == 'menunggu' %}
-                    <button type="button" class="cancel-btn" data-waiting-id="{{ waiting.id }}" class="flex-1 px-3 py-2 bg-red-100 hover:bg-red-200 text-red-700 text-sm font-semibold rounded-lg transition-all">
+                    <button type="button" class="cancel-btn flex-1 px-3 py-2 bg-red-100 hover:bg-red-200 text-red-700 text-sm font-semibold rounded-lg transition-all" data-waiting-id="{{ waiting.id }}">
                         Batalkan Antrian
                     </button>
                     {% elif waiting.status == 'siap_dipinjam' %}
-                    <button type="button" class="claim-btn" data-waiting-id="{{ waiting.id }}" class="flex-1 px-3 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold rounded-lg transition-all">
+                    <button type="button" class="claim-btn flex-1 px-3 py-2 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 text-sm font-semibold rounded-lg transition-all" data-waiting-id="{{ waiting.id }}">
                         Pinjam Sekarang
                     </button>
-                    <button type="button" class="cancel-btn" data-waiting-id="{{ waiting.id }}" class="flex-1 px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-semibold rounded-lg transition-all">
+                    <button type="button" class="cancel-btn flex-1 px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-semibold rounded-lg transition-all" data-waiting-id="{{ waiting.id }}">
                         Lewati Kesempatan
                     </button>
                     {% endif %}

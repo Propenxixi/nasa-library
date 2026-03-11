@@ -121,7 +121,7 @@
                 <!-- Actions -->
                 <div class="flex gap-2 flex-wrap">
                     {% if loan.status == 'sedang_dipinjam' and loan.days_overdue == 0 and loan.extensions.all|length == 0 %}
-                    <button type="button" class="extend-btn" data-loan-id="{{ loan.id }}" data-book-id="{{ loan.book.id }}" class="px-3 py-2 bg-indigo-600 text-white text-sm font-semibold rounded-lg hover:bg-indigo-700 transition-colors">
+                    <button type="button" class="extend-btn px-3 py-2 bg-violet-100 text-violet-700 text-sm font-semibold rounded-lg hover:bg-violet-200 transition-colors" data-loan-id="{{ loan.id }}" data-book-id="{{ loan.book.id }}">
                         Ajukan Perpanjangan
                     </button>
                     {% endif %}
@@ -158,7 +158,7 @@
                 Belum ada riwayat peminjaman
             {% endif %}
         </p>
-        <a href="{% url 'book:book_list' %}" class="inline-block px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition-colors">
+        <a href="{% url 'book:book_list' %}" class="inline-block px-4 py-2 bg-sky-100 text-sky-700 text-sm font-semibold rounded-lg hover:bg-sky-200 transition-colors">
             Jelajahi Koleksi Buku
         </a>
     </div>
@@ -183,7 +183,7 @@
                 <button type="button" onclick="document.getElementById('extendModal').classList.add('hidden')" class="flex-1 px-4 py-2 bg-gray-100 text-gray-700 text-sm font-semibold rounded-lg hover:bg-gray-200 transition-colors">
                     Batal
                 </button>
-                <button type="submit" class="flex-1 px-4 py-2 bg-indigo-600 text-white text-sm font-semibold rounded-lg hover:bg-indigo-700 transition-colors">
+                <button type="submit" class="flex-1 px-4 py-2 bg-violet-100 text-violet-700 text-sm font-semibold rounded-lg hover:bg-violet-200 transition-colors">
                     Ajukan
                 </button>
             </div>
