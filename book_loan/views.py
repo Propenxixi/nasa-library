@@ -584,20 +584,19 @@ def api_request_extension(request, loan_id):
 
 
 @login_required
-@require_http_methods(["PUT"])
+@require_http_methods(["POST"])
 def api_approve_extension(request, loan_id):
     """Approve extension request"""
+    if not _is_librarian(request.user):
+        messages.error(request, "Anda tidak memiliki akses.")
+        return redirect('book_loan:loan_management')
+    
     try:
-        if not _is_librarian(request.user):
-            return JsonResponse({'status': 'error', 'message': 'Akses ditolak'}, status=403)
-        
         extension = LoanExtension.objects.filter(loan_id=loan_id, status='pending').first()
         
         if not extension:
-            return JsonResponse({
-                'status': 'error',
-                'message': 'Tidak ada permintaan perpanjangan yang menunggu persetujuan'
-            }, status=400)
+            messages.error(request, 'Tidak ada permintaan perpanjangan yang menunggu persetujuan')
+            return redirect('book_loan:loan_management')
         
         extension.approve()
         
@@ -605,39 +604,35 @@ def api_approve_extension(request, loan_id):
             user=extension.loan.user,
             notification_type='extension_approved',
             title='Perpanjangan Disetujui',
-            message=f'Perpanjangan {extension.loan.book.title} telah disetujui. Jatuh tempo baru: {extension.new_due_date}',
+            message=f'Perpanjangan {extension.loan.book.title} telah disetujui. Jatuh tempo baru: {extension.new_due_date.strftime("%d %b %Y")}',
             loan=extension.loan,
             book=extension.loan.book
         )
         
-        return JsonResponse({
-            'status': 'success',
-            'message': 'Perpanjangan disetujui',
-            'new_due_date': extension.new_due_date.isoformat()
-        }, status=200)
+        messages.success(request, f'✓ Perpanjangan disetujui! Jatuh tempo baru: {extension.new_due_date.strftime("%d %b %Y")}')
+        return redirect('book_loan:loan_management')
     
     except Exception as e:
-        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+        messages.error(request, f'Terjadi kesalahan: {str(e)}')
+        return redirect('book_loan:loan_management')
 
 
 @login_required
-@require_http_methods(["PUT"])
+@require_http_methods(["POST"])
 def api_reject_extension(request, loan_id):
     """Reject extension request"""
+    if not _is_librarian(request.user):
+        messages.error(request, "Anda tidak memiliki akses.")
+        return redirect('book_loan:loan_management')
+    
     try:
-        if not _is_librarian(request.user):
-            return JsonResponse({'status': 'error', 'message': 'Akses ditolak'}, status=403)
-        
-        data = json.loads(request.body)
-        reason = data.get('reason', '')
+        reason = request.POST.get('rejection_reason', '')
         
         extension = LoanExtension.objects.filter(loan_id=loan_id, status='pending').first()
         
         if not extension:
-            return JsonResponse({
-                'status': 'error',
-                'message': 'Tidak ada permintaan perpanjangan yang menunggu persetujuan'
-            }, status=400)
+            messages.error(request, 'Tidak ada permintaan perpanjangan yang menunggu persetujuan')
+            return redirect('book_loan:loan_management')
         
         extension.reject(reason)
         
@@ -645,18 +640,17 @@ def api_reject_extension(request, loan_id):
             user=extension.loan.user,
             notification_type='extension_rejected',
             title='Perpanjangan Ditolak',
-            message=f'Perpanjangan {extension.loan.book.title} telah ditolak. Alasan: {reason}',
+            message=f'Perpanjangan {extension.loan.book.title} telah ditolak. Alasan: {reason}' if reason else f'Perpanjangan {extension.loan.book.title} telah ditolak.',
             loan=extension.loan,
             book=extension.loan.book
         )
         
-        return JsonResponse({
-            'status': 'success',
-            'message': 'Perpanjangan ditolak'
-        }, status=200)
+        messages.success(request, f'✓ Perpanjangan ditolak')
+        return redirect('book_loan:loan_management')
     
     except Exception as e:
-        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+        messages.error(request, f'Terjadi kesalahan: {str(e)}')
+        return redirect('book_loan:loan_management')
 
 
 @login_required

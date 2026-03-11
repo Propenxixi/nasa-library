@@ -579,58 +579,10 @@ function openRejectExtensionModal(loanId) {
     document.getElementById('rejectExtensionModal').classList.remove('hidden');
 }
 
-function approveExtension(loanId) {
-    if (!confirm('Setuju perpanjangan ini?')) return;
-    
-    fetch(`/loan/api/loans/${loanId}/approve-extend/`, {
-        method: 'PUT',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': getCookie('csrftoken')
-        }
-    })
-    .then(r => r.json())
-    .then(data => {
-        if (data.status === 'success') {
-            alert('Perpanjangan disetujui!');
-            location.reload();
-        } else {
-            alert(data.message || 'Terjadi kesalahan');
-        }
-    })
-    .catch(e => {
-        console.error('Error:', e);
-        alert('Terjadi kesalahan saat menyetujui perpanjangan');
-    });
-}
-
 document.getElementById('rejectExtensionForm')?.addEventListener('submit', function(e) {
-    e.preventDefault();
-    if (!currentExtensionId) return;
-    
-    const reason = this.querySelector('textarea[name="rejection_reason"]').value;
-    
-    fetch(`/loan/api/loans/${currentExtensionId}/reject-extend/`, {
-        method: 'PUT',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': getCookie('csrftoken')
-        },
-        body: JSON.stringify({ reason: reason })
-    })
-    .then(r => r.json())
-    .then(data => {
-        if (data.status === 'success') {
-            alert('Perpanjangan ditolak!');
-            location.reload();
-        } else {
-            alert(data.message || 'Terjadi kesalahan');
-        }
-    })
-    .catch(e => {
-        console.error('Error:', e);
-        alert('Terjadi kesalahan saat menolak perpanjangan');
-    });
+    if (!confirm('Tolak perpanjangan ini?')) {
+        e.preventDefault();
+    }
 });
 </script>
 
