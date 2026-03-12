@@ -84,11 +84,3 @@ git push origin feature/<feature-name>
 # then create MR to develop
 ```
 
-This ensures your branch stays updated and prevents large merge conflicts.
-
-| Peran | Meminjam | Melihat Riwayat Sendiri | Melihat Semua Riwayat | Memproses Peminjaman | Monitoring |
-|-------|----------|------------------------|----------------------|---------------------|------------|
-| Siswa | ✓ | ✓ | ✗ | ✗ | ✗ |
-| Pustakawan | ✗ | ✗ | ✓ | ✓ | ✓ |
-| Guru | ✗ | ✗ | ✓ | ✗ | ✗ |
-| Admin | ✗ | ✗ | ✓ | ✓ | ✓ |
