@@ -1,3 +1,5 @@
+
+
 {% extends 'base.html' %}
 {% load static book_extras %}
 {% block title %}{{ book.title }} — Nasa Library{% endblock %}
@@ -158,17 +160,17 @@
                     <!-- Actions -->
                     <div class="flex gap-2 flex-wrap">
                         {% if not is_librarian %}
-                            {% if book.display_status == 'tersedia' and book.available_copies > 0 %}
-                            <button type="button" onclick="requestBorrow('{{ book.id }}')"
-                                    class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-5 py-2.5 rounded-lg transition">
-                                📚 Pinjam Buku
-                            </button>
-                            {% elif book.display_status != 'tersedia' and book.status != 'tidak_aktif' %}
-                            <button type="button" onclick="joinWaitlist('{{ book.id }}')"
-                                    class="inline-flex items-center gap-2 bg-orange-600 hover:bg-orange-700 text-white text-sm font-semibold px-5 py-2.5 rounded-lg transition">
-                                📋 Masuk Antrian
-                            </button>
-                            {% endif %}
+                        {% if book.display_status == 'tersedia' and book.available_copies > 0 %}
+                        <button type="button" onclick="requestBorrow('{{ book.id }}')"
+                                class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-5 py-2.5 rounded-lg transition">
+                            📚 Pinjam Buku
+                        </button>
+                        {% elif book.display_status != 'tersedia' and book.status != 'tidak_aktif' %}
+                        <button type="button" onclick="joinWaitlist('{{ book.id }}')"
+                                class="inline-flex items-center gap-2 bg-orange-600 hover:bg-orange-700 text-white text-sm font-semibold px-5 py-2.5 rounded-lg transition">
+                            📋 Masuk Antrian
+                        </button>
+                        {% endif %}
                         {% endif %}
                         {% if is_librarian %}
                         <a href="#book-loan-history"
@@ -184,7 +186,8 @@
                         {% endif %}
                         {% if perms.book.delete_book and book.status != 'tidak_aktif' %}
                         <button id="deleteBtn"
-                                class="inline-flex items-center gap-2 bg-red-600 hover:bg-red-500 text-white text-sm font-semibold px-5 py-2.5 rounded-lg transition">
+                                {% if book.borrowed_copies > 0 %}disabled title="Buku tidak dapat dinonaktifkan karena sedang dipinjam"{% endif %}
+                            class="inline-flex items-center gap-2 {% if book.borrowed_copies > 0 %}bg-gray-400 cursor-not-allowed{% else %}bg-red-600 hover:bg-red-500{% endif %} text-white text-sm font-semibold px-5 py-2.5 rounded-lg transition">
                             Nonaktifkan Buku
                         </button>
                         {% endif %}
@@ -264,47 +267,47 @@
     <div id="book-loan-history" class="max-w-6xl mx-auto px-6 py-8 mt-8">
         <div class="bg-white border border-gray-100 rounded-2xl shadow-sm p-6">
             <h2 class="text-2xl font-bold text-gray-800 mb-6" style="font-family:'Playfair Display',serif">📋 Riwayat Peminjaman Buku {{ book.title }}</h2>
-            
+
             {% if book_loans %}
             <div class="overflow-x-auto">
                 <table class="w-full text-sm">
                     <thead>
-                        <tr class="border-b border-gray-200">
-                            <th class="text-left py-3 px-4 font-semibold text-gray-700">Peminjam</th>
-                            <th class="text-left py-3 px-4 font-semibold text-gray-700">Tanggal Peminjaman</th>
-                            <th class="text-left py-3 px-4 font-semibold text-gray-700">Jatuh Tempo</th>
-                            <th class="text-left py-3 px-4 font-semibold text-gray-700">Tanggal Kembali</th>
-                            <th class="text-left py-3 px-4 font-semibold text-gray-700">Status</th>
-                            <th class="text-left py-3 px-4 font-semibold text-gray-700">Durasi (hari)</th>
-                        </tr>
+                    <tr class="border-b border-gray-200">
+                        <th class="text-left py-3 px-4 font-semibold text-gray-700">Peminjam</th>
+                        <th class="text-left py-3 px-4 font-semibold text-gray-700">Tanggal Peminjaman</th>
+                        <th class="text-left py-3 px-4 font-semibold text-gray-700">Jatuh Tempo</th>
+                        <th class="text-left py-3 px-4 font-semibold text-gray-700">Tanggal Kembali</th>
+                        <th class="text-left py-3 px-4 font-semibold text-gray-700">Status</th>
+                        <th class="text-left py-3 px-4 font-semibold text-gray-700">Durasi (hari)</th>
+                    </tr>
                     </thead>
                     <tbody>
-                        {% for loan in book_loans %}
-                        <tr class="border-b border-gray-100 hover:bg-gray-50 transition">
-                            <td class="py-3 px-4">
-                                <div>
-                                    <p class="font-medium text-gray-800">{{ loan.user.get_full_name|default:loan.user.username }}</p>
-                                    <p class="text-xs text-gray-500">{{ loan.user.email }}</p>
-                                </div>
-                            </td>
-                            <td class="py-3 px-4 text-gray-700">{{ loan.loan_date|date:"d M Y" }}</td>
-                            <td class="py-3 px-4 text-gray-700">
-                                {% if loan.due_date %}
-                                    <span class="{% if loan.status == 'terlambat' %}text-red-600 font-semibold{% else %}text-gray-700{% endif %}">
+                    {% for loan in book_loans %}
+                    <tr class="border-b border-gray-100 hover:bg-gray-50 transition">
+                        <td class="py-3 px-4">
+                            <div>
+                                <p class="font-medium text-gray-800">{{ loan.user.get_full_name|default:loan.user.username }}</p>
+                                <p class="text-xs text-gray-500">{{ loan.user.email }}</p>
+                            </div>
+                        </td>
+                        <td class="py-3 px-4 text-gray-700">{{ loan.loan_date|date:"d M Y" }}</td>
+                        <td class="py-3 px-4 text-gray-700">
+                            {% if loan.due_date %}
+                            <span class="{% if loan.status == 'terlambat' %}text-red-600 font-semibold{% else %}text-gray-700{% endif %}">
                                         {{ loan.due_date|date:"d M Y" }}
                                     </span>
-                                {% else %}
-                                    <span class="text-gray-400">—</span>
-                                {% endif %}
-                            </td>
-                            <td class="py-3 px-4 text-gray-700">
-                                {% if loan.return_date %}
-                                    {{ loan.return_date|date:"d M Y" }}
-                                {% else %}
-                                    <span class="text-gray-400">—</span>
-                                {% endif %}
-                            </td>
-                            <td class="py-3 px-4">
+                            {% else %}
+                            <span class="text-gray-400">—</span>
+                            {% endif %}
+                        </td>
+                        <td class="py-3 px-4 text-gray-700">
+                            {% if loan.return_date %}
+                            {{ loan.return_date|date:"d M Y" }}
+                            {% else %}
+                            <span class="text-gray-400">—</span>
+                            {% endif %}
+                        </td>
+                        <td class="py-3 px-4">
                                 <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold
                                     {% if loan.status == 'menunggu_konfirmasi' %}bg-yellow-100 text-yellow-800
                                     {% elif loan.status == 'siap_diambil' %}bg-blue-100 text-blue-800
@@ -317,10 +320,10 @@
                                 ">
                                     {{ loan.get_status_display }}
                                 </span>
-                            </td>
-                            <td class="py-3 px-4 text-gray-700">{{ loan.duration_days }}</td>
-                        </tr>
-                        {% endfor %}
+                        </td>
+                        <td class="py-3 px-4 text-gray-700">{{ loan.duration_days }}</td>
+                    </tr>
+                    {% endfor %}
                     </tbody>
                 </table>
             </div>
@@ -328,41 +331,41 @@
             <p class="text-sm text-gray-500 text-center py-8">Belum ada riwayat peminjaman untuk buku ini.</p>
             {% endif %}
         </div>
-        
+
         <!-- Waiting List Management Section (Librarian Only) -->
         <div class="mt-12">
             <h2 class="text-2xl font-bold text-gray-800 mb-6" style="font-family:'Playfair Display',serif">📋 Daftar Antrian</h2>
-            
+
             {% if waiting_lists %}
             <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
                 <div class="overflow-x-auto">
                     <table class="w-full text-sm">
                         <thead class="bg-gray-50 border-b border-gray-200">
-                            <tr>
-                                <th class="py-3 px-4 text-left font-semibold text-gray-700">No</th>
-                                <th class="py-3 px-4 text-left font-semibold text-gray-700">Nama Anggota</th>
-                                <th class="py-3 px-4 text-left font-semibold text-gray-700">Kelas/Role</th>
-                                <th class="py-3 px-4 text-left font-semibold text-gray-700">Tanggal Daftar</th>
-                                <th class="py-3 px-4 text-left font-semibold text-gray-700">Status</th>
-                                <th class="py-3 px-4 text-center font-semibold text-gray-700">Aksi</th>
-                            </tr>
+                        <tr>
+                            <th class="py-3 px-4 text-left font-semibold text-gray-700">No</th>
+                            <th class="py-3 px-4 text-left font-semibold text-gray-700">Nama Anggota</th>
+                            <th class="py-3 px-4 text-left font-semibold text-gray-700">Kelas/Role</th>
+                            <th class="py-3 px-4 text-left font-semibold text-gray-700">Tanggal Daftar</th>
+                            <th class="py-3 px-4 text-left font-semibold text-gray-700">Status</th>
+                            <th class="py-3 px-4 text-center font-semibold text-gray-700">Aksi</th>
+                        </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-200">
-                            {% for waiting in waiting_lists %}
-                            <tr class="hover:bg-gray-50 transition">
-                                <td class="py-3 px-4 text-gray-900 font-semibold">{{ waiting.position }}</td>
-                                <td class="py-3 px-4 text-gray-900">{{ waiting.user.first_name }} {{ waiting.user.last_name }}</td>
-                                <td class="py-3 px-4 text-gray-700">
-                                    {% if waiting.user.profile.role %}
-                                        <span class="inline-block px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
+                        {% for waiting in waiting_lists %}
+                        <tr class="hover:bg-gray-50 transition">
+                            <td class="py-3 px-4 text-gray-900 font-semibold">{{ waiting.position }}</td>
+                            <td class="py-3 px-4 text-gray-900">{{ waiting.user.first_name }} {{ waiting.user.last_name }}</td>
+                            <td class="py-3 px-4 text-gray-700">
+                                {% if waiting.user.profile.role %}
+                                <span class="inline-block px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
                                             {{ waiting.user.profile.get_role_display }}
                                         </span>
-                                    {% else %}
-                                        <span class="text-gray-500">-</span>
-                                    {% endif %}
-                                </td>
-                                <td class="py-3 px-4 text-gray-700">{{ waiting.registered_date|date:"d M Y H:i" }}</td>
-                                <td class="py-3 px-4">
+                                {% else %}
+                                <span class="text-gray-500">-</span>
+                                {% endif %}
+                            </td>
+                            <td class="py-3 px-4 text-gray-700">{{ waiting.registered_date|date:"d M Y H:i" }}</td>
+                            <td class="py-3 px-4">
                                     <span class="inline-block px-2 py-1 text-xs font-semibold rounded-full
                                         {% if waiting.status == 'menunggu' %}bg-yellow-100 text-yellow-800
                                         {% elif waiting.status == 'siap_dipinjam' %}bg-green-100 text-green-800
@@ -372,23 +375,23 @@
                                     ">
                                         {{ waiting.get_status_display }}
                                     </span>
-                                </td>
-                                <td class="py-3 px-4 text-center">
-                                    <div class="flex justify-center gap-2">
-                                        {% if waiting.status == 'siap_dipinjam' %}
-                                        <button onclick="notifyWaitlist({{ waiting.id }})" 
-                                                class="px-3 py-1.5 bg-blue-100 hover:bg-blue-200 text-blue-700 text-xs font-semibold rounded transition" title="Kirim notifikasi ulang">
-                                            🔔 Notify
-                                        </button>
-                                        {% endif %}
-                                        <button onclick="removeFromWaitlist({{ waiting.id }})" 
-                                                class="px-3 py-1.5 bg-red-100 hover:bg-red-200 text-red-700 text-xs font-semibold rounded transition" title="Hapus dari antrian">
-                                            🗑️ Hapus
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                            {% endfor %}
+                            </td>
+                            <td class="py-3 px-4 text-center">
+                                <div class="flex justify-center gap-2">
+                                    {% if waiting.status == 'siap_dipinjam' %}
+                                    <button onclick="notifyWaitlist({{ waiting.id }})"
+                                            class="px-3 py-1.5 bg-blue-100 hover:bg-blue-200 text-blue-700 text-xs font-semibold rounded transition" title="Kirim notifikasi ulang">
+                                        🔔 Notify
+                                    </button>
+                                    {% endif %}
+                                    <button onclick="removeFromWaitlist({{ waiting.id }})"
+                                            class="px-3 py-1.5 bg-red-100 hover:bg-red-200 text-red-700 text-xs font-semibold rounded transition" title="Hapus dari antrian">
+                                        🗑️ Hapus
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
                         </tbody>
                     </table>
                 </div>
@@ -674,7 +677,7 @@
 <div id="borrowModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl">
         <h3 class="font-display text-xl font-bold text-gray-900 mb-4">Ajukan Peminjaman</h3>
-        
+
         <div class="mb-4">
             <label class="block font-sans text-sm font-semibold text-gray-700 mb-2">Durasi Peminjaman (hari):</label>
             <input type="number" id="borrowDays" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500" value="7" min="1" max="30">

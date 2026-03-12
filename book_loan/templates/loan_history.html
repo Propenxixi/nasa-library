@@ -19,6 +19,80 @@
         </div>
     </div>
 
+    <!-- Search and Filter Bar -->
+    <div class="bg-white border border-gray-100 rounded-lg shadow-sm mb-6 p-4">
+        <form method="GET" class="space-y-3">
+            <div>
+                <label class="block text-xs font-medium text-gray-600 mb-2 uppercase">Cari Nama, Email, atau Buku</label>
+                <input 
+                    type="text" 
+                    name="search" 
+                    value="{{ search }}"
+                    placeholder="Ketik nama anggota, email, atau judul buku..." 
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                >
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+                <!-- Tanggal Pinjam -->
+                <div>
+                    <label class="block text-xs font-medium text-gray-600 mb-1.5 uppercase">Tanggal Pinjam</label>
+                    <input 
+                        type="date" 
+                        name="tanggal_pinjam"
+                        value="{{ tanggal_pinjam }}"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                    >
+                </div>
+                
+                <!-- Jatuh Tempo -->
+                <div>
+                    <label class="block text-xs font-medium text-gray-600 mb-1.5 uppercase">Jatuh Tempo</label>
+                    <input 
+                        type="date" 
+                        name="jatuh_tempo"
+                        value="{{ jatuh_tempo }}"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                    >
+                </div>
+                
+                <!-- Sisa Hari -->
+                <div>
+                    <label class="block text-xs font-medium text-gray-600 mb-1.5 uppercase">Sisa Hari (&lt;=)</label>
+                    <input 
+                        type="number" 
+                        name="sisa_hari"
+                        value="{{ sisa_hari }}"
+                        placeholder="Contoh: 7"
+                        min="0"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                    >
+                </div>
+                
+                <!-- Buttons -->
+                <div class="flex gap-2 items-end">
+                    <button type="submit" class="flex-1 px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition-colors">
+                        🔍
+                    </button>
+                    <a href="{% url 'book_loan:loan_history' %}" class="px-3 py-2 bg-gray-200 text-gray-700 text-sm font-semibold rounded-lg hover:bg-gray-300 transition-colors" title="Reset">
+                        ✕
+                    </a>
+                </div>
+            </div>
+
+            <!-- Active Filter Info -->
+            {% if is_filtered %}
+            <div class="pt-3 border-t border-gray-200 text-xs text-gray-600">
+                <span class="font-semibold">Filter Aktif:</span>
+                {% if search %}<span class="ml-2 inline-block px-2 py-1 bg-blue-100 text-blue-700 rounded">{{ search }}</span>{% endif %}
+                {% if tanggal_pinjam %}<span class="ml-2 inline-block px-2 py-1 bg-green-100 text-green-700 rounded">Pinjam: {{ tanggal_pinjam }}</span>{% endif %}
+                {% if jatuh_tempo %}<span class="ml-2 inline-block px-2 py-1 bg-orange-100 text-orange-700 rounded">Tempo: {{ jatuh_tempo }}</span>{% endif %}
+                {% if sisa_hari %}<span class="ml-2 inline-block px-2 py-1 bg-red-100 text-red-700 rounded">Sisa: ≤{{ sisa_hari }} hari</span>{% endif %}
+            </div>
+            {% endif %}
+        </form>
+    </div>
+
     <!-- Status Pills Filter -->
     <div class="mb-6">
         <div class="flex flex-wrap gap-2 bg-white border border-gray-100 rounded-lg p-3 shadow-sm">
@@ -86,37 +160,53 @@
                     </span>
                 </div>
                 
-                <!-- Timeline Info -->
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4 bg-gray-50 rounded-lg p-3">
-                    <div>
-                        <p class="text-xs text-gray-500 uppercase mb-0.5 font-medium">Tanggal Peminjaman</p>
-                        <p class="font-semibold text-gray-900 text-sm">{{ loan.loan_date|date:"d M Y" }}</p>
-                    </div>
-                    
-                    {% if loan.due_date %}
-                    <div>
-                        <p class="text-xs text-gray-500 uppercase mb-0.5 font-medium">Jatuh Tempo</p>
-                        <p class="font-semibold {% if loan.days_overdue > 0 %}text-red-700{% else %}text-gray-900{% endif %} text-sm">
-                            {{ loan.due_date|date:"d M Y" }}
-                            {% if loan.days_overdue > 0 %}
-                                <span class="text-xs text-red-700 ml-1">(+{{ loan.days_overdue }} hari)</span>
+                <!-- Timeline Info or Rejection Reason -->
+                {% if loan.status == 'ditolak' %}
+                    <!-- Rejection Alert -->
+                    <div class="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                        <p class="text-xs font-semibold text-red-700 uppercase mb-2">Alasan Penolakan</p>
+                        <p class="text-sm text-red-800">
+                            {% if loan.rejection_reason %}
+                                {{ loan.rejection_reason }}
+                            {% else %}
+                                Tidak ada alasan yang diberikan
                             {% endif %}
                         </p>
+                        <p class="text-xs text-red-600 mt-2">Tanggal Penolakan: {{ loan.loan_date|date:"d M Y H:i" }}</p>
                     </div>
-                    {% endif %}
-                    
-                    {% if loan.return_date %}
-                    <div>
-                        <p class="text-xs text-gray-500 uppercase mb-0.5 font-medium">Dikembalikan</p>
-                        <p class="font-semibold text-gray-900 text-sm">{{ loan.return_date|date:"d M Y" }}</p>
+                {% else %}
+                    <!-- Timeline Info -->
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4 bg-gray-50 rounded-lg p-3">
+                        <div>
+                            <p class="text-xs text-gray-500 uppercase mb-0.5 font-medium">Tanggal Peminjaman</p>
+                            <p class="font-semibold text-gray-900 text-sm">{{ loan.loan_date|date:"d M Y" }}</p>
+                        </div>
+                        
+                        {% if loan.due_date %}
+                        <div>
+                            <p class="text-xs text-gray-500 uppercase mb-0.5 font-medium">Jatuh Tempo</p>
+                            <p class="font-semibold {% if loan.days_overdue > 0 %}text-red-700{% else %}text-gray-900{% endif %} text-sm">
+                                {{ loan.due_date|date:"d M Y" }}
+                                {% if loan.days_overdue > 0 %}
+                                    <span class="text-xs text-red-700 ml-1">(+{{ loan.days_overdue }} hari)</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                        {% endif %}
+                        
+                        {% if loan.return_date %}
+                        <div>
+                            <p class="text-xs text-gray-500 uppercase mb-0.5 font-medium">Dikembalikan</p>
+                            <p class="font-semibold text-gray-900 text-sm">{{ loan.return_date|date:"d M Y" }}</p>
+                        </div>
+                        {% endif %}
+                        
+                        <div>
+                            <p class="text-xs text-gray-500 uppercase mb-0.5 font-medium">Durasi</p>
+                            <p class="font-semibold text-gray-900 text-sm">{{ loan.duration_days }} hari</p>
+                        </div>
                     </div>
-                    {% endif %}
-                    
-                    <div>
-                        <p class="text-xs text-gray-500 uppercase mb-0.5 font-medium">Durasi</p>
-                        <p class="font-semibold text-gray-900 text-sm">{{ loan.duration_days }} hari</p>
-                    </div>
-                </div>
+                {% endif %}
                 
                 <!-- Actions -->
                 <div class="flex gap-2 flex-wrap">

@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% block title %}Tidak Ditemukan — Nasa Library{% endblock %}
+
+{% block content %}
+<div class="min-h-[60vh] flex items-center justify-center px-6">
+    <div class="text-center max-w-md">
+        <p class="text-8xl mb-6">📚</p>
+        <h1 class="text-4xl font-bold text-gray-800 mb-3" style="font-family:'Playfair Display',serif">
+            Buku Tidak Ditemukan
+        </h1>
+        <p class="text-gray-500 text-sm mb-8">
+            {{ message|default:"Halaman yang kamu cari tidak ada atau sudah dihapus dari sistem." }}
+        </p>
+        <div class="flex gap-3 justify-center">
+            <a href="{% url 'book:book_list' %}"
+               class="px-5 py-2.5 text-sm bg-gray-800 hover:bg-gray-700 text-white font-semibold rounded-lg transition">
+                Kembali ke Katalog
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
