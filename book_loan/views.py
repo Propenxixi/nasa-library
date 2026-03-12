@@ -42,20 +42,64 @@ def _is_student(user):
 
 @login_required
 def loan_history(request):
-    """Display user's loan history page"""
+    """Display user's loan history page with search and filtering"""
     if _is_librarian(request.user):
         loans = Loan.objects.all().select_related('user', 'book').prefetch_related('extensions')
     else:
         loans = Loan.objects.filter(user=request.user).select_related('book').prefetch_related('extensions')
     
+    # Get filter parameters
+    search = request.GET.get('search', '').strip()
+    tanggal_pinjam = request.GET.get('tanggal_pinjam', '')
+    jatuh_tempo = request.GET.get('jatuh_tempo', '')
+    sisa_hari = request.GET.get('sisa_hari', '')
     status_filter = request.GET.get('status', '')
+    
+    # Apply search filter (nama, email, atau buku)
+    if search:
+        loans = loans.filter(
+            Q(user__first_name__icontains=search) |
+            Q(user__last_name__icontains=search) |
+            Q(user__email__icontains=search) |
+            Q(book__title__icontains=search) |
+            Q(book__author__icontains=search)
+        )
+    
+    # Apply tanggal pinjam filter
+    if tanggal_pinjam:
+        loans = loans.filter(loan_date__date__gte=tanggal_pinjam)
+    
+    # Apply jatuh tempo filter
+    if jatuh_tempo:
+        loans = loans.filter(due_date=jatuh_tempo)
+    
+    # Apply sisa hari filter
+    if sisa_hari:
+        try:
+            sisa_hari_int = int(sisa_hari)
+            today = timezone.now().date()
+            filter_date = today + timedelta(days=sisa_hari_int)
+            loans = loans.filter(due_date__lte=filter_date, status='sedang_dipinjam')
+        except (ValueError, TypeError):
+            pass
+    
+    # Apply status filter
     if status_filter:
         loans = loans.filter(status=status_filter)
+    
+    # Determine if filters are active
+    is_filtered = bool(search or tanggal_pinjam or jatuh_tempo or sisa_hari or status_filter)
     
     context = {
         'loans': loans,
         'status_filter': status_filter,
         'status_choices': Loan.STATUS_CHOICES,
+        'search': search,
+        'tanggal_pinjam': tanggal_pinjam,
+        'jatuh_tempo': jatuh_tempo,
+        'sisa_hari': sisa_hari,
+        'is_filtered': is_filtered,
+        'is_librarian': _is_librarian(request.user),
     }
     return render(request, 'loan_history.html', context)
 
@@ -76,20 +120,58 @@ def waiting_list_view(request):
 
 @login_required
 def loan_management(request):
-    """Librarian page for loan management"""
+    """Librarian page for loan management with search and filtering"""
     if not _is_librarian(request.user):
         messages.error(request, "Anda tidak memiliki akses ke halaman ini.")
         return redirect('main:mainpage')
     
-    pending_approvals = Loan.objects.filter(status='menunggu_konfirmasi').select_related('user', 'book')
-    borrowed = Loan.objects.filter(status='sedang_dipinjam').select_related('user', 'book')
-    ready_for_pickup = Loan.objects.filter(status='siap_diambil').select_related('user', 'book')
-    overdue = Loan.objects.filter(status='terlambat').select_related('user', 'book')
+    # Get filter parameters
+    search = request.GET.get('search', '').strip()
+    tanggal_pinjam = request.GET.get('tanggal_pinjam', '')
+    jatuh_tempo = request.GET.get('jatuh_tempo', '')
+    sisa_hari = request.GET.get('sisa_hari', '')
     
-    # Get pending extension requests
-    pending_extensions = Loan.objects.filter(status='menunggu_persetujuan_perpanjangan').select_related('user', 'book').prefetch_related('extensions')
+    # Get all loans
+    all_loans = Loan.objects.all().select_related('user', 'book').prefetch_related('extensions')
     
-    # Transform to extension objects with extra data for the template
+    # Apply search filter (nama, email, atau buku)
+    if search:
+        all_loans = all_loans.filter(
+            Q(user__first_name__icontains=search) |
+            Q(user__last_name__icontains=search) |
+            Q(user__email__icontains=search) |
+            Q(book__title__icontains=search) |
+            Q(book__author__icontains=search)
+        )
+    
+    # Apply tanggal pinjam filter
+    if tanggal_pinjam:
+        all_loans = all_loans.filter(loan_date__date__gte=tanggal_pinjam)
+    
+    # Apply jatuh tempo filter
+    if jatuh_tempo:
+        all_loans = all_loans.filter(due_date=jatuh_tempo)
+    
+    # Apply sisa hari filter (only for sedang_dipinjam status)
+    if sisa_hari:
+        try:
+            sisa_hari_int = int(sisa_hari)
+            # Get current date and filter loans with days_remaining <= sisa_hari
+            from datetime import datetime
+            today = timezone.now().date()
+            filter_date = today + timedelta(days=sisa_hari_int)
+            all_loans = all_loans.filter(due_date__lte=filter_date, status='sedang_dipinjam')
+        except (ValueError, TypeError):
+            pass
+    
+    # Split by status
+    pending_approvals = all_loans.filter(status='menunggu_konfirmasi')
+    ready_for_pickup = all_loans.filter(status='siap_diambil')
+    borrowed = all_loans.filter(status='sedang_dipinjam')
+    overdue = all_loans.filter(status='terlambat')
+    pending_extensions = all_loans.filter(status='menunggu_persetujuan_perpanjangan')
+    
+    # Transform extensions data for template
     extensions_data = []
     for loan in pending_extensions:
         ext = loan.extensions.filter(status='pending').first()
@@ -104,12 +186,20 @@ def loan_management(request):
                 'new_due_date': ext.new_due_date,
             })
     
+    # Determine if filters are active
+    is_filtered = bool(search or tanggal_pinjam or jatuh_tempo or sisa_hari)
+    
     context = {
         'pending_approvals': pending_approvals,
         'ready_for_pickup': ready_for_pickup,
         'borrowed': borrowed,
         'overdue': overdue,
         'pending_extensions': extensions_data,
+        'search': search,
+        'tanggal_pinjam': tanggal_pinjam,
+        'jatuh_tempo': jatuh_tempo,
+        'sisa_hari': sisa_hari,
+        'is_filtered': is_filtered,
     }
     return render(request, 'loan_management.html', context)
 

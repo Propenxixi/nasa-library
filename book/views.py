@@ -105,7 +105,7 @@ def book_list(request):
 
     # Create status choices without 'tidak_aktif' for regular users
     status_choices = [('tersedia', 'Tersedia'), ('rusak', 'Rusak'), ('hilang', 'Hilang'), ('tidak_aktif', 'Tidak Aktif')]
-    
+
     context = {
         'page_obj':       page_obj,
         'q':              q,
@@ -123,7 +123,11 @@ def book_list(request):
 
 @login_required
 def book_detail(request, pk):
-    book       = get_object_or_404(Book, pk=pk)
+    try:
+        book = Book.objects.get(pk=pk)
+    except Book.DoesNotExist:
+        return render(request, '404.html', {'message': 'Buku tidak ditemukan.'}, status=404)
+
     reviews    = book.reviews.select_related('user').all()
     avg_rating = reviews.aggregate(avg=Avg('rating'))['avg']
     user_review = reviews.filter(user=request.user).first()
@@ -133,15 +137,15 @@ def book_detail(request, pk):
     book_loans = None
     waiting_lists = None
     user_in_waitlist = False
-    
+
     if _is_librarian(request.user):
         book_loans = book.loans.select_related('user').all().order_by('-loan_date')
         waiting_lists = book.waiting_lists.select_related('user').filter(status__in=['menunggu', 'siap_dipinjam']).order_by('position')
-    
+
     # Check if current user is in waitlist
     if hasattr(request.user, 'waiting_lists'):
         user_in_waitlist = request.user.waiting_lists.filter(book=book, status__in=['menunggu', 'siap_dipinjam']).exists()
-    
+
     # Get waiting list count for display
     waiting_count = book.waiting_lists.filter(status='menunggu').count()
 
@@ -169,7 +173,6 @@ def book_detail(request, pk):
         'waiting_count': waiting_count,
     }
     return render(request, 'book_detail.html', context)
-
 
 # ─── Add Book ─────────────────────────────────────────────────────────────────
 
@@ -211,11 +214,15 @@ def book_add(request):
 
 @login_required
 def book_edit(request, pk):
+    try:
+        book = Book.objects.get(pk=pk)
+    except Book.DoesNotExist:
+        return render(request, '404.html', {'message': 'Buku tidak ditemukan.'}, status=404)
+
     if not _is_staff_or_librarian(request.user):
         messages.error(request, 'Anda tidak memiliki izin untuk mengedit buku.')
         return redirect('book:book_detail', pk=pk)
 
-    book = get_object_or_404(Book, pk=pk)
     form = BookForm(instance=book)
 
     if request.method == 'POST':
@@ -247,8 +254,7 @@ def book_delete(request, pk):
     book = get_object_or_404(Book, pk=pk)
 
     # Cek peminjaman aktif
-    active_loans = getattr(book, 'loan_set', None)
-    if active_loans and active_loans.filter(status='dipinjam').exists():
+    if book.borrowed_copies > 0:
         messages.error(request, f'Buku "{book.title}" tidak dapat dinonaktifkan karena sedang dipinjam.')
         return redirect('book:book_detail', pk=pk)
 
@@ -410,10 +416,9 @@ def book_api_detail(request, pk):
             return JsonResponse({'errors': form.errors}, status=400)
 
     elif request.method == "DELETE":
-        active_loans = getattr(book, 'loan_set', None)
-        if active_loans and active_loans.filter(status='dipinjam').exists():
+        if book.borrowed_copies > 0:
             return JsonResponse({
-                'error': 'Buku tidak dapat dihapus karena masih ada peminjaman aktif.'
+                'error': f'Buku "{book.title}" tidak dapat dihapus karena masih ada peminjaman aktif.'
             }, status=400)
 
         book.status = 'tidak_aktif'

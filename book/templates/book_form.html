@@ -7,6 +7,9 @@
     #bookForm input[type="text"],#bookForm input[type="url"],#bookForm input[type="number"],#bookForm select,#bookForm textarea{display:block;width:100%;padding:10px 14px;font-size:.875rem;line-height:1.5;color:#374151;background:#f9fafb;border:1.5px solid #e5e7eb;border-radius:.5rem;outline:none;transition:border-color .15s,box-shadow .15s;font-family:inherit}
     #bookForm input:focus,#bookForm select:focus,#bookForm textarea:focus{border-color:#6b7280;box-shadow:0 0 0 3px rgba(107,114,128,.1);background:#fff}
     #bookForm textarea{resize:vertical;min-height:100px}
+    .field-error{font-size:0.72rem;color:#dc2626;margin-top:3px;margin-left:2px;display:flex;align-items:center;gap:3px}
+    .field-error::before{content:"⚠";font-size:0.65rem}
+    .input-has-error{border-color:#f87171 !important;background:#fff5f5 !important}
 </style>
 {% endblock %}
 
@@ -44,7 +47,7 @@
     </div>
     {% endif %}
 
-    <form method="post" id="bookForm">
+    <form method="post" id="bookForm" novalidate>
         {% csrf_token %}
 
         <!-- Informasi Dasar -->
@@ -59,7 +62,7 @@
                     </label>
                     {{ form.isbn }}
                     {% if form.isbn.errors %}
-                    <p class="text-xs text-red-500 mt-1">{{ form.isbn.errors.0 }}</p>
+                    <p class="field-error">{{ form.isbn.errors.0 }}</p>
                     {% endif %}
                 </div>
                 {% if action == 'add' %}
@@ -78,14 +81,22 @@
                         Judul <span class="text-red-500">*</span>
                     </label>
                     {{ form.title }}
-                    {% if form.title.errors %}<p class="text-xs text-red-500 mt-1">{{ form.title.errors.0 }}</p>{% endif %}
+                    {% if form.title.errors %}
+                    <p class="field-error">{{ form.title.errors.0 }}</p>
+                    {% else %}
+                    <p class="field-error" id="err_title" style="display:none"></p>
+                    {% endif %}
                 </div>
                 <div>
                     <label class="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-1.5">
                         Pengarang <span class="text-red-500">*</span>
                     </label>
                     {{ form.author }}
-                    {% if form.author.errors %}<p class="text-xs text-red-500 mt-1">{{ form.author.errors.0 }}</p>{% endif %}
+                    {% if form.author.errors %}
+                    <p class="field-error">{{ form.author.errors.0 }}</p>
+                    {% else %}
+                    <p class="field-error" id="err_author" style="display:none"></p>
+                    {% endif %}
                 </div>
             </div>
 
@@ -93,20 +104,24 @@
                 <div>
                     <label class="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-1.5">Kategori</label>
                     {{ form.category }}
+                    {% if form.category.errors %}<p class="field-error">{{ form.category.errors.0 }}</p>{% endif %}
                 </div>
                 <div>
                     <label class="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-1.5">Penerbit</label>
                     {{ form.publisher }}
+                    {% if form.publisher.errors %}<p class="field-error">{{ form.publisher.errors.0 }}</p>{% endif %}
                 </div>
                 <div>
                     <label class="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-1.5">Tahun Terbit</label>
                     {{ form.publish_year }}
+                    {% if form.publish_year.errors %}<p class="field-error">{{ form.publish_year.errors.0 }}</p>{% endif %}
                 </div>
             </div>
 
             <div>
                 <label class="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-1.5">Sinopsis</label>
                 {{ form.synopsis }}
+                {% if form.synopsis.errors %}<p class="field-error">{{ form.synopsis.errors.0 }}</p>{% endif %}
             </div>
         </div>
 
@@ -117,33 +132,40 @@
                 <div>
                     <label class="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-1.5">Halaman</label>
                     {{ form.pages }}
+                    {% if form.pages.errors %}<p class="field-error">{{ form.pages.errors.0 }}</p>{% endif %}
                 </div>
                 <div>
                     <label class="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-1.5">Bahasa</label>
                     {{ form.language }}
+                    {% if form.language.errors %}<p class="field-error">{{ form.language.errors.0 }}</p>{% endif %}
                 </div>
                 <div>
                     <label class="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-1.5">
                         Total Stok <span class="text-red-500">*</span>
                     </label>
                     {{ form.total_copies }}
-                    {% if form.total_copies.errors %}<p class="text-xs text-red-500 mt-1">{{ form.total_copies.errors.0 }}</p>{% endif %}
+                    {% if form.total_copies.errors %}
+                    <p class="field-error">{{ form.total_copies.errors.0 }}</p>
+                    {% else %}
+                    <p class="field-error" id="err_total_copies" style="display:none"></p>
+                    {% endif %}
                 </div>
                 <div>
                     <label class="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-1.5">Rusak</label>
                     {{ form.damaged_copies }}
-                    {% if form.damaged_copies.errors %}<p class="text-xs text-red-500 mt-1">{{ form.damaged_copies.errors.0 }}</p>{% endif %}
+                    {% if form.damaged_copies.errors %}<p class="field-error">{{ form.damaged_copies.errors.0 }}</p>{% endif %}
                 </div>
                 <div>
                     <label class="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-1.5">Hilang</label>
                     {{ form.lost_copies }}
-                    {% if form.lost_copies.errors %}<p class="text-xs text-red-500 mt-1">{{ form.lost_copies.errors.0 }}</p>{% endif %}
+                    {% if form.lost_copies.errors %}<p class="field-error">{{ form.lost_copies.errors.0 }}</p>{% endif %}
                 </div>
             </div>
             <div class="grid grid-cols-1 md:grid-cols-1 gap-4 mt-4">
                 <div>
                     <label class="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-1.5">Lokasi Rak</label>
                     {{ form.shelf_location }}
+                    {% if form.shelf_location.errors %}<p class="field-error">{{ form.shelf_location.errors.0 }}</p>{% endif %}
                 </div>
             </div>
         </div>
@@ -155,6 +177,7 @@
                 <div class="flex-1">
                     <label class="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-1.5">URL Gambar Sampul</label>
                     {{ form.cover_url }}
+                    {% if form.cover_url.errors %}<p class="field-error">{{ form.cover_url.errors.0 }}</p>{% endif %}
                 </div>
                 <div id="coverPreviewWrap"
                      class="w-24 aspect-[2/3] flex-shrink-0 rounded-lg overflow-hidden bg-gray-100 border border-gray-200 flex items-center justify-center text-xs text-gray-400">
@@ -185,68 +208,115 @@
 
 {% block extra_js %}
 <script>
-    // ── Cover URL live preview ────────────────────────────────────────────────────
+    // ── Highlight fields yang ada error dari server ────────────────────────────
+    document.querySelectorAll('.field-error').forEach(el => {
+        if (el.textContent.trim()) {
+            const input = el.closest('div').querySelector('input, select, textarea');
+            if (input) input.classList.add('input-has-error');
+        }
+    });
+
+    // ── Client-side validation untuk required fields ──────────────────────────
+    const REQUIRED_FIELDS = [
+        { id: 'id_isbn',         errId: null,               label: 'ISBN wajib diisi.' },
+        { id: 'id_title',        errId: 'err_title',        label: 'This field is required.' },
+        { id: 'id_author',       errId: 'err_author',       label: 'This field is required.' },
+        { id: 'id_total_copies', errId: 'err_total_copies', label: 'This field is required.' },
+    ];
+
+    document.getElementById('bookForm').addEventListener('submit', function(e) {
+        let valid = true;
+
+        REQUIRED_FIELDS.forEach(({ id, errId, label }) => {
+            const input = document.getElementById(id);
+            if (!input) return;
+            const errEl = errId ? document.getElementById(errId) : null;
+
+            if (!input.value.trim()) {
+                input.classList.add('input-has-error');
+                if (errEl) { errEl.textContent = label; errEl.style.display = 'flex'; }
+                valid = false;
+            } else {
+                input.classList.remove('input-has-error');
+                if (errEl) { errEl.textContent = ''; errEl.style.display = 'none'; }
+            }
+        });
+
+        if (!valid) e.preventDefault();
+    });
+
+    // ── Hapus error saat user mulai mengetik ──────────────────────────────────
+    REQUIRED_FIELDS.forEach(({ id, errId }) => {
+        const input = document.getElementById(id);
+        if (!input) return;
+        input.addEventListener('input', () => {
+            if (input.value.trim()) {
+                input.classList.remove('input-has-error');
+                const errEl = errId ? document.getElementById(errId) : null;
+                if (errEl) { errEl.textContent = ''; errEl.style.display = 'none'; }
+            }
+        });
+    });
+
+    // ── Cover URL live preview ────────────────────────────────────────────────
     const coverInput = document.getElementById('id_cover_url');
     const coverWrap  = document.getElementById('coverPreviewWrap');
 
     function updatePreview(url) {
-      if (!url) return;
-      const existing = document.getElementById('coverPreviewImg');
-      if (existing) {
-        existing.src = url;
-      } else {
-        coverWrap.innerHTML = `<img id="coverPreviewImg" src="${url}" alt="preview" class="w-full h-full object-cover">`;
-      }
+        if (!url) return;
+        const existing = document.getElementById('coverPreviewImg');
+        if (existing) { existing.src = url; }
+        else { coverWrap.innerHTML = `<img id="coverPreviewImg" src="${url}" alt="preview" class="w-full h-full object-cover">`; }
     }
 
     coverInput?.addEventListener('input', e => updatePreview(e.target.value.trim()));
 
-    // ── ISBN Auto-Fill ────────────────────────────────────────────────────────────
+    // ── ISBN Auto-Fill ────────────────────────────────────────────────────────
     const autofillBtn   = document.getElementById('autofillBtn');
     const autofillLabel = document.getElementById('autofillLabel');
 
     autofillBtn?.addEventListener('click', async () => {
-      const isbn = document.getElementById('id_isbn').value.trim();
-      if (!isbn) { alert('Masukkan ISBN terlebih dahulu.'); return; }
+        const isbn = document.getElementById('id_isbn').value.trim();
+        if (!isbn) { alert('Masukkan ISBN terlebih dahulu.'); return; }
 
-      autofillLabel.textContent = '⏳ Mencari…';
-      autofillBtn.disabled = true;
+        autofillLabel.textContent = '⏳ Mencari…';
+        autofillBtn.disabled = true;
 
-      try {
-        const r    = await fetch(`/book/api/enrich/?isbn=${encodeURIComponent(isbn)}`);
-        const data = await r.json();
+        try {
+            const r    = await fetch(`/book/api/enrich/?isbn=${encodeURIComponent(isbn)}`);
+            const data = await r.json();
 
-        const map = {
-          'id_cover_url':    data.cover_url,
-          'id_publisher':    data.publisher,
-          'id_publish_year': data.publish_year,
-          'id_category':     data.category,
-          'id_synopsis':     data.synopsis,
-        };
+            const map = {
+                'id_cover_url':    data.cover_url,
+                'id_publisher':    data.publisher,
+                'id_publish_year': data.publish_year,
+                'id_category':     data.category,
+                'id_synopsis':     data.synopsis,
+            };
 
-        let filled = 0;
-        for (const [id, value] of Object.entries(map)) {
-          const el = document.getElementById(id);
-          if (el && value && !el.value) {
-            el.value = value;
-            el.style.borderColor = '#86efac';
-            el.style.background  = '#f0fdf4';
-            filled++;
-          }
+            let filled = 0;
+            for (const [id, value] of Object.entries(map)) {
+                const el = document.getElementById(id);
+                if (el && value && !el.value) {
+                    el.value = value;
+                    el.style.borderColor = '#86efac';
+                    el.style.background  = '#f0fdf4';
+                    filled++;
+                }
+            }
+
+            if (data.cover_url) updatePreview(data.cover_url);
+            autofillLabel.textContent = filled > 0 ? `✅ ${filled} field diisi` : '⚠️ Data tidak ditemukan';
+
+        } catch(e) {
+            autofillLabel.textContent = '❌ Gagal';
+            console.error(e);
+        } finally {
+            setTimeout(() => {
+                if (autofillLabel) autofillLabel.textContent = '🔍 Auto-Fill';
+                if (autofillBtn)   autofillBtn.disabled = false;
+            }, 3000);
         }
-
-        if (data.cover_url) updatePreview(data.cover_url);
-        autofillLabel.textContent = filled > 0 ? `✅ ${filled} field diisi` : '⚠️ Data tidak ditemukan';
-
-      } catch(e) {
-        autofillLabel.textContent = '❌ Gagal';
-        console.error(e);
-      } finally {
-        setTimeout(() => {
-          if (autofillLabel) autofillLabel.textContent = '🔍 Auto-Fill';
-          if (autofillBtn)   autofillBtn.disabled = false;
-        }, 3000);
-      }
     });
 </script>
 {% endblock %}
