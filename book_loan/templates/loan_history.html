@@ -20,111 +20,89 @@
     </div>
 
     <!-- Search and Filter Bar -->
-    <div class="bg-white border border-gray-100 rounded-lg shadow-sm mb-6 p-4">
-        <form method="GET" class="space-y-3">
-            <div>
-                <label class="block text-xs font-medium text-gray-600 mb-2 uppercase">Cari Nama, Email, atau Buku</label>
-                <input 
-                    type="text" 
-                    name="search" 
-                    value="{{ search }}"
-                    placeholder="Ketik nama anggota, email, atau judul buku..." 
-                    class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-                >
-            </div>
-            
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
-                <!-- Tanggal Pinjam -->
-                <div>
-                    <label class="block text-xs font-medium text-gray-600 mb-1.5 uppercase">Tanggal Pinjam</label>
-                    <input 
-                        type="date" 
-                        name="tanggal_pinjam"
-                        value="{{ tanggal_pinjam }}"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-                    >
-                </div>
-                
-                <!-- Jatuh Tempo -->
-                <div>
-                    <label class="block text-xs font-medium text-gray-600 mb-1.5 uppercase">Jatuh Tempo</label>
-                    <input 
-                        type="date" 
-                        name="jatuh_tempo"
-                        value="{{ jatuh_tempo }}"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-                    >
-                </div>
-                
-                <!-- Sisa Hari -->
-                <div>
-                    <label class="block text-xs font-medium text-gray-600 mb-1.5 uppercase">Sisa Hari (&lt;=)</label>
-                    <input 
-                        type="number" 
-                        name="sisa_hari"
-                        value="{{ sisa_hari }}"
-                        placeholder="Contoh: 7"
-                        min="0"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-                    >
-                </div>
-                
-                <!-- Buttons -->
-                <div class="flex gap-2 items-end">
-                    <button type="submit" class="flex-1 px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition-colors">
-                        🔍
-                    </button>
-                    <a href="{% url 'book_loan:loan_history' %}" class="px-3 py-2 bg-gray-200 text-gray-700 text-sm font-semibold rounded-lg hover:bg-gray-300 transition-colors" title="Reset">
-                        ✕
-                    </a>
-                </div>
-            </div>
+    <form method="GET" class="flex flex-wrap gap-3 items-end bg-white border border-gray-200 rounded-xl px-5 py-4 shadow-sm mb-6">
+        <!-- Search Input -->
+        <div class="relative flex-1 min-w-[220px]">
+            <input 
+                type="text" 
+                name="search" 
+                value="{{ search }}"
+                placeholder="Cari nama, email, atau buku…"
+                class="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-gray-500 bg-gray-50"
+            >
+        </div>
+        
+        <!-- Tanggal Pinjam -->
+        <input 
+            type="date" 
+            name="tanggal_pinjam"
+            value="{{ tanggal_pinjam }}"
+            class="px-3 py-2.5 border border-gray-200 rounded-lg text-sm bg-gray-50 focus:outline-none focus:border-gray-500"
+            placeholder="Tanggal Pinjam"
+        >
+        
+        <!-- Jatuh Tempo -->
+        <input 
+            type="date" 
+            name="jatuh_tempo"
+            value="{{ jatuh_tempo }}"
+            class="px-3 py-2.5 border border-gray-200 rounded-lg text-sm bg-gray-50 focus:outline-none focus:border-gray-500"
+            placeholder="Jatuh Tempo"
+        >
+        
+        <!-- Sisa Hari -->
+        <input 
+            type="number" 
+            name="sisa_hari"
+            value="{{ sisa_hari }}"
+            placeholder="Sisa ≤"
+            min="0"
+            class="px-3 py-2.5 border border-gray-200 rounded-lg text-sm bg-gray-50 focus:outline-none focus:border-gray-500 w-20"
+        >
+        
+        <!-- Buttons -->
+        <button type="submit" class="bg-gray-800 hover:bg-gray-700 text-white text-sm font-semibold px-5 py-2.5 rounded-lg transition">
+            Cari
+        </button>
+        {% if search or tanggal_pinjam or jatuh_tempo or sisa_hari %}
+        <a href="{% url 'book_loan:loan_history' %}" class="text-sm text-gray-500 hover:text-gray-800 border border-gray-200 px-4 py-2.5 rounded-lg transition">
+            Reset
+        </a>
+        {% endif %}
+    </form>
 
-            <!-- Active Filter Info -->
-            {% if is_filtered %}
-            <div class="pt-3 border-t border-gray-200 text-xs text-gray-600">
-                <span class="font-semibold">Filter Aktif:</span>
-                {% if search %}<span class="ml-2 inline-block px-2 py-1 bg-blue-100 text-blue-700 rounded">{{ search }}</span>{% endif %}
-                {% if tanggal_pinjam %}<span class="ml-2 inline-block px-2 py-1 bg-green-100 text-green-700 rounded">Pinjam: {{ tanggal_pinjam }}</span>{% endif %}
-                {% if jatuh_tempo %}<span class="ml-2 inline-block px-2 py-1 bg-orange-100 text-orange-700 rounded">Tempo: {{ jatuh_tempo }}</span>{% endif %}
-                {% if sisa_hari %}<span class="ml-2 inline-block px-2 py-1 bg-red-100 text-red-700 rounded">Sisa: ≤{{ sisa_hari }} hari</span>{% endif %}
-            </div>
-            {% endif %}
-        </form>
-    </div>
-
-    <!-- Status Pills Filter -->
-    <div class="mb-6">
-        <div class="flex flex-wrap gap-2 bg-white border border-gray-100 rounded-lg p-3 shadow-sm">
-            <a href="{% url 'book_loan:loan_history' %}" class="px-3 py-1.5 rounded-full text-xs font-semibold transition-all {% if not status_filter %}bg-gray-800 text-white{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %}">
+    <!-- Status Filter Tabs -->
+    <div class="bg-white border border-gray-100 rounded-lg shadow-sm mb-6">
+        <div class="flex overflow-x-auto border-b border-gray-100">
+            <a href="{% url 'book_loan:loan_history' %}" class="flex-1 px-4 py-3 font-sans text-sm font-semibold border-b-2 {% if not status_filter %}border-gray-800 text-gray-800{% else %}border-transparent text-gray-600 hover:bg-gray-50{% endif %} transition-colors">
                 Semua
             </a>
             
-            <a href="?status=menunggu_konfirmasi" class="px-3 py-1.5 rounded-full text-xs font-semibold transition-all {% if status_filter == 'menunggu_konfirmasi' %}bg-yellow-600 text-white{% else %}bg-yellow-50 text-yellow-700 hover:bg-yellow-100{% endif %}">
+            <a href="?status=menunggu_konfirmasi" class="flex-1 px-4 py-3 font-sans text-sm font-semibold border-b-2 {% if status_filter == 'menunggu_konfirmasi' %}border-gray-800 text-gray-800{% else %}border-transparent text-gray-600 hover:bg-gray-50{% endif %} transition-colors">
                 Menunggu
             </a>
             
-            <a href="?status=siap_diambil" class="px-3 py-1.5 rounded-full text-xs font-semibold transition-all {% if status_filter == 'siap_diambil' %}bg-blue-600 text-white{% else %}bg-blue-50 text-blue-700 hover:bg-blue-100{% endif %}">
-                Siap Diambil
+            <a href="?status=siap_diambil" class="flex-1 px-4 py-3 font-sans text-sm font-semibold border-b-2 {% if status_filter == 'siap_diambil' %}border-gray-800 text-gray-800{% else %}border-transparent text-gray-600 hover:bg-gray-50{% endif %} transition-colors">
+                Siap
             </a>
             
-            <a href="?status=sedang_dipinjam" class="px-3 py-1.5 rounded-full text-xs font-semibold transition-all {% if status_filter == 'sedang_dipinjam' %}bg-green-600 text-white{% else %}bg-green-50 text-green-700 hover:bg-green-100{% endif %}">
-                Sedang Dipinjam
+            <a href="?status=sedang_dipinjam" class="flex-1 px-4 py-3 font-sans text-sm font-semibold border-b-2 {% if status_filter == 'sedang_dipinjam' %}border-gray-800 text-gray-800{% else %}border-transparent text-gray-600 hover:bg-gray-50{% endif %} transition-colors">
+                Dipinjam
             </a>
             
-            <a href="?status=menunggu_persetujuan_perpanjangan" class="px-3 py-1.5 rounded-full text-xs font-semibold transition-all {% if status_filter == 'menunggu_persetujuan_perpanjangan' %}bg-purple-600 text-white{% else %}bg-purple-50 text-purple-700 hover:bg-purple-100{% endif %}">
-                Menunggu Perpanjangan
+            <a href="?status=menunggu_persetujuan_perpanjangan" class="flex-1 px-4 py-3 font-sans text-sm font-semibold border-b-2 {% if status_filter == 'menunggu_persetujuan_perpanjangan' %}border-gray-800 text-gray-800{% else %}border-transparent text-gray-600 hover:bg-gray-50{% endif %} transition-colors">
+                Perpanjangan
             </a>
             
-            <a href="?status=terlambat" class="px-3 py-1.5 rounded-full text-xs font-semibold transition-all {% if status_filter == 'terlambat' %}bg-red-600 text-white{% else %}bg-red-50 text-red-700 hover:bg-red-100{% endif %}">
+            <a href="?status=terlambat" class="flex-1 px-4 py-3 font-sans text-sm font-semibold border-b-2 {% if status_filter == 'terlambat' %}border-gray-800 text-gray-800{% else %}border-transparent text-gray-600 hover:bg-gray-50{% endif %} transition-colors">
                 Terlambat
             </a>
             
-            <a href="?status=dikembalikan" class="px-3 py-1.5 rounded-full text-xs font-semibold transition-all {% if status_filter == 'dikembalikan' %}bg-indigo-600 text-white{% else %}bg-indigo-50 text-indigo-700 hover:bg-indigo-100{% endif %}">
+            <a href="?status=dikembalikan" class="flex-1 px-4 py-3 font-sans text-sm font-semibold border-b-2 {% if status_filter == 'dikembalikan' %}border-gray-800 text-gray-800{% else %}border-transparent text-gray-600 hover:bg-gray-50{% endif %} transition-colors">
                 Dikembalikan
             </a>
             
-            <a href="?status=ditolak" class="px-3 py-1.5 rounded-full text-xs font-semibold transition-all {% if status_filter == 'ditolak' %}bg-gray-600 text-white{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %}">
+            <a href="?status=ditolak" class="flex-1 px-4 py-3 font-sans text-sm font-semibold border-b-2 {% if status_filter == 'ditolak' %}border-gray-800 text-gray-800{% else %}border-transparent text-gray-600 hover:bg-gray-50{% endif %} transition-colors">
                 Ditolak
             </a>
         </div>
