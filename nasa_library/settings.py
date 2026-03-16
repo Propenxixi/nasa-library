@@ -197,8 +197,10 @@ LOGGING = {
     },
 }
 
-# Django-Crontab Settings - Auto Check-Out at 3:00 PM
+# Django-Crontab Settings
 CRONJOBS = [
     # Auto check-out students at 3:00 PM (15:00) every day
     ('0 15 * * *', 'attendance.cron.auto_checkout_at_closing'),
+    # Send reminder notifications for loans due tomorrow at 7:00 AM
+    ('0 7 * * *', 'book_loan.cron.send_due_reminders'),
 ]

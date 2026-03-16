@@ -205,6 +205,15 @@ def loan_management(request):
 
 
 @login_required
+def notifications(request):
+    """Display user's notifications page"""
+    context = {
+        'unread_count': Notification.objects.filter(user=request.user, is_read=False).count(),
+    }
+    return render(request, 'notifications.html', context)
+
+
+@login_required
 @require_http_methods(["POST"])
 def loan_approve(request, loan_id):
     """Approve a loan request"""

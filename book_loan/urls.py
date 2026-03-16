@@ -8,6 +8,7 @@ urlpatterns = [
     path('history/', views.loan_history, name='loan_history'),
     path('waiting-list/', views.waiting_list_view, name='waiting_list'),
     path('management/', views.loan_management, name='loan_management'),
+    path('notifications/', views.notifications, name='notifications'),
     
     # Loan Management Forms
     path('loans/<int:loan_id>/approve/', views.loan_approve, name='loan_approve'),

@@ -63,6 +63,15 @@
                 {% if user.is_authenticated %}
                     <!-- Authenticated User Section -->
                     <div class="flex items-center space-x-3 md:space-x-4">
+                    
+                    <!-- Notification Bell -->
+                    <a href="{% url 'book_loan:notifications' %}" class="relative p-2 text-gray-700 hover:text-gray-900 transition-colors" title="Notifikasi">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+                        </svg>
+                        <span id="notificationBadge" class="hidden absolute top-1 right-1 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold" style="font-size: 0.65rem;">0</span>
+                    </a>
+                    
                     <!-- User Profile Dropdown -->
                     <div class="relative group">
                         <button class="flex items-center space-x-2 hover:opacity-75 transition-opacity">
@@ -462,5 +471,36 @@
         if (isStudent) {
             checkPreferences();
         }
+    });
+</script>
+
+<!-- Notification Badge Script -->
+<script>
+    async function updateNotificationBadge() {
+        try {
+            const response = await fetch('{% url "book_loan:api_get_notifications" %}');
+            const data = await response.json();
+            
+            if (data.status === 'success') {
+                const badge = document.getElementById('notificationBadge');
+                const count = data.count;
+                
+                if (count > 0) {
+                    badge.textContent = count > 9 ? '9+' : count;
+                    badge.classList.remove('hidden');
+                } else {
+                    badge.classList.add('hidden');
+                }
+            }
+        } catch (error) {
+            console.error('Error updating notification badge:', error);
+        }
+    }
+
+    // Update on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        updateNotificationBadge();
+        // Update every 30 seconds
+        setInterval(updateNotificationBadge, 30000);
     });
 </script>

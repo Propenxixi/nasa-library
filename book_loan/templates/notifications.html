@@ -1,0 +1,321 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Notifikasi - SMAN 61 Jakarta Library{% endblock %}
+
+{% block extra_css %}
+<style>
+    .notification-item {
+        transition: all 0.3s ease;
+    }
+    
+    .notification-item.unread {
+        background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+        border-left: 4px solid #0284c7;
+    }
+    
+    .notification-item.read {
+        background: #f8fafc;
+        border-left: 4px solid #cbd5e1;
+    }
+    
+    .notification-item:hover {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        transform: translateY(-2px);
+    }
+    
+    .badge {
+        animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.7; }
+    }
+    
+    .notification-date {
+        font-size: 0.75rem;
+        color: #64748b;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="min-h-screen py-8 md:py-12">
+    <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Header -->
+        <div class="mb-8">
+            <div class="flex items-center justify-between mb-6">
+                <h1 class="text-3xl md:text-4xl font-display font-bold text-gray-900">
+                    🔔 Notifikasi
+                </h1>
+                <div id="unreadBadge" class="hidden">
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
+                        <span id="unreadCount">0</span> belum dibaca
+                    </span>
+                </div>
+            </div>
+            
+            <!-- Action Buttons -->
+            <div class="flex gap-3">
+                <button onclick="markAllAsRead()" class="px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors text-sm font-medium">
+                    ✓ Tandai Semua Dibaca
+                </button>
+                <button onclick="location.reload()" class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium">
+                    🔄 Segarkan
+                </button>
+            </div>
+        </div>
+
+        <!-- Notifications Container -->
+        <div id="notificationsContainer" class="space-y-4">
+            <!-- Loading State -->
+            <div id="loadingState" class="text-center py-12">
+                <div class="inline-block">
+                    <div class="w-12 h-12 border-4 border-gray-200 border-t-gray-900 rounded-full animate-spin"></div>
+                </div>
+                <p class="mt-4 text-gray-600">Memuat notifikasi...</p>
+            </div>
+        </div>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="hidden text-center py-16">
+            <div class="text-6xl mb-4">📭</div>
+            <h3 class="text-xl font-semibold text-gray-900 mb-2">Tidak ada notifikasi baru</h3>
+            <p class="text-gray-600 mb-6">Semua notifikasi sudah dibaca atau belum ada notifikasi untuk Anda.</p>
+            <a href="{% url 'book_loan:loan_history' %}" class="inline-block px-6 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors">
+                ← Kembali ke Riwayat Peminjaman
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Notification Modal (for fuller details if needed) -->
+<div id="notificationModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-40 flex items-center justify-center p-4">
+    <div class="bg-white rounded-lg max-w-2xl w-full max-h-[80vh] overflow-y-auto p-6">
+        <div class="flex justify-between items-center mb-4">
+            <h2 id="modalTitle" class="text-2xl font-bold text-gray-900"></h2>
+            <button onclick="closeNotificationModal()" class="text-gray-500 hover:text-gray-700 text-2xl">×</button>
+        </div>
+        <div id="modalContent"></div>
+        <div id="modalActions" class="mt-6 flex gap-3"></div>
+    </div>
+</div>
+
+<script>
+    // Load notifications on page load
+    document.addEventListener('DOMContentLoaded', loadNotifications);
+
+    async function loadNotifications() {
+        try {
+            const response = await fetch('{% url "book_loan:api_get_notifications" %}');
+            const data = await response.json();
+            
+            if (data.status === 'success') {
+                displayNotifications(data.notifications, data.count);
+                updateUnreadBadge(data.count);
+            }
+        } catch (error) {
+            console.error('Error loading notifications:', error);
+            document.getElementById('loadingState').innerHTML = '<p class="text-red-600">Gagal memuat notifikasi</p>';
+        }
+    }
+
+    function displayNotifications(notifications, unreadCount) {
+        const container = document.getElementById('notificationsContainer');
+        const emptyState = document.getElementById('emptyState');
+        
+        // Clear loading state
+        container.innerHTML = '';
+        
+        if (!notifications || notifications.length === 0) {
+            container.parentElement.style.display = 'none';
+            emptyState.classList.remove('hidden');
+            return;
+        }
+        
+        emptyState.classList.add('hidden');
+        container.parentElement.style.display = 'block';
+        
+        notifications.forEach(notification => {
+            const notifElement = createNotificationElement(notification);
+            container.appendChild(notifElement);
+        });
+    }
+
+    function createNotificationElement(notification) {
+        const div = document.createElement('div');
+        const isUnread = !notification.is_read;
+        const createdDate = new Date(notification.created_at);
+        const formattedDate = formatDate(createdDate);
+        
+        // Get icon based on notification type
+        const icon = getNotificationIcon(notification.type);
+        
+        div.className = `notification-item ${isUnread ? 'unread' : 'read'} p-5 rounded-lg border cursor-pointer`;
+        div.innerHTML = `
+            <div class="flex items-start gap-4">
+                <div class="text-3xl mt-1">${icon}</div>
+                <div class="flex-1">
+                    <div class="flex items-start justify-between">
+                        <div class="flex-1">
+                            <h3 class="font-semibold text-gray-900 text-lg mb-1">
+                                ${notification.title}
+                            </h3>
+                            <p class="text-gray-700 mb-3 leading-relaxed">
+                                ${notification.message}
+                            </p>
+                            <div class="notification-date">${formattedDate}</div>
+                        </div>
+                        ${isUnread ? `<span class="inline-block w-2.5 h-2.5 bg-blue-500 rounded-full mt-2 ml-2"></span>` : ''}
+                    </div>
+                    
+                    <div class="mt-4 flex gap-2">
+                        ${notification.type === 'reminder_due' ? `
+                            <button onclick="goToExtension(${notification.loan_id})" class="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm font-medium transition-colors">
+                                📋 Ajukan Perpanjangan
+                            </button>
+                        ` : ''}
+                        ${isUnread ? `
+                            <button onclick="markAsRead(${notification.id})" class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition-colors">
+                                ✓ Tandai Dibaca
+                            </button>
+                        ` : ''}
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Handle click to mark as read
+        if (isUnread) {
+            div.addEventListener('click', function(e) {
+                if (!e.target.closest('button')) {
+                    markAsRead(notification.id);
+                }
+            });
+        }
+        
+        return div;
+    }
+
+    function getNotificationIcon(type) {
+        const icons = {
+            'reminder_due': '⏰',
+            'extension_approved': '✅',
+            'extension_rejected': '❌',
+            'waitlist_ready': '📚',
+            'loan_approved': '✓',
+            'loan_rejected': '✗',
+        };
+        return icons[type] || '📬';
+    }
+
+    function formatDate(date) {
+        const today = new Date();
+        const yesterday = new Date(today);
+        yesterday.setDate(yesterday.getDate() - 1);
+        
+        const dateOnly = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+        const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+        const yesterdayOnly = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate());
+        
+        let dateStr = '';
+        if (dateOnly.getTime() === todayOnly.getTime()) {
+            dateStr = 'Hari ini';
+        } else if (dateOnly.getTime() === yesterdayOnly.getTime()) {
+            dateStr = 'Kemarin';
+        } else {
+            dateStr = date.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+        }
+        
+        const timeStr = date.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+        return `${dateStr} pukul ${timeStr}`;
+    }
+
+    async function markAsRead(notificationId) {
+        try {
+            const response = await fetch(`{% url "book_loan:api_mark_notification_read" notification_id=9999 %}`.replace('9999', notificationId), {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken'),
+                }
+            });
+            
+            const data = await response.json();
+            if (data.status === 'success') {
+                // Reload notifications
+                loadNotifications();
+            }
+        } catch (error) {
+            console.error('Error marking notification as read:', error);
+        }
+    }
+
+    async function markAllAsRead() {
+        try {
+            const container = document.getElementById('notificationsContainer');
+            const unreadNotifications = container.querySelectorAll('.notification-item.unread');
+            
+            if (unreadNotifications.length === 0) {
+                alert('Tidak ada notifikasi yang belum dibaca');
+                return;
+            }
+            
+            const promises = [];
+            unreadNotifications.forEach(notif => {
+                const button = notif.querySelector('button');
+                if (button && button.textContent.includes('Tandai Dibaca')) {
+                    const onclick = button.getAttribute('onclick');
+                    const notifId = onclick.match(/\d+/)[0];
+                    promises.push(markAsRead(parseInt(notifId)));
+                }
+            });
+            
+            await Promise.all(promises);
+            loadNotifications();
+        } catch (error) {
+            console.error('Error marking all as read:', error);
+        }
+    }
+
+    function goToExtension(loanId) {
+        // Redirect to loan history with anchor to the specific loan
+        window.location.href = `{% url "book_loan:loan_history" %}?loan_id=${loanId}#loan-${loanId}`;
+    }
+
+    function updateUnreadBadge(count) {
+        const badge = document.getElementById('unreadBadge');
+        const countSpan = document.getElementById('unreadCount');
+        
+        if (count > 0) {
+            countSpan.textContent = count;
+            badge.classList.remove('hidden');
+        } else {
+            badge.classList.add('hidden');
+        }
+    }
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    function closeNotificationModal() {
+        document.getElementById('notificationModal').classList.add('hidden');
+    }
+
+    // Auto-refresh notifications every 30 seconds
+    setInterval(loadNotifications, 30000);
+</script>
+{% endblock %}
