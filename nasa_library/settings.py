@@ -203,4 +203,6 @@ CRONJOBS = [
     ('0 15 * * *', 'attendance.cron.auto_checkout_at_closing'),
     # Send reminder notifications for loans due tomorrow at 7:00 AM
     ('0 7 * * *', 'book_loan.cron.send_due_reminders'),
+    # Mark loans as overdue (run daily at 8:00 AM)
+    ('0 8 * * *', 'book_loan.cron.handle_overdue_loans'),
 ]

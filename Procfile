@@ -1,1 +1,1 @@
-web: python manage.py migrate && python manage.py import_students --default && python manage.py import_books && python manage.py create_superuser && gunicorn nasa_library.wsgi --log-file -
+web: python manage.py migrate && python manage.py import_students --default && python manage.py import_books && python manage.py init_activities && python manage.py create_superuser && gunicorn nasa_library.wsgi --log-file -
