@@ -67,11 +67,11 @@ def loan_history(request):
     
     # Apply tanggal pinjam filter
     if tanggal_pinjam:
-        loans = loans.filter(loan_date__date__gte=tanggal_pinjam)
+        loans = loans.filter(loan_date__date=tanggal_pinjam)
     
     # Apply jatuh tempo filter
     if jatuh_tempo:
-        loans = loans.filter(due_date=jatuh_tempo)
+        loans = loans.filter(due_date__date=jatuh_tempo)
     
     # Apply sisa hari filter
     if sisa_hari:
@@ -146,11 +146,11 @@ def loan_management(request):
     
     # Apply tanggal pinjam filter
     if tanggal_pinjam:
-        all_loans = all_loans.filter(loan_date__date__gte=tanggal_pinjam)
+        all_loans = all_loans.filter(loan_date__date=tanggal_pinjam)
     
     # Apply jatuh tempo filter
     if jatuh_tempo:
-        all_loans = all_loans.filter(due_date=jatuh_tempo)
+        all_loans = all_loans.filter(due_date__date=jatuh_tempo)
     
     # Apply sisa hari filter (only for sedang_dipinjam status)
     if sisa_hari:
