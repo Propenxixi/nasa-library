@@ -100,7 +100,7 @@ class AttendanceAdmin(admin.ModelAdmin):
         return format_html(result)
     activity_list.short_description = "Activities List"
     
-    def has_delete_permission(self, request):
+    def has_delete_permission(self, request, obj=None):
         # Prevent accidental deletion of attendance records
         return request.user.is_superuser
     

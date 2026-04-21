@@ -105,5 +105,7 @@ class AuthenticationConfig(AppConfig):
 
     def ready(self):
         # Register the post_migrate signal
-        from django.db.models.signals import post_migrate
-        post_migrate.connect(import_students_callback, sender=self)
+        # TEMPORARILY DISABLED FOR FRESH START - comment out to re-enable auto-import
+        # from django.db.models.signals import post_migrate
+        # post_migrate.connect(import_students_callback, sender=self)
+        pass

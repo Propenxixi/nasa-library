@@ -1,219 +1,201 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Active Session - SMAN 61 Jakarta Library{% endblock %}
 
 {% block content %}
-<div class="min-h-screen bg-gradient-to-br from-white via-gray-50 to-white">
-    <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        
-        <!-- Header -->
-        <div class="mb-8">
-            <div class="flex items-center justify-between mb-4">
-                <h1 class="font-display text-4xl font-bold text-gray-900">Your Session</h1>
-                <div class="inline-flex items-center justify-center w-12 h-12 bg-green-100 rounded-full">
-                    <span class="text-2xl animate-pulse">🟢</span>
-                </div>
-            </div>
-            <p class="font-sans text-gray-600">You're currently in the library</p>
-        </div>
-
-        <!-- Live Session Card -->
-        <div class="bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-300 rounded-2xl p-8 mb-8 shadow-sm">
+<div class="w-full min-h-screen bg-white">
+    <!-- Main Content -->
+    <div class="w-full flex justify-center px-4 sm:px-6 md:px-8 py-6 sm:py-8 md:py-12">
+        <div class="w-full max-w-7xl">
             
-            <!-- Check-in Time -->
-            <div class="mb-8 pb-8 border-b border-green-200">
-                <p class="font-sans text-sm text-green-700 uppercase tracking-wide mb-2">Check-in Time</p>
-                <p class="font-display text-5xl font-bold text-green-900 mb-2">
-                    {{ active_attendance.check_in_time|date:"H:i" }}
-                </p>
-                <p class="font-sans text-sm text-green-700">
-                    {{ active_attendance.check_in_time|date:"l, j F Y" }}
-                </p>
-            </div>
-
-            <!-- Time Spent Card -->
-            <div class="bg-white rounded-xl p-6 border border-green-200 mb-8">
-                <p class="font-sans text-xs text-gray-500 uppercase tracking-wide mb-3">Time Spent in Library</p>
-                <div class="flex items-end gap-4">
-                    {% if hours_spent > 0 %}
-                        <div class="text-center">
-                            <p class="font-display text-5xl font-bold text-green-600">{{ hours_spent }}</p>
-                            <p class="font-sans text-sm text-gray-600 mt-1">hour{% if hours_spent != 1 %}s{% endif %}</p>
+            <!-- Header -->
+            <div class="mb-6 sm:mb-8 md:mb-8">
+                <div class="w-full h-auto relative mb-6 sm:mb-8">
+                    <div class="inline-flex flex-col justify-start items-start gap-1 sm:gap-2 md:gap-2">
+                        <div class="h-auto relative">
+                            <h1 class="text-slate-900 text-3xl sm:text-4xl md:text-5xl font-bold font-['Playfair_Display'] leading-tight sm:leading-tight md:leading-[57.60px]">Your Session</h1>
                         </div>
-                        <div class="text-2xl text-gray-300">•</div>
-                    {% endif %}
-                    <div class="text-center">
-                        <p class="font-display text-5xl font-bold text-green-600">{{ remaining_minutes }}</p>
-                        <p class="font-sans text-sm text-gray-600 mt-1">minute{% if remaining_minutes != 1 %}s{% endif %}</p>
-                    </div>
-                </div>
-                <div class="mt-4 pt-4 border-t border-gray-200">
-                    <p class="font-sans text-xs text-gray-500">Total: <span class="font-semibold text-gray-700">{{ minutes_spent }} minutes</span></p>
-                </div>
-            </div>
-
-            <!-- Activities Card -->
-            {% if active_attendance.activities.all %}
-                <div class="bg-white rounded-xl p-6 border border-green-200">
-                    <p class="font-sans text-xs text-gray-500 uppercase tracking-wide mb-4">Your Activities Today</p>
-                    <div class="space-y-2">
-                        {% for activity in active_attendance.activities.all %}
-                            <div class="flex items-center gap-3 p-3 bg-green-50 rounded-lg">
-                                <span class="text-2xl">{{ activity.emoji }}</span>
-                                <span class="font-sans text-gray-800">{{ activity.name }}</span>
+                        <div class="h-auto inline-flex justify-start items-center gap-2">
+                            <div class="w-2 h-2 relative bg-emerald-500 rounded-full flex-shrink-0"></div>
+                            <div class="h-auto flex justify-start items-start">
+                                <p class="text-zinc-600 text-base sm:text-lg md:text-xl font-normal font-['Work_Sans'] leading-normal">You're currently in the library</p>
                             </div>
-                        {% endfor %}
-                        {% if active_attendance.custom_activity %}
-                            <div class="flex items-center gap-3 p-3 bg-blue-50 rounded-lg">
-                                <span class="text-2xl">✏️</span>
-                                <span class="font-sans text-gray-800">{{ active_attendance.custom_activity }}</span>
-                            </div>
-                        {% endif %}
-                    </div>
-                </div>
-            {% endif %}
-        </div>
-
-        <!-- Reading Prompt Card -->
-        <div class="bg-gradient-to-br from-blue-50 to-cyan-50 border-2 border-blue-200 rounded-2xl p-6 mb-8">
-            <div class="flex items-start gap-4">
-                <div class="text-4xl">👀</div>
-                <div>
-                    <h3 class="font-display text-xl font-bold text-blue-900 mb-2">Have you picked up a book yet?</h3>
-                    <p class="font-sans text-sm text-blue-800 mb-4">Reading is a great way to spend your time in the library. Discover something new or continue a page-turner!</p>
-                    <div class="flex gap-2">
-                        <button class="px-4 py-2 bg-blue-600 text-white font-sans font-semibold rounded-lg hover:bg-blue-700 transition-colors text-sm">
-                            📚 Browse Books
-                        </button>
-                        <button class="px-4 py-2 bg-white text-blue-600 font-sans font-semibold rounded-lg border border-blue-300 hover:bg-blue-50 transition-colors text-sm">
-                            Later
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Quick Stats -->
-        <div class="grid grid-cols-2 gap-4 mb-8">
-            <div class="bg-white border border-gray-200 rounded-xl p-4">
-                <p class="font-sans text-xs text-gray-500 mb-2">Status</p>
-                <div class="flex items-center gap-2">
-                    <div class="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-                    <p class="font-sans font-semibold text-green-700">Active</p>
-                </div>
-            </div>
-            <div class="bg-white border border-gray-200 rounded-xl p-4">
-                <p class="font-sans text-xs text-gray-500 mb-2">Check-out</p>
-                <p class="font-sans font-semibold text-gray-900">3:00 PM (Auto)</p>
-                <p class="font-sans text-xs text-gray-600 mt-1">or anytime below</p>
-            </div>
-        </div>
-
-        <!-- Check-Out Form - AJAX Version -->
-        <div class="bg-white border border-gray-200 rounded-2xl p-6 md:p-8 shadow-sm">
-            <h2 class="font-display text-2xl font-bold text-gray-900 mb-4">Ready to Leave?</h2>
-            <p class="font-sans text-gray-600 mb-6">Click below to check out and end your session</p>
-            
-            <!-- Session Summary -->
-            <div class="mb-6 p-4 rounded-xl border-2 border-gray-200 bg-gray-50">
-                <p class="font-sans text-sm text-gray-700 mb-3">
-                    <span class="font-semibold">You checked in at:</span> {{ active_attendance.check_in_time|date:"H:i, l j F Y" }}
-                </p>
-                <p class="font-sans text-sm text-gray-700 mb-3">
-                    <span class="font-semibold">Check-out will be recorded at:</span> <span id="checkout-time">--:--</span>
-                </p>
-                <p class="font-sans text-sm text-gray-700">
-                    <span class="font-semibold">Visit duration will be:</span> <span id="visit-duration">calculating...</span>
-                </p>
-            </div>
-
-            <!-- Warning -->
-            <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6">
-                <p class="font-sans text-sm text-amber-900">
-                    <span class="font-semibold">💡 Tip:</span> Your visit history helps us track library usage and improve services. Don't forget to check out!
-                </p>
-            </div>
-
-            <!-- Check-Out Button -->
-            <button id="checkout-btn" class="w-full py-4 px-6 bg-red-600 text-white font-sans font-semibold rounded-xl hover:bg-red-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 text-lg mb-3">
-                👋 Check Out
-            </button>
-
-            <!-- Continue Button -->
-            <a href="{% url 'main:mainpage' %}" class="block w-full py-3 px-6 text-center text-gray-700 font-sans font-semibold rounded-xl border-2 border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition-colors">
-                Explore the Library
-            </a>
-        </div>
-
-        <!-- Loading Modal -->
-        <div id="checkout-loading-modal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-            <div class="bg-white rounded-2xl p-8 max-w-sm mx-4 shadow-2xl">
-                <div class="text-center">
-                    <div class="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4">
-                        <div class="flex gap-1">
-                            <div class="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style="animation-delay: 0ms"></div>
-                            <div class="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style="animation-delay: 150ms"></div>
-                            <div class="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style="animation-delay: 300ms"></div>
                         </div>
                     </div>
-                    <h3 class="font-display text-lg font-bold text-gray-900 mb-2">Processing Checkout</h3>
-                    <p class="font-sans text-sm text-gray-600">Saving your visit information...</p>
                 </div>
             </div>
-        </div>
 
-        <!-- Success Modal -->
-        <div id="checkout-success-modal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-            <div class="bg-white rounded-2xl p-8 max-w-sm mx-4 shadow-2xl">
-                <div class="text-center">
-                    <div class="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-4">
-                        <span class="text-3xl animate-bounce">✓</span>
+            <!-- Main Session Container -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-5 md:gap-6 mb-8 sm:mb-10 md:mb-12">
+                
+                <!-- Left Column - Main Session Card -->
+                <div class="md:col-span-2">
+                    <div class="bg-white rounded-xl sm:rounded-2xl shadow-[0px_1px_3px_0px_rgba(0,0,0,0.10)] outline outline-1 outline-offset-[-1px] outline-gray-200">
+                        
+                        <!-- Active Session Header -->
+                        <div class="w-full h-auto px-4 sm:px-6 py-4 sm:py-6 inline-flex justify-start items-center gap-2 sm:gap-3 border-b border-gray-200">
+                            <div class="w-10 h-10 sm:w-12 sm:h-12 px-2 sm:px-3 bg-green-100 rounded-full flex justify-center items-center flex-shrink-0">
+                                <svg class="w-5 h-5 sm:w-6 sm:h-6 text-emerald-500" fill="currentColor" viewBox="0 0 20 20">
+                                    <circle cx="10" cy="10" r="8" fill="currentColor"/>
+                                </svg>
+                            </div>
+                            <div class="inline-flex flex-col justify-start items-start min-w-0">
+                                <div class="h-auto relative">
+                                    <h2 class="text-slate-900 text-lg sm:text-xl md:text-2xl font-bold font-['Playfair_Display'] leading-snug">Active Session</h2>
+                                </div>
+                                <div class="h-auto relative">
+                                    <p class="text-zinc-600 text-xs sm:text-sm font-normal font-['Work_Sans'] leading-snug truncate">{{ active_attendance.check_in_time|date:"l, j F Y" }}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Check-in Time and Time Spent -->
+                        <div class="w-full px-4 sm:px-6 py-4 sm:py-6 border-b border-gray-200">
+                            <div class="grid grid-cols-2 gap-4 sm:gap-6 md:gap-8">
+                                <div>
+                                    <p class="text-zinc-600 text-[8px] sm:text-[9px] md:text-[10px] font-semibold font-['Work_Sans'] uppercase leading-3 sm:leading-4 tracking-wide mb-2">Check-in Time</p>
+                                    <p class="text-slate-900 text-2xl sm:text-3xl md:text-4xl font-bold font-['Playfair_Display'] leading-tight">
+                                        {{ active_attendance.check_in_time|date:"H:i" }}
+                                    </p>
+                                </div>
+                                <div>
+                                    <p class="text-zinc-600 text-[8px] sm:text-[9px] md:text-[10px] font-semibold font-['Work_Sans'] uppercase leading-3 sm:leading-4 tracking-wide mb-2">Time Spent</p>
+                                    <p class="text-slate-900 text-2xl sm:text-3xl md:text-4xl font-bold font-['Playfair_Display'] leading-tight">{{ minutes_spent }}</p>
+                                    <p class="text-zinc-600 text-xs sm:text-xs md:text-xs font-normal font-['Work_Sans'] leading-snug">minute{% if minutes_spent != 1 %}s{% endif %}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Your Activities Today -->
+                        <div class="w-full px-4 sm:px-6 py-4 sm:py-6 inline-flex flex-col justify-start items-start gap-3 sm:gap-4">
+                            <p class="text-zinc-600 text-[8px] sm:text-[9px] md:text-[10px] font-semibold font-['Work_Sans'] uppercase leading-3 sm:leading-4 tracking-wide">Your Activities Today</p>
+                            <div class="w-full flex flex-col justify-start items-start gap-2 sm:gap-3">
+                                {% if active_attendance.activities.all %}
+                                    {% for activity in active_attendance.activities.all %}
+                                    <div class="w-full h-14 sm:h-16 pl-3 sm:pl-4 bg-gray-50 rounded-lg sm:rounded-[10px] outline outline-1 outline-offset-[-1px] outline-gray-200 inline-flex justify-start items-center gap-2 sm:gap-3">
+                                        <div class="w-9 h-9 sm:w-10 sm:h-10 px-2 bg-blue-100 rounded-lg flex justify-center items-center flex-shrink-0">
+                                            <svg class="w-4 h-4 sm:w-5 sm:h-5 text-blue-900" fill="currentColor" viewBox="0 0 20 20">
+                                                <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4z"/>
+                                                <path fill-rule="evenodd" d="M3 10a1 1 0 011-1h12a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6z" clip-rule="evenodd"/>
+                                            </svg>
+                                        </div>
+                                        <div class="h-auto relative min-w-0 flex-1">
+                                            <p class="text-slate-900 text-xs sm:text-sm font-medium font-['Work_Sans'] leading-snug truncate">{{ activity.name }}</p>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                {% endif %}
+                                {% if active_attendance.custom_activity %}
+                                <div class="w-full h-14 sm:h-16 pl-3 sm:pl-4 bg-gray-50 rounded-lg sm:rounded-[10px] outline outline-1 outline-offset-[-1px] outline-gray-200 inline-flex justify-start items-center gap-2 sm:gap-3">
+                                    <div class="w-9 h-9 sm:w-10 sm:h-10 px-2 bg-blue-100 rounded-lg flex justify-center items-center flex-shrink-0">
+                                        <svg class="w-4 h-4 sm:w-5 sm:h-5 text-blue-900" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4z" clip-rule="evenodd"/>
+                                            <path fill-rule="evenodd" d="M3 10a1 1 0 011-1h12a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6z" clip-rule="evenodd"/>
+                                        </svg>
+                                    </div>
+                                    <div class="h-auto relative min-w-0 flex-1">
+                                        <p class="text-slate-900 text-xs sm:text-sm font-medium font-['Work_Sans'] leading-snug truncate">{{ active_attendance.custom_activity }}</p>
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
                     </div>
-                    <h3 class="font-display text-lg font-bold text-gray-900 mb-2">Check-Out Successful!</h3>
-                    <p class="font-sans text-sm text-gray-600 mb-4" id="success-message">
-                        Thank you for visiting! You spent <span id="success-duration">--</span> in the library.
-                    </p>
-                    <div class="bg-gray-50 rounded-xl p-4 mb-6 text-left">
-                        <p class="font-sans text-xs text-gray-600 mb-1">
-                            <span class="text-gray-800 font-semibold">Check-in:</span> <span id="success-checkin">--:--</span>
+                </div>
+
+                <!-- Right Column - Status Cards -->
+                <div class="flex flex-col gap-4 sm:gap-5 md:gap-6">
+                    <!-- Status Card -->
+                    <div class="bg-white rounded-xl sm:rounded-2xl shadow-[0px_1px_3px_0px_rgba(0,0,0,0.10)] outline outline-1 outline-offset-[-1px] outline-gray-200 p-4 sm:p-6">
+                        <p class="text-zinc-600 text-xs sm:text-xs md:text-xs font-semibold font-['Work_Sans'] uppercase leading-3 sm:leading-4 tracking-wide mb-3">Status</p>
+                        <div class="inline-flex justify-start items-center gap-2">
+                            <div class="w-3 h-3 relative bg-emerald-500 rounded-full flex-shrink-0"></div>
+                            <p class="text-emerald-500 text-base sm:text-lg md:text-xl font-bold font-['Work_Sans'] leading-snug">Active</p>
+                        </div>
+                        <p class="text-zinc-600 text-xs sm:text-sm font-normal font-['Work_Sans'] leading-snug mt-3">Your session is currently active and being tracked.</p>
+                    </div>
+
+                    <!-- Auto Check-out Card -->
+                    <div class="bg-white rounded-xl sm:rounded-2xl shadow-[0px_1px_3px_0px_rgba(0,0,0,0.10)] outline outline-1 outline-offset-[-1px] outline-gray-200 p-4 sm:p-6">
+                        <p class="text-zinc-600 text-xs sm:text-xs md:text-xs font-semibold font-['Work_Sans'] uppercase leading-3 sm:leading-4 tracking-wide mb-3">Auto Check-out</p>
+                        <p class="text-slate-900 text-base sm:text-lg md:text-xl font-bold font-['Work_Sans'] leading-snug">15:00</p>
+                        <p class="text-zinc-600 text-xs sm:text-sm font-normal font-['Work_Sans'] leading-snug mt-3">The system will automatically check you out at closing time if you forget.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reading Prompt Card -->
+            <div class="w-full bg-sky-50 rounded-xl sm:rounded-2xl outline outline-1 outline-offset-[-1px] outline-sky-200 p-4 sm:p-6 mb-8 sm:mb-10 md:mb-12">
+                <div class="flex flex-col sm:flex-row justify-start items-start gap-3 sm:gap-4 w-full">
+                    <div class="w-6 h-8 sm:w-7 sm:h-9 md:w-8 md:h-10 flex justify-start items-start flex-shrink-0">
+                        <svg class="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-blue-900" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10.519a9.965 9.965 0 015.5-1.565c1.747 0 3.413.448 4.868 1.227V4.804z"/>
+                            <path d="M15 9.304c-1.455-.781-3.121-1.075-4.868-1.075-.946 0-1.853.166-2.718.484.685-1.653 2.406-2.783 4.452-2.783 1.255 0 2.443.29 3.5.804v10.519a9.965 9.965 0 00-5.5 1.565V9.304z"/>
+                        </svg>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <h3 class="text-slate-900 text-base sm:text-lg md:text-xl font-bold font-['Playfair_Display'] leading-snug mb-2">Have you picked up a book yet?</h3>
+                        <p class="text-zinc-600 text-xs sm:text-sm font-normal font-['Work_Sans'] leading-snug mb-3">Reading is a great way to spend your time in the library. Discover something new or continue a page-turner!</p>
+                        <div class="flex flex-col sm:flex-row justify-start items-start sm:items-center gap-2 sm:gap-3">
+                            <a href="{% url 'book:book_list' %}" class="h-10 sm:h-12 px-4 sm:px-6 bg-blue-900 rounded-lg sm:rounded-[10px] flex justify-center items-center gap-2 hover:bg-blue-800 transition-colors w-full sm:w-auto">
+                                <svg class="w-4 h-4 sm:w-5 sm:h-5 text-white flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z"/>
+                                </svg>
+                                <p class="text-center text-white text-xs sm:text-sm font-semibold font-['Work_Sans'] leading-snug">Browse Books</p>
+                            </a>
+                            <button class="h-10 sm:h-12 px-4 sm:px-6 bg-white rounded-lg sm:rounded-[10px] outline outline-1 outline-offset-[-1px] outline-gray-200 flex justify-center items-center hover:bg-gray-50 transition-colors w-full sm:w-auto">
+                                <p class="text-center text-zinc-600 text-xs sm:text-sm font-semibold font-['Work_Sans'] leading-snug">Later</p>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Check-Out Form -->
+            <div class="w-full bg-white rounded-xl sm:rounded-2xl shadow-[0px_1px_3px_0px_rgba(0,0,0,0.10)] outline outline-1 outline-offset-[-1px] outline-gray-200 overflow-hidden">
+                <div class="w-full h-px bg-gray-200"></div>
+                
+                <div class="w-full px-4 sm:px-8 py-6 sm:py-8 inline-flex flex-col justify-start items-start gap-0">
+                    <h2 class="text-slate-900 text-2xl sm:text-2xl md:text-3xl font-bold font-['Playfair_Display'] leading-snug mb-3 sm:mb-4">Ready to Leave?</h2>
+                    <p class="text-zinc-600 text-xs sm:text-sm font-normal font-['Work_Sans'] leading-snug mb-4 sm:mb-6">Click below to check out and end your session</p>
+                    
+                    <!-- Session Summary -->
+                    <div class="w-full bg-gray-50 rounded-lg sm:rounded-xl outline outline-1 outline-offset-[-1px] outline-gray-200 px-3 sm:px-6 py-3 sm:py-6 mb-4 sm:mb-6">
+                        <div class="flex flex-col justify-start items-start gap-2 sm:gap-3">
+                            <div class="w-full inline-flex flex-col sm:flex-row gap-1 sm:gap-0 sm:justify-between sm:items-center">
+                                <p class="text-zinc-600 text-xs font-medium font-['Work_Sans'] leading-snug">Check-in:</p>
+                                <p class="text-slate-900 text-xs font-bold font-['Work_Sans'] leading-snug">{{ active_attendance.check_in_time|date:"H:i, l j F Y" }}</p>
+                            </div>
+                            <div class="w-full inline-flex flex-col sm:flex-row gap-1 sm:gap-0 sm:justify-between sm:items-center">
+                                <p class="text-zinc-600 text-xs font-medium font-['Work_Sans'] leading-snug">Current time:</p>
+                                <p class="text-slate-900 text-xs font-bold font-['Work_Sans'] leading-snug" id="display-time">--:--</p>
+                            </div>
+                            <div class="w-full inline-flex flex-col sm:flex-row gap-1 sm:gap-0 sm:justify-between sm:items-center">
+                                <p class="text-zinc-600 text-xs font-medium font-['Work_Sans'] leading-snug">Visit duration:</p>
+                                <p class="text-slate-900 text-xs font-bold font-['Work_Sans'] leading-snug" id="visit-duration">{{ minutes_spent }} minutes</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tip -->
+                    <div class="w-full bg-amber-50 rounded-lg sm:rounded-xl outline outline-1 outline-offset-[-1px] outline-amber-200 px-3 sm:px-4 py-3 sm:py-4 mb-4 sm:mb-6">
+                        <p class="text-amber-900 text-xs font-normal font-['Work_Sans'] leading-snug">
+                            <span class="font-semibold">Tip:</span> Your visit history helps us track library usage and improve services. Don't forget to check out!
                         </p>
-                        <p class="font-sans text-xs text-gray-600">
-                            <span class="text-gray-800 font-semibold">Check-out:</span> <span id="success-checkout">--:--</span>
-                        </p>
                     </div>
-                    <button onclick="window.location.href=this.dataset.url;" data-url="{% url 'attendance:check_in' %}" class="w-full py-3 px-6 bg-green-600 text-white font-sans font-semibold rounded-xl hover:bg-green-700 transition-colors">
-                        Return to Check-In
-                    </button>
-                </div>
-            </div>
-        </div>
 
-        <!-- Error Modal -->
-        <div id="checkout-error-modal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-            <div class="bg-white rounded-2xl p-8 max-w-sm mx-4 shadow-2xl">
-                <div class="text-center">
-                    <div class="inline-flex items-center justify-center w-16 h-16 bg-red-100 rounded-full mb-4">
-                        <span class="text-3xl">⚠️</span>
-                    </div>
-                    <h3 class="font-display text-lg font-bold text-gray-900 mb-2">Checkout Failed</h3>
-                    <p class="font-sans text-sm text-gray-600 mb-6" id="error-message">An error occurred while processing your checkout.</p>
-                    <div class="flex gap-3">
-                        <button onclick="document.getElementById('checkout-error-modal').classList.add('hidden')" class="flex-1 py-3 px-4 bg-gray-200 text-gray-800 font-sans font-semibold rounded-xl hover:bg-gray-300 transition-colors">
-                            Close
+                    <!-- Buttons -->
+                    <div class="w-full flex flex-col sm:flex-row justify-start items-stretch sm:items-center gap-3">
+                        <button id="checkout-btn" class="w-full sm:flex-1 h-12 px-4 sm:px-6 bg-red-600 rounded-lg sm:rounded-[10px] flex justify-center items-center hover:bg-red-700 transition-colors">
+                            <p class="text-center text-white text-sm sm:text-base font-semibold font-['Work_Sans'] leading-snug">Check Out</p>
                         </button>
-                        <button onclick="document.getElementById('checkout-btn').click()" class="flex-1 py-3 px-4 bg-red-600 text-white font-sans font-semibold rounded-xl hover:bg-red-700 transition-colors">
-                            Try Again
-                        </button>
+                        <a href="{% url 'main:mainpage' %}" class="w-full sm:flex-1 h-12 px-4 sm:px-6 bg-white rounded-lg sm:rounded-[10px] outline outline-1 outline-offset-[-1px] outline-gray-200 flex justify-center items-center hover:bg-gray-50 transition-colors">
+                            <p class="text-center text-blue-900 text-sm sm:text-base font-semibold font-['Work_Sans'] leading-snug">Explore Library</p>
+                        </a>
                     </div>
                 </div>
             </div>
-        </div>
-
-        <!-- Info Message -->
-        <div class="mt-8 p-4 bg-gray-50 rounded-xl border border-gray-200">
-            <p class="font-sans text-xs text-gray-600 text-center">
-                <span class="font-semibold">Automatic Check-out:</span> If you forget to check out, the system will automatically record your checkout at 3:00 PM.
-            </p>
         </div>
     </div>
 </div>
@@ -238,12 +220,87 @@
     }
 </style>
 
+<!-- Loading Modal -->
+<div id="checkout-loading-modal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-lg sm:rounded-2xl p-6 sm:p-8 w-full max-w-sm shadow-2xl">
+        <div class="text-center">
+            <div class="inline-flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 bg-blue-100 rounded-full mb-3 sm:mb-4">
+                <div class="flex gap-1">
+                    <div class="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style="animation-delay: 0s;"></div>
+                    <div class="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style="animation-delay: 0.1s;"></div>
+                    <div class="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style="animation-delay: 0.2s;"></div>
+                </div>
+            </div>
+            <h3 class="font-display text-base sm:text-lg font-bold text-gray-900 mb-2">Processing Checkout</h3>
+            <p class="font-sans text-xs sm:text-sm text-gray-600">Saving your visit information...</p>
+        </div>
+    </div>
+</div>
+
+<!-- Success Modal -->
+<div id="checkout-success-modal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-lg sm:rounded-2xl p-6 sm:p-8 w-full max-w-sm shadow-2xl">
+        <div class="text-center">
+            <div class="inline-flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 mb-3 sm:mb-4">
+                <img src="{% static 'assets/ChecklistModal.svg' %}" alt="Success" class="w-14 h-14 sm:w-16 sm:h-16">
+            </div>
+            <h3 class="font-display text-base sm:text-lg font-bold text-gray-900 mb-2">Check-Out Successful!</h3>
+            <p class="font-sans text-xs sm:text-sm text-gray-600 mb-4" id="success-message">
+                Thank you for visiting! You spent <span id="success-duration">--</span> in the library.
+            </p>
+            <div class="bg-gray-50 rounded-lg sm:rounded-xl p-3 sm:p-4 mb-4 sm:mb-6 text-left">
+                <p class="font-sans text-xs text-gray-600 mb-2">
+                    <span class="font-semibold">Check-in:</span> <span id="success-checkin">--:--</span>
+                </p>
+                <p class="font-sans text-xs text-gray-600 mb-2">
+                    <span class="font-semibold">Check-out:</span> <span id="success-checkout">--:--</span>
+                </p>
+                <p class="font-sans text-xs text-gray-600">
+                    <span class="font-semibold">Total time:</span> <span id="success-total-minutes">--</span>
+                </p>
+            </div>
+            <!-- Activities Summary -->
+            <div class="w-full bg-gray-50 rounded-lg sm:rounded-xl p-3 sm:p-4 mb-4 sm:mb-6 text-left">
+                <p class="font-sans text-xs font-semibold text-gray-600 mb-3">Activities</p>
+                <div class="flex flex-col gap-2" id="success-activities-list">
+                    <!-- Activities will be populated by JavaScript -->
+                </div>
+            </div>
+            <button onclick="window.location.href=this.dataset.url;" data-url="{% url 'attendance:check_in' %}" class="w-full py-2.5 sm:py-3 px-6 text-white font-sans text-xs sm:text-sm font-semibold rounded-lg sm:rounded-xl hover:opacity-90 transition-all" style="background-color: #1E3A8A;">
+                Return to Check-In
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Error Modal -->
+<div id="checkout-error-modal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-lg sm:rounded-2xl p-6 sm:p-8 w-full max-w-sm shadow-2xl">
+        <div class="text-center">
+            <div class="inline-flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 bg-red-100 rounded-full mb-3 sm:mb-4">
+                <svg class="w-7 h-7 sm:w-8 sm:h-8 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                </svg>
+            </div>
+            <h3 class="font-display text-base sm:text-lg font-bold text-gray-900 mb-2">Checkout Failed</h3>
+            <p class="font-sans text-xs sm:text-sm text-gray-600 mb-4 sm:mb-6" id="error-message">An error occurred while processing your checkout.</p>
+            <div class="flex flex-col sm:flex-row gap-2 sm:gap-3">
+                <button id="error-btn" class="flex-1 py-2.5 sm:py-3 px-6 bg-red-600 text-white font-sans text-xs sm:text-sm font-semibold rounded-lg sm:rounded-xl hover:bg-red-700 transition-colors">
+                    Try Again
+                </button>
+                <button onclick="document.getElementById('checkout-error-modal').classList.add('hidden')" class="flex-1 py-2.5 sm:py-3 px-6 bg-gray-200 text-gray-900 font-sans text-xs sm:text-sm font-semibold rounded-lg sm:rounded-xl hover:bg-gray-300 transition-colors">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
-    // Update checkout time display when page loads
+    // Update current time display
     window.addEventListener('DOMContentLoaded', function() {
-        updateCheckoutDisplay();
-        // Update every second
-        setInterval(updateCheckoutDisplay, 1000);
+        updateTimeDisplay();
+        setInterval(updateTimeDisplay, 1000);
     });
 
     // Use server time to ensure Jakarta timezone
@@ -260,11 +317,11 @@
         return new Date(Date.now() + timeDiff);
     }
 
-    function updateCheckoutDisplay() {
+    function updateTimeDisplay() {
         const now = getAdjustedNow();
         const hours = String(now.getHours()).padStart(2, '0');
         const minutes = String(now.getMinutes()).padStart(2, '0');
-        document.getElementById('checkout-time').textContent = hours + ':' + minutes;
+        document.getElementById('display-time').textContent = hours + ':' + minutes;
         
         // Update duration based on server time
         const durationMs = now - checkInTime;
@@ -300,7 +357,7 @@
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRFToken': document.querySelector('[name="csrfmiddlewaretoken"]').value
+                    'X-CSRFToken': document.querySelector('[name="csrfmiddlewaretoken"]')?.value || ''
                 },
                 body: JSON.stringify({})
             });
@@ -313,21 +370,53 @@
                 document.getElementById('success-duration').textContent = data.duration_display;
                 document.getElementById('success-checkin').textContent = data.check_in_time_formatted;
                 document.getElementById('success-checkout').textContent = data.check_out_time_formatted;
+                document.getElementById('success-total-minutes').textContent = data.duration_minutes + 'm';
+                
+                // Populate activities
+                const activitiesList = document.getElementById('success-activities-list');
+                activitiesList.innerHTML = '';
+                if (data.activities && data.activities.length > 0) {
+                    data.activities.forEach(activity => {
+                        const activityItem = document.createElement('div');
+                        activityItem.className = 'flex items-center gap-2';
+                        activityItem.innerHTML = `
+                            <div class="w-5 h-5 flex justify-center items-center flex-shrink-0">
+                                <svg class="w-4 h-4 text-blue-900" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                </svg>
+                            </div>
+                            <span class="font-sans text-xs text-gray-700">${activity.name}</span>
+                        `;
+                        activitiesList.appendChild(activityItem);
+                    });
+                } else {
+                    const noActivityItem = document.createElement('p');
+                    noActivityItem.className = 'font-sans text-xs text-gray-600';
+                    noActivityItem.textContent = 'No activities recorded';
+                    activitiesList.appendChild(noActivityItem);
+                }
+                
                 successModal.classList.remove('hidden');
-                console.log('✓ Checkout successful:', data);
+                console.log('Check-out successful:', data);
             } else {
                 // Show error modal
                 document.getElementById('error-message').textContent = data.message || 'An error occurred while processing your checkout.';
                 errorModal.classList.remove('hidden');
-                console.error('✗ Checkout failed:', data);
+                console.error('Check-out failed:', data);
             }
         } catch (error) {
             loadingModal.classList.add('hidden');
             document.getElementById('error-message').textContent = `Network error: ${error.message}`;
             document.getElementById('checkout-error-modal').classList.remove('hidden');
-            console.error('✗ Checkout error:', error);
+            console.error('Check-out error:', error);
         }
     }
+
+    // Allow retry on error
+    document.getElementById('error-btn').addEventListener('click', function() {
+        document.getElementById('checkout-error-modal').classList.add('hidden');
+        performCheckout();
+    });
 </script>
 
 {% endblock %}

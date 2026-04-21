@@ -44,7 +44,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         from django.db import IntegrityError
         from django.contrib.auth.hashers import make_password
-        
+
         # Determine filepath
         excel_file = options.get('excel_file')
         use_default = options.get('default')
@@ -90,14 +90,14 @@ class Command(BaseCommand):
 
             # First pass: read all data and prepare
             all_readied_data = []
-            
+
             for row_idx, row in enumerate(worksheet.iter_rows(min_row=2, values_only=True), start=2):
                 try:
                     # Handle row safely with bounds checking
                     if len(row) < 2:
                         skipped_count += 1
                         continue
-                        
+
                     nis = row[0]
                     nama = row[1]
                     jenis_kelamin = row[2] if len(row) > 2 else None
@@ -206,9 +206,9 @@ class Command(BaseCommand):
                         # Process in chunks
                         if len(users_to_create) >= chunk_size:
                             self.stdout.write(f'  Creating chunk {i // chunk_size + 1}... {i+1}/{len(creates)} rows', ending='\r')
-                            
+
                             created_users = User.objects.bulk_create(users_to_create, ignore_conflicts=False)
-                            
+
                             profiles = [
                                 UserProfile(
                                     user=profile_data['user'],
@@ -220,7 +220,7 @@ class Command(BaseCommand):
                                 for profile_data in profiles_to_create
                             ]
                             UserProfile.objects.bulk_create(profiles, ignore_conflicts=False)
-                            
+
                             users_to_create = []
                             profiles_to_create = []
 
@@ -228,7 +228,7 @@ class Command(BaseCommand):
                     if users_to_create:
                         self.stdout.write(f'  Creating final chunk... {len(creates)}/{len(creates)}', ending='')
                         created_users = User.objects.bulk_create(users_to_create, ignore_conflicts=False)
-                        
+
                         profiles = [
                             UserProfile(
                                 user=profile_data['user'],

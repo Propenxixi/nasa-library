@@ -1,87 +1,304 @@
 {% extends 'base.html' %}
 {% load static %}
-{% load book_extras %}
-{% block title %}Home — Nasa Library{% endblock %}
+{% block title %}Explore Books — Nasa Library{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Card gradient border matched from Figma */
+    .figma-card {
+        position: relative;
+        background-color: var(--foundationneutralneutral-50, #ffffff);
+        border-radius: 10px;
+        display: flex;
+        flex-direction: column;
+        padding: 24px 28px;
+        gap: 12px;
+        overflow: hidden;
+    }
+
+    .figma-card::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        padding: 1.5px;
+        border-radius: 10px;
+        background: linear-gradient(111deg, rgba(36, 66, 160, 1) 0%, rgba(13, 24, 58, 1) 100%);
+        -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+        -webkit-mask-composite: xor;
+        mask-composite: exclude;
+        pointer-events: none;
+    }
+
+    .book-chip {
+        display: inline-flex;
+        align-items: center;
+        padding: 4px 14px;
+        background-color: #f0fdf4;
+        border-radius: 23px;
+        border: 1px solid #10b981;
+    }
+
+    .book-chip span {
+        color: #10b981;
+        font-family: inherit;
+        font-size: 14px;
+        font-weight: 500;
+        white-space: nowrap;
+    }
+
+    @media (max-width: 768px) {
+        .main-heading {
+            font-size: 32px !important;
+            margin-bottom: 32px !important;
+        }
+        .section-heading {
+            font-size: 20px !important;
+        }
+        .figma-card {
+            padding: 20px;
+        }
+        .category-name {
+            font-size: 22px !important;
+        }
+    .card-inner-info {
+            flex-direction: column;
+            align-items: flex-start !important;
+            gap: 12px;
+        }
+        .mobile-category-scroll {
+            display: grid;
+            grid-template-rows: repeat(2, auto);
+            grid-auto-flow: column;
+            overflow-x: auto;
+            gap: 16px;
+            padding: 10px 4px 24px 4px;
+            scroll-snap-type: x mandatory;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+        .mobile-category-scroll::-webkit-scrollbar {
+            display: none;
+        }
+        .mobile-category-card {
+            width: 280px;
+            scroll-snap-align: start;
+            flex-shrink: 0;
+        }
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="max-w-6xl mx-auto px-6 py-8">
+<div class="w-full min-h-screen pt-8 md:pt-12 pb-20">
+    <div class="max-w-[1280px] mx-auto px-4 sm:px-6 md:px-10">
 
-    {% if genre_books %}
-    {% for genre, books in genre_books.items %}
-    <section class="mb-10">
-        <div class="flex items-baseline justify-between border-b border-gray-200 pb-3 mb-5">
-            <h2 class="text-xl font-bold text-gray-800" style="font-family:'Playfair Display',serif">{{ genre }}</h2>
-            <a href="{% url 'book:book_list' %}?category={{ genre|urlencode }}"
-               class="text-xs font-semibold text-gray-500 hover:text-gray-800 tracking-wide transition">
-                Lihat Semua ›
-            </a>
-        </div>
-        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-            {% for book in books %}
-            <a href="{% url 'book:book_detail' book.pk %}"
-               class="group flex flex-col rounded-xl overflow-hidden bg-white border border-gray-100 shadow-sm hover:-translate-y-1 hover:shadow-md transition-all duration-200">
-                <div class="aspect-[2/3] bg-gray-100 overflow-hidden">
-                    {% if book.cover_url %}
-                    <img src="{{ book.cover_url }}" alt="{{ book.title }}" loading="lazy" class="w-full h-full object-cover">
-                    {% else %}
-                    <div class="cover-lazy w-full h-full flex items-center justify-center p-2" data-isbn="{{ book.isbn }}">
-                        <p class="text-xs text-gray-400 text-center leading-snug">{{ book.title|truncatechars:30 }}</p>
+        <!-- Heading -->
+        <h2 class="text-center font-bold text-gray-900 mb-8 md:mb-12 main-heading"
+            style="font-family:'Playfair Display',serif; font-size: 48px;">Kategori</h2>
+
+        <!-- Categoric Book Grids -->
+        <div class="relative w-full mb-20">
+            <!-- Desktop / Tablet Carousel -->
+            <div class="hidden md:block relative" id="carouselWrapper">
+                <div class="overflow-hidden w-full relative" id="carouselContainer">
+                    <div class="flex transition-transform duration-500 ease-in-out w-full" id="carouselTrack"
+                        style="transform: translateX(0%); min-height: 200px;">
+                        {% for page in paginated_categories %}
+                        <div class="w-full flex-shrink-0 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 px-1">
+                            {% for cat in page %}
+                            <!-- Figma strictly aligned card -->
+                            <div
+                                class="figma-card shadow-[0_2px_10px_rgba(0,0,0,0.06)] hover:shadow-[0_4px_16px_rgba(30,58,138,0.15)] transition duration-300">
+                                <div class="flex flex-col flex-grow items-center justify-center z-10 w-full relative mb-1">
+                                    <h3 class="text-[28px] font-bold text-[#111827] text-center category-name"
+                                        style="font-family:'Playfair Display',serif; margin-bottom: 8px; line-height: 1;">
+                                        {{ cat.name }}
+                                    </h3>
+                                    <p class="text-[#6b7280] text-[16px] flex items-center justify-center gap-3"
+                                        style="font-family:'Work Sans',sans-serif;">
+                                        <img src="{% static 'stack of different books.png' %}"
+                                            class="w-[32px] h-[19px] object-contain" alt="books">
+                                        {{ cat.count }} buku tersedia
+                                        <img src="{% static 'stack of different books.png' %}"
+                                            class="w-[32px] h-[19px] object-contain" alt="books">
+                                    </p>
+                                </div>
+                                <a href="{% url 'book:book_list' %}?category={{ cat.name|urlencode }}"
+                                    class="w-[100%] mx-auto text-center z-10 block bg-[#1e3a8a] text-white py-[12px] rounded-[10px] text-[16px] font-semibold hover:bg-blue-900 transition tracking-wide">
+                                    Lihat Semua
+                                </a>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% empty %}
+                        <div class="w-full text-center text-gray-500 py-10">Belum ada kategori buku.</div>
+                        {% endfor %}
                     </div>
-                    {% endif %}
                 </div>
-                <div class="p-3">
-                    <p class="text-xs font-semibold text-gray-800 line-clamp-2 leading-snug">{{ book.title|truncatechars:40 }}</p>
-                    <p class="text-xs text-gray-400 mt-1 truncate">{{ book.author|truncatechars:30 }}</p>
-                </div>
-            </a>
-            {% endfor %}
-        </div>
-    </section>
-    {% endfor %}
 
-    {% else %}
-    <section class="mb-10">
-        <div class="flex items-baseline justify-between border-b border-gray-200 pb-3 mb-5">
-            <h2 class="text-xl font-bold text-gray-800" style="font-family:'Playfair Display',serif">Koleksi Terbaru</h2>
-            <a href="{% url 'book:book_list' %}" class="text-xs font-semibold text-gray-500 hover:text-gray-800 tracking-wide transition">Lihat Semua ›</a>
-        </div>
-        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-            {% for book in recent_books %}
-            <a href="{% url 'book:book_detail' book.pk %}"
-               class="group flex flex-col rounded-xl overflow-hidden bg-white border border-gray-100 shadow-sm hover:-translate-y-1 hover:shadow-md transition-all duration-200">
-                <div class="aspect-[2/3] bg-gray-100 overflow-hidden">
-                    {% if book.cover_url %}
-                    <img src="{{ book.cover_url }}" alt="{{ book.title }}" loading="lazy" class="w-full h-full object-cover">
-                    {% else %}
-                    <div class="cover-lazy w-full h-full flex items-center justify-center p-2" data-isbn="{{ book.isbn }}">
-                        <p class="text-xs text-gray-400 text-center leading-snug">{{ book.title|truncatechars:30 }}</p>
+                <!-- Arrows -->
+                {% if paginated_categories|length > 1 %}
+                <button onclick="prevCategorySlide()"
+                    class="absolute left-[-60px] top-1/2 -translate-y-1/2 bg-white rounded-full p-2.5 shadow-md hover:bg-gray-50 text-[#1e3a8a] z-20 border border-gray-100 hidden lg:block transition hover:scale-110">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M15 19l-7-7 7-7" />
+                    </svg>
+                </button>
+                <button onclick="nextCategorySlide()"
+                    class="absolute right-[-60px] top-1/2 -translate-y-1/2 bg-white rounded-full p-2.5 shadow-md hover:bg-gray-50 text-[#1e3a8a] z-20 border border-gray-100 hidden lg:block transition hover:scale-110">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9 5l7 7-7 7" />
+                    </svg>
+                </button>
+                {% endif %}
+            </div>
+
+            <!-- Mobile Horizontal Scroll (2 Rows) -->
+            <div class="md:hidden mobile-category-scroll">
+                {% for cat in categories %}
+                <div class="mobile-category-card figma-card shadow-[0_2px_10px_rgba(0,0,0,0.06)] h-full">
+                    <div class="flex flex-col flex-grow items-center justify-center z-10 w-full relative mb-1">
+                        <h3 class="text-[20px] font-bold text-[#111827] text-center"
+                            style="font-family:'Playfair Display',serif; margin-bottom: 6px; line-height: 1.2;">
+                            {{ cat.name }}
+                        </h3>
+                        <p class="text-[#6b7280] text-[14px] flex items-center justify-center gap-2"
+                            style="font-family:'Work Sans',sans-serif;">
+                            <img src="{% static 'stack of different books.png' %}"
+                                class="w-[24px] h-[14px] object-contain" alt="books">
+                            {{ cat.count }} buku tersedia
+                            <img src="{% static 'stack of different books.png' %}"
+                                class="w-[24px] h-[14px] object-contain" alt="books">
+                        </p>
                     </div>
-                    {% endif %}
+                    <a href="{% url 'book:book_list' %}?category={{ cat.name|urlencode }}"
+                        class="w-full text-center z-10 block bg-[#1e3a8a] text-white py-[10px] rounded-[10px] text-[14px] font-semibold">
+                        Lihat Semua
+                    </a>
                 </div>
-                <div class="p-3">
-                    <p class="text-xs font-semibold text-gray-800 line-clamp-2 leading-snug">{{ book.title|truncatechars:40 }}</p>
-                    <p class="text-xs text-gray-400 mt-1 truncate">{{ book.author|truncatechars:30 }}</p>
-                </div>
-            </a>
-            {% endfor %}
+                {% empty %}
+                <div class="w-full text-center text-gray-500 py-10">Belum ada kategori buku.</div>
+                {% endfor %}
+            </div>
         </div>
-    </section>
-    {% endif %}
 
+        <!-- Management Sections -->
+        {% if can_manage %}
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+            <!-- Book Loan Request Section -->
+            <div>
+                <div class="flex items-center justify-between border-b-2 border-blue-900 pb-3 mb-5">
+                    <h3 class="text-2xl font-bold text-[#1e3a8a] flex items-center gap-3">
+                        Book Loan Request
+                    </h3>
+                    <a href="/loan/management/"
+                        class="text-sm font-bold text-[#1e3a8a] hover:underline flex items-center tracking-wide">
+                        Lihat Semua
+                        <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                        </svg>
+                    </a>
+                </div>
+
+                <div class="space-y-4">
+                    {% for loan in loan_requests %}
+                    <div
+                        class="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 min-h-[112px] bg-[#e9ebf3] border border-gray-200 rounded-[10px] shadow-sm hover:shadow transition gap-4">
+                        <div class="flex items-center gap-4">
+                            <div
+                                class="w-14 h-20 bg-gray-100 flex-shrink-0 overflow-hidden rounded shadow-[0_4px_6px_-1px_rgba(0,0,0,0.1)]">
+                                {% if loan.book.cover_url %}
+                                <img src="{{ loan.book.cover_url }}" class="w-full h-full object-cover">
+                                {% else %}
+                                <div class="w-full h-full flex items-center justify-center text-xs text-gray-400">NaN
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-gray-900 text-[18px] mb-1"
+                                    style="font-family:'Playfair Display',serif;">{{ loan.book.title }}</h4>
+                                <p class="text-[13px] text-gray-500 font-medium">
+                                    {{ loan.book.author }} • Requested {{ loan.created_at|date:"M d" }}</p>
+                            </div>
+                        </div>
+                        <div class="book-chip z-10 relative">
+                            <span>Tersedia</span>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="text-center py-6 text-gray-400 bg-[#e9ebf3] border border-gray-100 rounded-xl text-sm">
+                        Tidak ada permohonan terkini.</div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Book Request Section -->
+            <div>
+                <div class="flex items-center justify-between border-b-2 border-blue-900 pb-3 mb-5">
+                    <h3 class="text-2xl font-bold text-[#1e3a8a] flex items-center gap-3">
+                        Book Request
+                    </h3>
+                    <a href="/book-request/staff/"
+                        class="text-sm font-bold text-[#1e3a8a] hover:underline flex items-center tracking-wide">
+                        Lihat Semua
+                        <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                        </svg>
+                    </a>
+                </div>
+
+                <div class="space-y-4">
+                    {% for req in book_requests %}
+                    <div
+                        class="flex items-center justify-between p-4 min-h-[112px] bg-[#e9ebf3] border border-gray-200 rounded-[10px] shadow-sm hover:shadow transition cursor-default">
+                        <div>
+                            <h4 class="font-bold text-gray-900 text-[18px] mb-1"
+                                style="font-family:'Playfair Display',serif;">{{ req.title }}</h4>
+                            <p class="text-[14px] text-gray-500 font-medium">{{ req.author|default:"Unknown Author" }}
+                            </p>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div
+                        class="text-center py-6 text-gray-400 bg-[#e9ebf3] rounded-[10px] border border-gray-100 text-sm">
+                        Tidak ada usulan buku terkini.</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+    </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-    document.querySelectorAll('.cover-lazy[data-isbn]').forEach(el => {
-      const isbn = el.dataset.isbn;
-      if (!isbn || isbn.startsWith('NOISBN')) return;
-      const img = new Image();
-      img.onload = () => {
-        if (img.naturalWidth > 10)
-          el.outerHTML = `<img src="https://covers.openlibrary.org/b/isbn/${isbn}-M.jpg" class="w-full h-full object-cover">`;
-      };
-      img.src = `https://covers.openlibrary.org/b/isbn/${isbn}-M.jpg`;
-    });
+    let currentSlide = 0;
+    const track = document.getElementById('carouselTrack');
+    const totalSlides = Number("{{ paginated_categories|length }}") || 1;
+
+    function updateCarousel() {
+        if (!track) return;
+        track.style.transform = `translateX(-${currentSlide * 100}%)`;
+    }
+
+    function prevCategorySlide() {
+        if (currentSlide > 0) {
+            currentSlide--;
+        } else {
+            currentSlide = totalSlides - 1; // loop back to end
+        }
+        updateCarousel();
+    }
+
+    function nextCategorySlide() {
+        if (currentSlide < totalSlides - 1) {
+            currentSlide++;
+        } else {
+            currentSlide = 0; // loop back to start
+        }
+        updateCarousel();
+    }
 </script>
 {% endblock %}

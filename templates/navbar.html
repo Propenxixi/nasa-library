@@ -1,506 +1,383 @@
-<!-- Navigation Bar -->
+<!-- ─── Navigation Bar ─── -->
 {% load static %}
-<nav class="sticky top-0 z-50 border-b border-gray-100 backdrop-blur-md bg-white/80">
+<nav class="nasa-nav sticky top-0 z-50">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between items-center h-16 md:h-20">
+        <div class="flex items-center justify-between h-16 md:h-[72px]">
 
-            <!-- Logo Section -->
-            <div class="flex items-center space-x-3">
-                <a href="{% url 'main:mainpage' %}" class="flex items-center justify-center w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-gray-900 to-gray-700 rounded-lg">
-                    <span class="text-white font-display text-lg md:text-xl font-bold">📚</span>
-                </a>
-                <div class="hidden sm:block">
-                    <h1 class="text-base md:text-lg font-display font-bold text-gray-900">SMAN 61</h1>
-                    <p class="text-xs md:text-sm text-gray-600 font-sans">Jakarta Library</p>
-                </div>
-            </div>
+            <!-- Logo -->
+            <a href="{% url 'main:mainpage' %}" class="flex items-center gap-2.5 flex-shrink-0">
+                <img src="{% static 'assets/NASALibraryLogo.png' %}" alt="NASA Library"
+                     class="w-9 h-9 md:w-10 md:h-10 rounded-full object-cover">
+                <span class="font-display font-bold text-base md:text-lg leading-none tracking-tight hidden sm:block"
+                      style="color:var(--primary-900);">
+                    NASA LIBRARY
+                </span>
+            </a>
 
-            <!-- Desktop Navigation Links -->
-            <div class="hidden md:flex items-center space-x-8">
-                <a href="{% url 'main:mainpage' %}" class="text-gray-700 hover:text-gray-900 font-sans text-sm font-medium transition-colors duration-200">Home</a>
-                <a href="{% url 'book:dashboard' %}" class="text-gray-700 hover:text-gray-900 font-sans text-sm font-medium transition-colors duration-200">Explore Books</a>
+            <!-- Desktop Nav Links -->
+            <div class="hidden md:flex items-center gap-6 lg:gap-8">
+                <a href="{% url 'main:mainpage' %}" class="nav-link">Beranda</a>
+                <a href="{% url 'book:dashboard' %}" class="nav-link">Katalog</a>
 
                 {% if user.is_authenticated %}
-                    <!-- Tools Dropdown -->
-                    <div class="relative group">
-                        <button class="flex items-center gap-1.5 text-gray-700 hover:text-gray-900 font-sans text-sm font-medium transition-colors duration-200">
-                            Tools
-                            <svg class="w-4 h-4 group-hover:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                            </svg>
-                        </button>
+                <a href="{% url 'book_loan:loan_history' %}" class="nav-link">Peminjaman Saya</a>
+                <a href="{% url 'literacy:leaderboard' %}" class="nav-link">Peringkat</a>
 
-                        <div class="absolute left-0 mt-0 w-52 bg-white rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 border border-gray-100">
-                            {% if user.profile.is_student or user.profile.is_teacher %}
-                                <a href="{% url 'book_loan:loan_history' %}" class="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 border-b border-gray-100">📋 My Borrowing</a>
-                                <a href="{% url 'book_loan:waiting_list' %}" class="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 border-b border-gray-100">⏳ Waiting List</a>
-                                <a href="{% url 'attendance:check_in' %}" class="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 border-b border-gray-100">📍 Check-in</a>
-                            {% endif %}
-
-                            <a href="{% url 'literacy:leaderboard' %}" class="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 border-b border-gray-100">🏆 Leaderboard</a>
-
-                            {% if user.profile.is_student %}
-                                <a href="{% url 'literacy:forum' %}" class="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 border-b border-gray-100">💬 Forum</a>
-                            {% endif %}
-
-                            {% if user.profile.is_librarian %}
-                                <a href="{% url 'book_loan:loan_management' %}" class="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 border-b border-gray-100">📚 Loan Management</a>
-                                <a href="{% url 'user:user_list' %}" class="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 border-b border-gray-100">👥 User Management</a>
-                            {% endif %}
-
-                            {% if user.profile.is_librarian or user.profile.is_teacher %}
-                                <a href="{% url 'attendance:report' %}" class="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 border-b border-gray-100">📋 Attendance Report</a>
-                                <a href="{% url 'literacy:teacher_verify_reviews' %}" class="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">✓ Verify Reviews</a>
-                            {% endif %}
-                        </div>
+                <!-- Features Dropdown -->
+                <div class="relative nasa-dropdown-trigger">
+                    <button class="nav-link flex items-center gap-1">
+                        Fitur
+                        <svg class="w-3.5 h-3.5 mt-0.5 transition-transform group-hover:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/>
+                        </svg>
+                    </button>
+                    <div class="nasa-dropdown">
+                        {% if user.profile.is_student or user.profile.is_teacher %}
+                        <a href="{% url 'book_loan:loan_history' %}">
+                            <img src="{% static 'assets/OpenBook.svg' %}" class="w-4 h-4 opacity-60" alt=""> Peminjaman Saya
+                        </a>
+                        <a href="{% url 'book_loan:waiting_list' %}">
+                            <img src="{% static 'assets/Clock.svg' %}" class="w-4 h-4 opacity-60" alt=""> Waiting List
+                        </a>
+                        <a href="{% url 'attendance:check_in' %}">
+                            <img src="{% static 'assets/Bookmark.svg' %}" class="w-4 h-4 opacity-60" alt=""> Check-in
+                        </a>
+                        <a href="{% url 'book_request:request_list' %}">
+                            <img src="{% static 'assets/OpenBook.svg' %}" class="w-4 h-4 opacity-60" alt=""> Book Request
+                        </a>
+                        {% endif %}
+                        {% if user.profile.is_student %}
+                        <a href="{% url 'literacy:forum' %}">
+                            <img src="{% static 'assets/Pen.svg' %}" class="w-4 h-4 opacity-60" alt=""> Forum
+                        </a>
+                        {% endif %}
+                        {% if user.profile.is_librarian %}
+                        <a href="{% url 'book_loan:loan_management' %}">
+                            <img src="{% static 'assets/Book.svg' %}" class="w-4 h-4 opacity-60" alt=""> Manajemen Peminjaman
+                        </a>
+                        <a href="{% url 'user:user_list' %}">
+                            <img src="{% static 'assets/People.svg' %}" class="w-4 h-4 opacity-60" alt=""> Manajemen User
+                        </a>
+                        <a href="{% url 'book:book_add' %}">
+                            <svg class="w-4 h-4 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 5v14M5 12h14"/>
+                            </svg> Tambah Buku
+                        </a>
+                        {% endif %}
+                        {% if user.is_superuser or user.profile.is_librarian %}
+                        <a href="{% url 'book_request:staff_dashboard' %}">
+                            <img src="{% static 'assets/OpenBook.svg' %}" class="w-4 h-4 opacity-60" alt=""> Review Book Request
+                        </a>
+                        {% endif %}
+                        {% if user.is_superuser or user.profile.is_librarian or user.profile.is_teacher %}
+                        <a href="{% url 'dashboard:index' %}">
+                            <img src="{% static 'assets/Bookmark.svg' %}" class="w-4 h-4 opacity-60" alt=""> Dashboard
+                        </a>
+                        {% endif %}
+                        {% if user.profile.is_librarian or user.profile.is_teacher %}
+                        <a href="{% url 'report:index' %}">
+                            <img src="{% static 'assets/Computer.svg' %}" class="w-4 h-4 opacity-60" alt=""> Laporan & Analitik
+                        </a>
+                        <a href="{% url 'literacy:teacher_verify_reviews' %}">
+                            <svg class="w-4 h-4 opacity-60" fill="currentColor" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                            Verifikasi Ulasan
+                        </a>
+                        {% endif %}
                     </div>
+                </div>
                 {% endif %}
             </div>
 
-            <!-- User Info & Actions -->
-            <div class="flex items-center space-x-3 md:space-x-6">
-
+            <!-- Right: Actions -->
+            <div class="flex items-center gap-2 md:gap-3">
                 {% if user.is_authenticated %}
-                    <!-- Authenticated User Section -->
-                    <div class="flex items-center space-x-3 md:space-x-4">
-                    
-                    <!-- Notification Bell -->
-                    <a href="{% url 'book_loan:notifications' %}" class="relative p-2 text-gray-700 hover:text-gray-900 transition-colors" title="Notifikasi">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
-                        </svg>
-                        <span id="notificationBadge" class="hidden absolute top-1 right-1 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold" style="font-size: 0.65rem;">0</span>
-                    </a>
-                    
-                    <!-- User Profile Dropdown -->
-                    <div class="relative group">
-                        <button class="flex items-center space-x-2 hover:opacity-75 transition-opacity">
-                            <div class="w-8 h-8 md:w-9 md:h-9 bg-gradient-to-br from-gray-400 to-gray-600 rounded-full flex items-center justify-center text-white font-sans font-bold text-sm">
-                                {{ user.first_name|make_list|first|upper }}
-                            </div>
-                            <span class="hidden md:block text-sm font-sans text-gray-700">{{ user.first_name }}</span>
-                            <svg class="hidden md:block w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                            </svg>
-                        </button>
+                <!-- Notification -->
+                <a href="{% url 'book_loan:notifications' %}" class="relative p-2 rounded-xl transition-colors"
+                   style="color:var(--neutral-500);"
+                   onmouseover="this.style.color='var(--primary-900)';this.style.background='var(--primary-50)'"
+                   onmouseout="this.style.color='var(--neutral-500)';this.style.background='transparent'"
+                   title="Notifikasi">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                    </svg>
+                    <span id="notificationBadge" class="notif-badge hidden">0</span>
+                </a>
 
-                        <!-- Dropdown Menu -->
-                        <div class="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 border border-gray-100">
-                            <div class="px-4 py-3 border-b border-gray-100">
-                                <p class="text-sm font-sans text-gray-900 font-medium">{{ user.first_name }} {{ user.last_name }}</p>
-                                <p class="text-xs font-sans text-gray-500">
-                                    {% if user.profile.role == 'student' %}Student
-                                    {% elif user.profile.role == 'teacher' %}Teacher
-                                    {% elif user.profile.role == 'librarian' %}Librarian
-                                    {% else %}{{ user.profile.role }}{% endif %}
-                                </p>
-                            </div>
-                            <a href="#" class="block px-4 py-3 text-sm font-sans text-gray-700 hover:bg-gray-50 border-b border-gray-100">My Profile</a>
-                            {% if user.profile.is_student %}
-                                <button onclick="showPreferenceModal()" class="w-full text-left px-4 py-3 text-sm font-sans text-gray-700 hover:bg-gray-50 border-b border-gray-100 flex items-center justify-between">
-                                    <span>📚 Minat Baca</span>
-                                    <span id="preferenceCount" class="text-xs bg-gray-200 text-gray-600 px-2 py-0.5 rounded-full">-</span>
-                                </button>
-                            {% endif %}
-                            {% if user.profile.is_student or user.profile.is_teacher %}
-                                <a href="{% url 'book_loan:loan_history' %}" class="block px-4 py-3 text-sm font-sans text-gray-700 hover:bg-gray-50 border-b border-gray-100">📋 My Borrowing</a>
-                                <a href="{% url 'book_loan:waiting_list' %}" class="block px-4 py-3 text-sm font-sans text-gray-700 hover:bg-gray-50 border-b border-gray-100">⏳ Waiting List</a>
-                            {% endif %}
-                            <a href="{% url 'attendance:check_in' %}" class="block px-4 py-3 text-sm font-sans text-gray-700 hover:bg-gray-50 border-b border-gray-100">📍 Attendance</a>
-                            {% if user.profile.is_librarian %}
-                                <a href="{% url 'user:user_list' %}" class="block px-4 py-3 text-sm font-sans text-gray-700 hover:bg-gray-50 border-b border-gray-100">👥 User Management</a>
-                            {% endif %}
-                            <a href="{% url 'authentication:change_password' %}" class="block px-4 py-3 text-sm font-sans text-gray-700 hover:bg-gray-50 border-b border-gray-100">Change Password</a>
-                            <form method="post" action="{% url 'authentication:logout' %}" class="m-0">
+                <!-- Profile Dropdown -->
+                <div class="relative nasa-dropdown-trigger">
+                    <button class="flex items-center gap-2 hover:opacity-80 transition-opacity">
+                        <div class="user-avatar">{{ user.first_name|make_list|first|upper }}</div>
+                        <span class="hidden md:block text-sm font-medium" style="color:var(--neutral-600);">{{ user.first_name }}</span>
+                        <svg class="hidden md:block w-3.5 h-3.5" style="color:var(--neutral-400);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/>
+                        </svg>
+                    </button>
+                    <div class="nasa-dropdown right-0 left-auto" style="min-width:220px;">
+                        <div class="px-3 py-2.5 mb-1" style="border-bottom: 1px solid var(--neutral-200);">
+                            <p class="text-sm font-semibold" style="color:var(--primary-900);">{{ user.first_name }} {{ user.last_name }}</p>
+                            <p class="text-xs mt-0.5" style="color:var(--neutral-400);">
+                                {% if user.profile.role == 'student' %}Student
+                                {% elif user.profile.role == 'teacher' %}Teacher
+                                {% elif user.profile.role == 'librarian' %}Librarian
+                                {% else %}{{ user.profile.role }}{% endif %}
+                            </p>
+                        </div>
+                        <a href="#">
+                            <svg class="w-4 h-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                            Profil Saya
+                        </a>
+                        {% if user.profile.is_student %}
+                        <button onclick="showPreferenceModal()">
+                            <img src="{% static 'assets/Book.svg' %}" class="w-4 h-4 opacity-50" alt="">
+                            <span class="flex-1">Minat Baca</span>
+                            <span id="preferenceCount" class="text-[0.7rem] px-1.5 py-0.5 rounded-full" style="background:var(--neutral-200);color:var(--neutral-500);">-</span>
+                        </button>
+                        {% endif %}
+                        <a href="{% url 'authentication:change_password' %}">
+                            <svg class="w-4 h-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>
+                            Ganti Password
+                        </a>
+                        <div class="mt-1 pt-1" style="border-top: 1px solid var(--neutral-200);">
+                            <form method="post" action="{% url 'authentication:logout' %}">
                                 {% csrf_token %}
-                                <button type="submit" class="w-full text-left px-4 py-3 text-sm font-sans text-red-600 hover:bg-red-50">
+                                <button type="submit" style="color:var(--error-500);"
+                                        onmouseover="this.style.background='var(--error-50)';this.style.color='var(--error-600)'"
+                                        onmouseout="this.style.background='transparent';this.style.color='var(--error-500)'">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
                                     Logout
                                 </button>
                             </form>
                         </div>
                     </div>
+                </div>
                 {% else %}
-                    <!-- Guest User Section - Login Button -->
-                    <a href="{% url 'authentication:login' %}" class="hidden md:inline-flex items-center px-4 py-2 bg-gray-900 text-white font-sans text-sm font-medium rounded-lg hover:bg-gray-800 transition-colors duration-200">
-                        Login
-                    </a>
+                <!-- Guest: Register Button (desktop) -->
+                <a href="{% url 'authentication:login' %}" class="btn-primary hidden md:inline-flex">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+                    Register
+                </a>
                 {% endif %}
 
-                <!-- Mobile Menu Button -->
-                <button class="md:hidden text-gray-700 hover:text-gray-900 transition-colors" id="mobile-menu-btn">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                <!-- Mobile Hamburger -->
+                <button id="mobile-menu-btn" class="md:hidden p-2 rounded-xl transition-colors"
+                        style="color:var(--neutral-600);"
+                        onmouseover="this.style.color='var(--primary-900)';this.style.background='var(--primary-50)'"
+                        onmouseout="this.style.color='var(--neutral-600)';this.style.background='transparent'">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
                     </svg>
                 </button>
-                </div>
             </div>
 
-            <!-- Mobile Navigation Menu -->
-            <div id="mobile-menu" class="hidden md:hidden border-t border-gray-100 pb-4">
-                <a href="{% url 'main:mainpage' %}" class="block px-4 py-3 text-gray-700 hover:text-gray-900 hover:bg-gray-50 font-sans text-sm font-medium">Home</a>
-                <a href="{% url 'book:dashboard' %}" class="block px-4 py-3 text-gray-700 hover:text-gray-900 hover:bg-gray-50 font-sans text-sm font-medium">Explore Books</a>
-                {% if user.is_authenticated %}
-                    <!-- Mobile Tools Dropdown -->
-                    <button id="mobile-tools-btn" class="w-full text-left px-4 py-3 text-gray-700 hover:text-gray-900 hover:bg-gray-50 font-sans text-sm font-medium flex items-center justify-between">
-                        Tools
-                        <svg class="w-4 h-4" id="mobile-tools-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                        </svg>
-                    </button>
-
-                    <div id="mobile-tools-menu" class="hidden bg-gray-50 border-t border-gray-100">
-                        {% if user.profile.is_student or user.profile.is_teacher %}
-                            <a href="{% url 'book_loan:loan_history' %}" class="block px-6 py-2.5 text-gray-700 hover:text-gray-900 hover:bg-gray-100 font-sans text-sm">📋 My Borrowing</a>
-                            <a href="{% url 'book_loan:waiting_list' %}" class="block px-6 py-2.5 text-gray-700 hover:text-gray-900 hover:bg-gray-100 font-sans text-sm">⏳ Waiting List</a>
-                            <a href="{% url 'attendance:check_in' %}" class="block px-6 py-2.5 text-gray-700 hover:text-gray-900 hover:bg-gray-100 font-sans text-sm">📍 Check-in</a>
-                        {% endif %}
-
-                        <a href="{% url 'literacy:leaderboard' %}" class="block px-6 py-2.5 text-gray-700 hover:text-gray-900 hover:bg-gray-100 font-sans text-sm">🏆 Leaderboard</a>
-
-                        {% if user.profile.is_student %}
-                            <a href="{% url 'literacy:forum' %}" class="block px-6 py-2.5 text-gray-700 hover:text-gray-900 hover:bg-gray-100 font-sans text-sm">💬 Forum</a>
-                        {% endif %}
-
-                        {% if user.profile.is_librarian %}
-                            <a href="{% url 'book_loan:loan_management' %}" class="block px-6 py-2.5 text-gray-700 hover:text-gray-900 hover:bg-gray-100 font-sans text-sm">📚 Loan Management</a>
-                            <a href="{% url 'user:user_list' %}" class="block px-6 py-2.5 text-gray-700 hover:text-gray-900 hover:bg-gray-100 font-sans text-sm">👥 User Management</a>
-                        {% endif %}
-
-                        {% if user.profile.is_librarian or user.profile.is_teacher %}
-                            <a href="{% url 'attendance:report' %}" class="block px-6 py-2.5 text-gray-700 hover:text-gray-900 hover:bg-gray-100 font-sans text-sm">📋 Attendance Report</a>
-                            <a href="{% url 'literacy:teacher_verify_reviews' %}" class="block px-6 py-2.5 text-gray-700 hover:text-gray-900 hover:bg-gray-100 font-sans text-sm">✓ Verify Reviews</a>
-                        {% endif %}
-                    </div>
-
-                    <div class="border-t border-gray-100 mt-2 pt-2">
-                        <p class="px-4 py-2 text-xs font-sans text-gray-500">Signed in as {{ user.first_name }}</p>
-                        {% if user.profile.is_student %}
-                            <button onclick="showPreferenceModal()" class="w-full text-left block px-4 py-3 text-gray-700 hover:text-gray-900 hover:bg-gray-50 font-sans text-sm font-medium">📚 Minat Baca</button>
-                        {% endif %}
-                        {% if user.profile.is_librarian %}
-                            <a href="{% url 'user:user_list' %}" class="block px-4 py-3 text-gray-700 hover:text-gray-900 hover:bg-gray-50 font-sans text-sm font-medium">👥 User Management</a>
-                        {% endif %}
-                        <a href="{% url 'authentication:change_password' %}" class="block px-4 py-3 text-gray-700 hover:text-gray-900 hover:bg-gray-50 font-sans text-sm font-medium">Change Password</a>
-                        <form method="post" action="{% url 'authentication:logout' %}" class="m-0">
-                            {% csrf_token %}
-                            <button type="submit" class="w-full text-left px-4 py-3 text-red-600 hover:bg-red-50 font-sans text-sm font-medium">
-                                Logout
-                            </button>
-                        </form>
-                    </div>
-                {% else %}
-                    <a href="{% url 'authentication:login' %}" class="block px-4 py-3 text-gray-700 hover:text-gray-900 hover:bg-gray-50 font-sans text-sm font-medium">Login</a>
-                {% endif %}
-            </div>
         </div>
+    </div>
 </nav>
 
-<!-- Preference Modal (available from navbar) -->
-<div id="preferenceModal" class="fixed inset-0 z-50 hidden">
-    <!-- Backdrop -->
+<!-- ─── Preference Modal ─── -->
+<div id="preferenceModal" class="fixed inset-0 z-[9998] hidden">
     <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="closePreferenceModal()"></div>
-
-    <!-- Modal Content -->
-    <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-lg mx-4">
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg px-4">
         <div class="bg-white rounded-2xl shadow-2xl overflow-hidden">
-            <!-- Header -->
-            <div class="bg-gradient-to-r from-gray-900 to-gray-800 p-6 text-white">
-                <h2 class="font-display text-2xl font-bold">Atur Preferensi Minat Baca</h2>
-                <p class="text-gray-300 text-sm mt-1">Pilih minimal 1 dan maksimal 5 kategori buku yang kamu suka</p>
+            <div class="px-6 py-5" style="background:var(--primary-900); border-bottom: 1px solid var(--primary-800);">
+                <h2 class="font-display text-xl font-bold text-white" style="line-height:1.2;">Atur Preferensi Minat Baca</h2>
+                <p class="text-white/60 text-sm mt-1">Pilih minimal 1 dan maksimal 5 kategori buku yang kamu suka</p>
             </div>
-
-            <!-- Body -->
-            <div class="p-6 max-h-[60vh] overflow-y-auto">
-                <div id="categoryLoading" class="text-center py-4">
-                    <svg class="animate-spin h-8 w-8 mx-auto text-gray-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            <div class="p-6 max-h-[55vh] overflow-y-auto">
+                <div id="categoryLoading" class="text-center py-6">
+                    <svg class="animate-spin h-7 w-7 mx-auto opacity-40" style="color:var(--primary-900);" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
                     </svg>
-                    <p class="text-gray-500 mt-2">Memuat kategori...</p>
+                    <p class="text-sm mt-2" style="color:var(--neutral-400);">Memuat kategori...</p>
                 </div>
-
-                <div id="categoryList" class="grid grid-cols-2 gap-3 hidden">
-                    <!-- Categories will be loaded dynamically -->
-                </div>
-
-                <p id="categoryCount" class="text-center text-sm text-gray-500 mt-4">
-                    Dipilih: <span id="selectedCount">0</span>/5
+                <div id="categoryList" class="grid grid-cols-2 gap-2.5 hidden"></div>
+                <p id="categoryCount" class="text-center text-sm mt-4" style="color:var(--neutral-400);">
+                    Dipilih: <span id="selectedCount" class="font-semibold" style="color:var(--primary-900);">0</span>/5
                 </p>
-
-                <p id="errorMessage" class="text-red-500 text-sm text-center mt-3 hidden"></p>
+                <p id="errorMessage" class="text-sm text-center mt-3 hidden" style="color:var(--error-500);"></p>
             </div>
-
-            <!-- Footer -->
-            <div class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-end gap-3">
-                <button onclick="closePreferenceModal()" class="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors font-sans text-sm font-semibold">
-                    Nanti Saja
-                </button>
-                <button onclick="savePreferences()" id="saveBtn" class="px-6 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors font-sans text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed">
-                    Simpan Preferensi
-                </button>
+            <div class="px-6 py-4 flex justify-end gap-3" style="background:var(--neutral-100); border-top: 1px solid var(--neutral-200);">
+                <button onclick="closePreferenceModal()" class="btn-secondary text-sm">Nanti Saja</button>
+                <button onclick="savePreferences()" id="saveBtn" class="btn-primary text-sm disabled:opacity-40 disabled:cursor-not-allowed">Simpan Preferensi</button>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Toast Notification -->
+<!-- Toast -->
 <div id="toast" class="fixed bottom-4 right-4 transform translate-y-full opacity-0 transition-all duration-300 z-50">
-    <div class="bg-green-600 text-white px-6 py-3 rounded-xl shadow-lg flex items-center gap-3">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-        </svg>
+    <div class="text-white px-5 py-3 rounded-xl shadow-xl flex items-center gap-3 text-sm font-medium" style="background:var(--primary-900);">
+        <svg class="w-4 h-4 flex-shrink-0" style="color:var(--secondary-400);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
         <span id="toastMessage">Preferensi minat berhasil disimpan</span>
     </div>
 </div>
 
-<!-- Mobile Menu Toggle Script -->
+<!-- ─── Scripts ─── -->
 <script>
-    const mobileMenuBtn = document.getElementById('mobile-menu-btn');
-    const mobileMenu = document.getElementById('mobile-menu');
-    const mobileToolsBtn = document.getElementById('mobile-tools-btn');
-    const mobileToolsMenu = document.getElementById('mobile-tools-menu');
-    const mobileToolsIcon = document.getElementById('mobile-tools-icon');
-
-    if (mobileMenuBtn && mobileMenu) {
-        mobileMenuBtn.addEventListener('click', () => {
-            mobileMenu.classList.toggle('hidden');
-        });
-    }
-
-    if (mobileToolsBtn && mobileToolsMenu) {
-        mobileToolsBtn.addEventListener('click', () => {
-            mobileToolsMenu.classList.toggle('hidden');
-            mobileToolsIcon.classList.toggle('rotate-180');
-        });
-    }
-</script>
-
-<!-- Preference Modal Scripts -->
-<script>
+    /* ─── Preference Modal ─── */
     let selectedCategories = [];
     let availableCategories = [];
 
     async function loadPreferenceCount() {
         try {
-            const response = await fetch('/recommendation/api/users/preferences', {
-                headers: { 'X-CSRFToken': getCookie('csrftoken') }
-            });
-            const data = await response.json();
+            const res = await fetch('/recommendation/api/users/preferences', { headers: { 'X-CSRFToken': getCookie('csrftoken') } });
+            const data = await res.json();
             const count = data.categories ? data.categories.length : 0;
-            const countEl = document.getElementById('preferenceCount');
-            if (countEl) {
-                countEl.textContent = count > 0 ? count + ' kategori' : 'Belum diatur';
-            }
-        } catch (error) {
-            console.error('Error loading preference count:', error);
-        }
+            const el = document.getElementById('preferenceCount');
+            if (el) el.textContent = count > 0 ? count + ' kategori' : 'Belum diatur';
+        } catch(e) { console.error(e); }
     }
 
     async function checkPreferences() {
         try {
-            const response = await fetch('/recommendation/api/users/preferences/check', {
-                headers: { 'X-CSRFToken': getCookie('csrftoken') }
-            });
-            const data = await response.json();
-            if (!data.has_preferences) {
-                showPreferenceModal();
-            }
-        } catch (error) {
-            console.error('Error checking preferences:', error);
-        }
+            const res = await fetch('/recommendation/api/users/preferences/check', { headers: { 'X-CSRFToken': getCookie('csrftoken') } });
+            const data = await res.json();
+            if (!data.has_preferences) showPreferenceModal();
+        } catch(e) { console.error(e); }
     }
 
     function showPreferenceModal() {
         document.getElementById('preferenceModal').classList.remove('hidden');
         loadCategories();
     }
-
     function closePreferenceModal() {
         document.getElementById('preferenceModal').classList.add('hidden');
     }
 
     async function loadCategories() {
         try {
-            const response = await fetch('/recommendation/api/categories');
-            const data = await response.json();
+            const res = await fetch('/recommendation/api/categories');
+            const data = await res.json();
             availableCategories = data.categories || [];
-
-            const prefResponse = await fetch('/recommendation/api/users/preferences', {
-                headers: { 'X-CSRFToken': getCookie('csrftoken') }
-            });
-            const prefData = await prefResponse.json();
+            const prefRes = await fetch('/recommendation/api/users/preferences', { headers: { 'X-CSRFToken': getCookie('csrftoken') } });
+            const prefData = await prefRes.json();
             selectedCategories = prefData.categories || [];
-
             renderCategories();
-        } catch (error) {
-            console.error('Error loading categories:', error);
-            document.getElementById('errorMessage').textContent = 'Gagal memuat kategori. Silakan coba lagi.';
+        } catch(e) {
+            document.getElementById('errorMessage').textContent = 'Gagal memuat kategori.';
             document.getElementById('errorMessage').classList.remove('hidden');
         }
     }
 
     function renderCategories() {
         const container = document.getElementById('categoryList');
-        const loading = document.getElementById('categoryLoading');
-        loading.classList.add('hidden');
+        document.getElementById('categoryLoading').classList.add('hidden');
         container.classList.remove('hidden');
-        container.innerHTML = availableCategories.map(category => `
-            <label class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors ${selectedCategories.includes(category) ? 'border-gray-900 bg-gray-50' : 'border-gray-200'}">
-                <input type="checkbox"
-                       value="${category}"
-                       ${selectedCategories.includes(category) ? 'checked' : ''}
-                       onchange="toggleCategory(this)"
-                       class="w-4 h-4 text-gray-900 border-gray-300 rounded focus:ring-gray-900">
-                <span class="ml-2 text-sm font-sans text-gray-700">${category}</span>
+        container.innerHTML = availableCategories.map(cat => `
+            <label class="flex items-center gap-2.5 p-3 border rounded-xl cursor-pointer transition-colors ${selectedCategories.includes(cat) ? 'selected' : ''}"
+                   style="${selectedCategories.includes(cat) ? 'border-color:var(--primary-900);background:var(--primary-50);' : 'border-color:var(--neutral-200);'}">
+                <input type="checkbox" value="${cat}" ${selectedCategories.includes(cat) ? 'checked' : ''} onchange="toggleCategory(this)"
+                       class="w-4 h-4 rounded" style="accent-color:var(--primary-900);">
+                <span class="text-sm" style="color:var(--neutral-600);">${cat}</span>
             </label>
         `).join('');
         updateCount();
     }
 
-    function toggleCategory(checkbox) {
-        const category = checkbox.value;
-        if (checkbox.checked) {
-            if (selectedCategories.length >= 5) {
-                checkbox.checked = false;
-                showError('Maksimal 5 kategori yang dapat dipilih');
-                return;
-            }
-            selectedCategories.push(category);
+    function toggleCategory(cb) {
+        const cat = cb.value;
+        if (cb.checked) {
+            if (selectedCategories.length >= 5) { cb.checked = false; showError('Maksimal 5 kategori'); return; }
+            selectedCategories.push(cat);
         } else {
-            selectedCategories = selectedCategories.filter(c => c !== category);
+            selectedCategories = selectedCategories.filter(c => c !== cat);
         }
-        updateCount();
-        updateCheckboxStyles();
-        hideError();
+        updateCount(); updateCheckboxStyles(); hideError();
     }
-
     function updateCount() {
         document.getElementById('selectedCount').textContent = selectedCategories.length;
         document.getElementById('saveBtn').disabled = selectedCategories.length === 0;
     }
-
     function updateCheckboxStyles() {
-        document.querySelectorAll('#categoryList input[type="checkbox"]').forEach(checkbox => {
-            const label = checkbox.closest('label');
-            if (checkbox.checked) {
-                label.classList.add('border-gray-900', 'bg-gray-50');
-                label.classList.remove('border-gray-200');
+        document.querySelectorAll('#categoryList label').forEach(label => {
+            const cb = label.querySelector('input');
+            if (cb.checked) {
+                label.classList.add('selected');
+                label.style.borderColor = 'var(--primary-900)';
+                label.style.background  = 'var(--primary-50)';
+                label.style.borderColor = 'var(--neutral-200)';
             } else {
-                label.classList.remove('border-gray-900', 'bg-gray-50');
-                label.classList.add('border-gray-200');
+                label.classList.remove('selected');
+                label.style.borderColor = 'var(--neutral-200)';
+                label.style.background  = 'transparent';
+            }
+        });
+        // re-apply selected on checked ones
+        document.querySelectorAll('#categoryList label').forEach(label => {
+            const cb = label.querySelector('input');
+            if (cb.checked) {
+                label.style.borderColor = 'var(--primary-900)';
+                label.style.background  = 'var(--primary-50)';
             }
         });
     }
-
-    function showError(message) {
-        const errorEl = document.getElementById('errorMessage');
-        errorEl.textContent = message;
-        errorEl.classList.remove('hidden');
-    }
-
-    function hideError() {
-        document.getElementById('errorMessage').classList.add('hidden');
-    }
+    function showError(msg) { const el=document.getElementById('errorMessage'); el.textContent=msg; el.classList.remove('hidden'); }
+    function hideError()    { document.getElementById('errorMessage').classList.add('hidden'); }
 
     async function savePreferences() {
-        if (selectedCategories.length === 0) {
-            showError('Minimal pilih 1 kategori');
-            return;
-        }
-        const saveBtn = document.getElementById('saveBtn');
-        saveBtn.disabled = true;
-        saveBtn.textContent = 'Menyimpan...';
+        if (selectedCategories.length === 0) { showError('Minimal pilih 1 kategori'); return; }
+        const btn = document.getElementById('saveBtn');
+        btn.disabled = true; btn.textContent = 'Menyimpan...';
         try {
-            const response = await fetch('/recommendation/api/users/preferences', {
+            const res = await fetch('/recommendation/api/users/preferences', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': getCookie('csrftoken')
-                },
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
                 body: JSON.stringify({ categories: selectedCategories })
             });
-            const data = await response.json();
-            if (response.ok) {
-                closePreferenceModal();
-                showToast('Preferensi minat berhasil disimpan');
-                loadPreferenceCount();
-                window.dispatchEvent(new CustomEvent('preferencesSaved'));
-            } else {
-                showError(data.error || 'Gagal menyimpan preferensi');
-            }
-        } catch (error) {
-            console.error('Error saving preferences:', error);
-            showError('Terjadi kesalahan. Silakan coba lagi.');
-        } finally {
-            saveBtn.disabled = false;
-            saveBtn.textContent = 'Simpan Preferensi';
-        }
+            const data = await res.json();
+            if (res.ok) {
+                closePreferenceModal(); showToast('Preferensi minat berhasil disimpan');
+                loadPreferenceCount(); window.dispatchEvent(new CustomEvent('preferencesSaved'));
+            } else { showError(data.error || 'Gagal menyimpan'); }
+        } catch(e) { showError('Terjadi kesalahan.'); }
+        finally { btn.disabled = false; btn.textContent = 'Simpan Preferensi'; }
     }
 
-    function showToast(message) {
-        const toast = document.getElementById('toast');
-        document.getElementById('toastMessage').textContent = message;
-        toast.classList.remove('translate-y-full', 'opacity-0');
-        setTimeout(() => {
-            toast.classList.add('translate-y-full', 'opacity-0');
-        }, 3000);
+    function showToast(msg) {
+        const t = document.getElementById('toast');
+        document.getElementById('toastMessage').textContent = msg;
+        t.classList.remove('translate-y-full','opacity-0');
+        setTimeout(() => t.classList.add('translate-y-full','opacity-0'), 3000);
     }
 
     function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
-            }
+        let v = null;
+        if (document.cookie) {
+            document.cookie.split(';').forEach(c => {
+                c = c.trim();
+                if (c.startsWith(name + '=')) v = decodeURIComponent(c.substring(name.length + 1));
+            });
         }
-        return cookieValue;
+        return v;
     }
 
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', () => {
         loadPreferenceCount();
         /* {% if user.is_authenticated and user.profile.role == 'student' %} */
-            var isStudent = true;
-            /* {% else %} */
-            var isStudent = false;
-            /* {% endif %} */
-        if (isStudent) {
-            checkPreferences();
-        }
+        const isStudent = true;
+        /* {% else %} */
+        // const isStudent = false;
+        /* {% endif %} */
+        if (typeof isStudent !== 'undefined' && isStudent) checkPreferences();
     });
 </script>
 
-<!-- Notification Badge Script -->
+<!-- ─── Notification Badge ─── -->
 <script>
     async function updateNotificationBadge() {
         try {
-            const response = await fetch('{% url "book_loan:api_get_notifications" %}');
-            const data = await response.json();
-            
+            const res = await fetch('{% url "book_loan:api_get_notifications" %}');
+            const data = await res.json();
             if (data.status === 'success') {
                 const badge = document.getElementById('notificationBadge');
                 const count = data.count;
-                
-                if (count > 0) {
-                    badge.textContent = count > 9 ? '9+' : count;
-                    badge.classList.remove('hidden');
-                } else {
-                    badge.classList.add('hidden');
-                }
+                if (count > 0) { badge.textContent = count > 9 ? '9+' : count; badge.classList.remove('hidden'); }
+                else { badge.classList.add('hidden'); }
             }
-        } catch (error) {
-            console.error('Error updating notification badge:', error);
-        }
+        } catch(e) { console.error(e); }
     }
-
-    // Update on page load
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', () => {
         updateNotificationBadge();
-        // Update every 30 seconds
         setInterval(updateNotificationBadge, 30000);
     });
 </script>

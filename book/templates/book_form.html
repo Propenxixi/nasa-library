@@ -4,229 +4,564 @@
 
 {% block extra_css %}
 <style>
-    #bookForm input[type="text"],#bookForm input[type="url"],#bookForm input[type="number"],#bookForm select,#bookForm textarea{display:block;width:100%;padding:10px 14px;font-size:.875rem;line-height:1.5;color:#374151;background:#f9fafb;border:1.5px solid #e5e7eb;border-radius:.5rem;outline:none;transition:border-color .15s,box-shadow .15s;font-family:inherit}
-    #bookForm input:focus,#bookForm select:focus,#bookForm textarea:focus{border-color:#6b7280;box-shadow:0 0 0 3px rgba(107,114,128,.1);background:#fff}
-    #bookForm textarea{resize:vertical;min-height:100px}
-    .field-error{font-size:0.72rem;color:#dc2626;margin-top:3px;margin-left:2px;display:flex;align-items:center;gap:3px}
-    .field-error::before{content:"⚠";font-size:0.65rem}
-    .input-has-error{border-color:#f87171 !important;background:#fff5f5 !important}
+    :root {
+        --foundation-primary-900: #0d183a;
+        --foundation-neutral-800: #1f1f1f;
+        --foundation-neutral-500: #595959;
+        --foundation-primary-500: #1e3a8a;
+        --foundation-neutral-400: #8c8c8c;
+        --foundation-neutral-200: #f0f0f0;
+        --foundation-primary-50: #e9ebf3;
+        --foundation-neutral-100: #fcfcfc;
+        --foundation-primary-400: #4b61a1;
+    }
+
+    body {
+        background-color: var(--foundation-neutral-100);
+    }
+
+    .form-section {
+        background-color: var(--foundation-primary-50);
+        border-radius: 10px;
+        padding: 24px;
+        margin-bottom: 24px;
+        position: relative;
+    }
+
+    .section-title {
+        font-family: 'Work Sans', sans-serif;
+        font-weight: 600;
+        font-size: 20px;
+        color: var(--foundation-neutral-800);
+        margin-bottom: 20px;
+        display: block;
+    }
+
+    .section-divider {
+        height: 1px;
+        background-color: #cbd5e1;
+        margin-top: -10px;
+        margin-bottom: 25px;
+        width: 100%;
+    }
+
+    .form-group label {
+        display: block;
+        font-family: 'Work Sans-SemiBold', sans-serif;
+        font-weight: 600;
+        font-size: 12px;
+        color: var(--foundation-primary-500);
+        text-transform: uppercase;
+        margin-bottom: 6px;
+    }
+
+    .form-group label span.required {
+        color: #d84040;
+    }
+
+    .form-input {
+        width: 100%;
+        padding: 10px 18px;
+        border: 1.5px solid var(--foundation-primary-500) !important;
+        border-radius: 10px;
+        background-color: #ffffff !important;
+        font-family: 'Sans Serif Collection', sans-serif;
+        font-size: 12px;
+        color: var(--foundation-primary-500);
+        transition: border-color 0.2s, box-shadow 0.2s;
+        height: 44px;
+    }
+
+    .form-input::placeholder {
+        color: var(--foundation-primary-500);
+        opacity: 0.6;
+    }
+
+    .form-input:focus {
+        outline: none;
+        border-color: var(--foundation-primary-900);
+        box-shadow: 0 0 0 3px rgba(13, 24, 58, 0.1);
+    }
+
+    textarea.form-input {
+        height: 140px;
+        resize: vertical;
+    }
+
+    .btn-autofill {
+        background-color: var(--foundation-primary-400);
+        color: #ffffff;
+        padding: 12px 32px;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 14px;
+        height: 44px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: opacity 0.2s;
+    }
+
+    .btn-autofill:hover {
+        opacity: 0.9;
+    }
+
+    .btn-action-primary {
+        background-color: var(--foundation-primary-500);
+        color: #ffffff;
+        padding: 12px 32px;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 16px;
+        transition: background-color 0.2s;
+    }
+
+    .btn-action-primary:hover {
+        background-color: var(--foundation-primary-900);
+    }
+
+    .btn-action-outline {
+        border: 1px solid var(--foundation-primary-500);
+        color: var(--foundation-primary-500);
+        padding: 12px 32px;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 16px;
+        transition: background-color 0.2s;
+    }
+
+    .cover-preview {
+        width: 98px;
+        height: 140px;
+        background-color: #f0f0f0;
+        border: 1px solid var(--foundation-neutral-400);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--foundation-neutral-400);
+        font-size: 12px;
+        font-weight: 600;
+        text-align: center;
+        overflow: hidden;
+    }
+
+    .info-box {
+        background-color: var(--foundation-neutral-200);
+        border-left: 3px solid var(--foundation-primary-500);
+        padding: 10px 15px;
+        border-radius: 10px;
+        margin-bottom: 25px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .info-box p {
+        color: var(--foundation-primary-500);
+        font-size: 14px;
+        font-weight: 500;
+    }
+
+    .field-error {
+        font-size: 11px;
+        color: #dc2626;
+        margin-top: 4px;
+        font-weight: 500;
+    }
+
+    .input-has-error {
+        border-color: #f87171 !important;
+    }
+
+    /* Modal Styles */
+    #successModalOverlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.4);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        backdrop-filter: blur(2px);
+    }
+
+    .modal {
+        display: inline-flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+        padding: 28px;
+        position: relative;
+        background-color: #ffffff;
+        border-radius: 10px;
+        border: none;
+        max-width: 400px;
+        width: 90%;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    }
+
+    .modal .frame {
+        width: 100%;
+        align-items: flex-end;
+        gap: 12px;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        flex: 0 0 auto;
+    }
+
+    .modal .close-vector {
+        position: relative;
+        width: 22.22px;
+        height: 22.22px;
+        cursor: pointer;
+        opacity: 0.5;
+        transition: opacity 0.2s;
+    }
+    
+    .modal .close-vector:hover { opacity: 1; }
+
+    .modal .div-content {
+        align-items: center;
+        gap: 20px;
+        align-self: stretch;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        flex: 0 0 auto;
+    }
+
+    .modal .success-icon {
+        position: relative;
+        width: 66.67px;
+        height: 66.67px;
+        color: #10b981; /* Green success */
+    }
+
+    .modal .frame-text {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+        position: relative;
+        align-self: stretch;
+        width: 100%;
+        flex: 0 0 auto;
+    }
+
+    .modal .heading {
+        position: relative;
+        align-self: stretch;
+        font-family: 'Playfair Display', serif;
+        font-weight: 700;
+        color: var(--foundation-neutral-800);
+        font-size: 24px;
+        text-align: center;
+        line-height: 1.2;
+    }
+
+    .modal .text-wrapper {
+        position: relative;
+        align-self: stretch;
+        font-family: 'Work Sans', sans-serif;
+        font-weight: 400;
+        color: var(--foundation-neutral-500);
+        font-size: 14px;
+        text-align: center;
+        line-height: 1.5;
+    }
+
+    .modal .button-ok {
+        all: unset;
+        box-sizing: border-box;
+        display: flex;
+        height: 43px;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 12px 32px;
+        position: relative;
+        align-self: stretch;
+        width: 100%;
+        background-color: var(--foundation-primary-500);
+        border-radius: 10px;
+        color: #ffffff;
+        font-weight: 600;
+        text-align: center;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+
+    .modal .button-ok:hover {
+        background-color: var(--foundation-primary-900);
+    }
+
+    .modal::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        padding: 1.5px;
+        border-radius: 10px;
+        background: linear-gradient(111deg, rgba(30, 58, 138, 1) 0%, rgba(13, 24, 58, 1) 100%);
+        -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+        -webkit-mask-composite: xor;
+        mask-composite: exclude;
+        z-index: 1;
+        pointer-events: none;
+    }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="max-w-3xl mx-auto px-6 py-8">
+<div class="max-w-[1280px] mx-auto px-10 py-12">
 
-    <!-- Breadcrumb -->
-    <nav class="flex items-center gap-2 text-xs text-gray-400 mb-6">
-        <a href="{% url 'book:dashboard' %}" class="hover:text-gray-700 transition">Home</a>
-        <span>/</span>
-        <a href="{% url 'book:book_list' %}" class="hover:text-gray-700 transition">Katalog</a>
-        <span>/</span>
-        {% if action == 'edit' %}
-        <a href="{% url 'book:book_detail' book.pk %}" class="hover:text-gray-700 transition truncate max-w-[160px]">{{ book.title|truncatechars:30 }}</a>
-        <span>/</span>
-        {% endif %}
-        <span class="text-gray-600">{% if action == 'add' %}Tambah Buku{% else %}Edit{% endif %}</span>
-    </nav>
-
-    <h1 class="text-3xl font-bold text-gray-800 mb-6" style="font-family:'Playfair Display',serif">
-        {% if action == 'add' %}New Book Form{% else %}Edit Book Details{% endif %}
+    <!-- Header -->
+    <h1 class="text-[48px] font-bold text-black mb-10" style="font-family:'Playfair Display',serif">
+        {% if action == 'add' %}Tambah Buku{% else %}Edit Buku{% endif %}
     </h1>
 
     {% if action == 'add' %}
-    <div class="flex items-center gap-2 bg-blue-50 border border-blue-100 rounded-lg px-4 py-3 text-sm text-blue-700 mb-5">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="flex-shrink-0"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
-        Masukkan ISBN lalu klik <strong class="mx-1">Auto-Fill</strong> untuk mengisi data otomatis.
-    </div>
-    {% endif %}
-
-    <!-- Non-field form errors -->
-    {% if form.non_field_errors %}
-    <div class="mb-5 bg-red-50 border border-red-200 rounded-lg px-4 py-3 text-sm text-red-700">
-        {% for err in form.non_field_errors %}<p>⚠️ {{ err }}</p>{% endfor %}
+    <!-- Info Alert -->
+    <div class="info-box">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1e3a8a" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="16" x2="12" y2="12" />
+            <line x1="12" y1="8" x2="12.01" y2="8" />
+        </svg>
+        <p class="text-[14px] text-[#1e3a8a] font-medium">Masukkan ISBN lalu klik Auto-Fill untuk mengisi data otomatis.
+        </p>
     </div>
     {% endif %}
 
     <form method="post" id="bookForm" novalidate>
         {% csrf_token %}
 
-        <!-- Informasi Dasar -->
-        <div class="bg-white border border-gray-100 rounded-2xl p-6 mb-4 shadow-sm">
-            <h3 class="text-base font-bold text-gray-700 border-b border-gray-100 pb-3 mb-5">Informasi Dasar</h3>
+        <!-- Section 1: Informasi Dasar -->
+        <div class="form-section">
+            <span class="section-title">Informasi Dasar</span>
+            <div class="section-divider"></div>
 
-            <!-- ISBN + Auto-Fill -->
-            <div class="flex gap-3 mb-4">
-                <div class="flex-1">
-                    <label class="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-1.5">
-                        ISBN <span class="text-red-500">*</span>
-                    </label>
-                    {{ form.isbn }}
-                    {% if form.isbn.errors %}
-                    <p class="field-error">{{ form.isbn.errors.0 }}</p>
-                    {% endif %}
+            <!-- ISBN with Auto-Fill -->
+            <div class="flex gap-4 mb-6">
+                <div class="flex-grow">
+                    <div class="form-group">
+                        <label>ISBN <span class="required">*</span></label>
+                        <input type="text" name="isbn" id="id_isbn" value="{{ form.isbn.value|default:'' }}"
+                            class="form-input" placeholder="Contoh: 9781234567890">
+                        {% if form.isbn.errors %}<p class="field-error">{{ form.isbn.errors.0 }}</p>{% endif %}
+                    </div>
                 </div>
                 {% if action == 'add' %}
-                <div class="flex-shrink-0 self-end">
-                    <button type="button" id="autofillBtn"
-                            class="flex items-center gap-2 border border-gray-300 text-gray-700 hover:bg-gray-800 hover:text-white text-sm font-semibold px-4 py-2.5 rounded-lg transition">
-                        <span id="autofillLabel">🔍 Auto-Fill</span>
+                <div class="self-end">
+                    <button type="button" id="autofillBtn" class="btn-autofill">
+                        <span id="autofillLabel">Auto-Fill</span>
                     </button>
                 </div>
                 {% endif %}
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                <div>
-                    <label class="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-1.5">
-                        Judul <span class="text-red-500">*</span>
-                    </label>
-                    {{ form.title }}
-                    {% if form.title.errors %}
-                    <p class="field-error">{{ form.title.errors.0 }}</p>
-                    {% else %}
-                    <p class="field-error" id="err_title" style="display:none"></p>
-                    {% endif %}
+            <!-- Title and Author -->
+            <div class="grid grid-cols-1 md:grid-cols-5 gap-6 mb-6">
+                <div class="md:col-span-3">
+                    <div class="form-group">
+                        <label>Judul Buku <span class="required">*</span></label>
+                        <input type="text" name="title" id="id_title" value="{{ form.title.value|default:'' }}"
+                            class="form-input" placeholder="Masukkan judul lengkap buku">
+                        {% if form.title.errors %}<p class="field-error">{{ form.title.errors.0 }}</p>{% else %}<p
+                            class="field-error" id="err_title" style="display:none"></p>{% endif %}
+                    </div>
                 </div>
-                <div>
-                    <label class="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-1.5">
-                        Pengarang <span class="text-red-500">*</span>
-                    </label>
-                    {{ form.author }}
-                    {% if form.author.errors %}
-                    <p class="field-error">{{ form.author.errors.0 }}</p>
-                    {% else %}
-                    <p class="field-error" id="err_author" style="display:none"></p>
-                    {% endif %}
+                <div class="md:col-span-2">
+                    <div class="form-group">
+                        <label>Penulis <span class="required">*</span></label>
+                        <input type="text" name="author" id="id_author" value="{{ form.author.value|default:'' }}"
+                            class="form-input" placeholder="Nama penulis">
+                        {% if form.author.errors %}<p class="field-error">{{ form.author.errors.0 }}</p>{% else %}<p
+                            class="field-error" id="err_author" style="display:none"></p>{% endif %}
+                    </div>
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                <div>
-                    <label class="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-1.5">Kategori</label>
-                    {{ form.category }}
+            <!-- Category, Publisher, Publish Date -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                <div class="form-group">
+                    <label>Kategori</label>
+                    <input type="text" name="category" id="id_category" value="{{ form.category.value|default:'' }}"
+                        class="form-input" placeholder="Fiksi, Edukasi, dsb.">
                     {% if form.category.errors %}<p class="field-error">{{ form.category.errors.0 }}</p>{% endif %}
                 </div>
-                <div>
-                    <label class="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-1.5">Penerbit</label>
-                    {{ form.publisher }}
+                <div class="form-group">
+                    <label>Penerbit</label>
+                    <input type="text" name="publisher" id="id_publisher" value="{{ form.publisher.value|default:'' }}"
+                        class="form-input" placeholder="Nama penerbit">
                     {% if form.publisher.errors %}<p class="field-error">{{ form.publisher.errors.0 }}</p>{% endif %}
                 </div>
-                <div>
-                    <label class="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-1.5">Tahun Terbit</label>
-                    {{ form.publish_year }}
-                    {% if form.publish_year.errors %}<p class="field-error">{{ form.publish_year.errors.0 }}</p>{% endif %}
+                <div class="form-group">
+                    <label>Tanggal Terbit</label>
+                    <input type="text" name="publish_year" id="id_publish_year"
+                        value="{{ form.publish_year.value|default:'' }}" class="form-input"
+                        placeholder="YYYY atau DD-MM-YYYY">
+                    {% if form.publish_year.errors %}<p class="field-error">{{ form.publish_year.errors.0 }}</p>
+                    {% endif %}
                 </div>
             </div>
 
-            <div>
-                <label class="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-1.5">Sinopsis</label>
-                {{ form.synopsis }}
+            <!-- Synopsis -->
+            <div class="form-group">
+                <label>Sinopsis</label>
+                <textarea name="synopsis" id="id_synopsis" class="form-input"
+                    placeholder="Ringkasan cerita atau isi buku...">{{ form.synopsis.value|default:'' }}</textarea>
                 {% if form.synopsis.errors %}<p class="field-error">{{ form.synopsis.errors.0 }}</p>{% endif %}
             </div>
         </div>
 
-        <!-- Data Fisik & Stok -->
-        <div class="bg-white border border-gray-100 rounded-2xl p-6 mb-4 shadow-sm">
-            <h3 class="text-base font-bold text-gray-700 border-b border-gray-100 pb-3 mb-5">Data Fisik & Stok</h3>
-            <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
-                <div>
-                    <label class="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-1.5">Halaman</label>
-                    {{ form.pages }}
+        <!-- Section 2: Data Fisik & Stok -->
+        <div class="form-section">
+            <span class="section-title">Data Fisik & Stok</span>
+            <div class="section-divider"></div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                <div class="form-group">
+                    <label>Halaman</label>
+                    <input type="number" name="pages" id="id_pages" value="{{ form.pages.value|default:'' }}"
+                        class="form-input" placeholder="Jumlah halaman">
                     {% if form.pages.errors %}<p class="field-error">{{ form.pages.errors.0 }}</p>{% endif %}
                 </div>
-                <div>
-                    <label class="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-1.5">Bahasa</label>
-                    {{ form.language }}
+                <div class="form-group">
+                    <label>Bahasa</label>
+                    <input type="text" name="language" id="id_language" value="{{ form.language.value|default:'' }}"
+                        class="form-input" placeholder="Contoh: Indonesia">
                     {% if form.language.errors %}<p class="field-error">{{ form.language.errors.0 }}</p>{% endif %}
                 </div>
-                <div>
-                    <label class="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-1.5">
-                        Total Stok <span class="text-red-500">*</span>
-                    </label>
-                    {{ form.total_copies }}
-                    {% if form.total_copies.errors %}
-                    <p class="field-error">{{ form.total_copies.errors.0 }}</p>
+                <div class="form-group">
+                    <label>Total Stok <span class="required">*</span></label>
+                    <input type="number" name="total_copies" id="id_total_copies"
+                        value="{{ form.total_copies.value|default:'' }}" class="form-input" placeholder="0">
+                    {% if form.total_copies.errors %}<p class="field-error">{{ form.total_copies.errors.0 }}</p>
                     {% else %}
-                    <p class="field-error" id="err_total_copies" style="display:none"></p>
-                    {% endif %}
-                </div>
-                <div>
-                    <label class="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-1.5">Rusak</label>
-                    {{ form.damaged_copies }}
-                    {% if form.damaged_copies.errors %}<p class="field-error">{{ form.damaged_copies.errors.0 }}</p>{% endif %}
-                </div>
-                <div>
-                    <label class="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-1.5">Hilang</label>
-                    {{ form.lost_copies }}
-                    {% if form.lost_copies.errors %}<p class="field-error">{{ form.lost_copies.errors.0 }}</p>{% endif %}
+                    <p class="field-error" id="err_total_copies" style="display:none"></p>{% endif %}
                 </div>
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-1 gap-4 mt-4">
-                <div>
-                    <label class="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-1.5">Lokasi Rak</label>
-                    {{ form.shelf_location }}
-                    {% if form.shelf_location.errors %}<p class="field-error">{{ form.shelf_location.errors.0 }}</p>{% endif %}
+
+            <div class="form-group">
+                <label>Lokasi Rak</label>
+                <input type="text" name="shelf_location" id="id_shelf_location"
+                    value="{{ form.shelf_location.value|default:'' }}" class="form-input" placeholder="Contoh: R-01-A">
+                {% if form.shelf_location.errors %}<p class="field-error">{{ form.shelf_location.errors.0 }}</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Section 3: Sampul Buku -->
+        <div class="form-section">
+            <span class="section-title">Sampul Buku</span>
+            <div class="section-divider"></div>
+
+            <div class="flex items-start gap-8">
+                <div class="flex-grow">
+                    <div class="form-group">
+                        <label>URL Gambar Sampul</label>
+                        <input type="url" name="cover_url" id="id_cover_url"
+                            value="{{ form.cover_url.value|default:'' }}" class="form-input"
+                            placeholder="https://example.com/cover.jpg">
+                        {% if form.cover_url.errors %}<p class="field-error">{{ form.cover_url.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="flex-shrink-0 flex flex-col items-center">
+                    <div id="coverPreviewWrap" class="cover-preview">
+                        {% if action == 'edit' and book.cover_url %}
+                        <img id="coverPreviewImg" src="{{ book.cover_url }}" alt="preview"
+                            class="w-full h-full object-cover">
+                        {% else %}
+                        <span>Preview</span>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- Cover -->
-        <div class="bg-white border border-gray-100 rounded-2xl p-6 mb-6 shadow-sm">
-            <h3 class="text-base font-bold text-gray-700 border-b border-gray-100 pb-3 mb-5">Sampul Buku</h3>
-            <div class="flex gap-5 items-start">
-                <div class="flex-1">
-                    <label class="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-1.5">URL Gambar Sampul</label>
-                    {{ form.cover_url }}
-                    {% if form.cover_url.errors %}<p class="field-error">{{ form.cover_url.errors.0 }}</p>{% endif %}
-                </div>
-                <div id="coverPreviewWrap"
-                     class="w-24 aspect-[2/3] flex-shrink-0 rounded-lg overflow-hidden bg-gray-100 border border-gray-200 flex items-center justify-center text-xs text-gray-400">
-                    {% if action == 'edit' and book.cover_url %}
-                    <img id="coverPreviewImg" src="{{ book.cover_url }}" alt="preview" class="w-full h-full object-cover">
-                    {% else %}
-                    <span>Preview</span>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-
-        <!-- Actions -->
-        <div class="flex gap-3 justify-end">
+        <!-- Footer Actions -->
+        <div class="flex justify-end gap-4 mt-12 pb-20">
             <a href="{% if action == 'edit' %}{% url 'book:book_detail' book.pk %}{% else %}{% url 'book:book_list' %}{% endif %}"
-               class="px-5 py-2.5 text-sm border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-100 transition">
+                class="btn-action-outline">
                 Batal
             </a>
-            <button type="submit"
-                    class="px-6 py-2.5 text-sm bg-gray-800 hover:bg-gray-700 text-white font-semibold rounded-lg transition">
+            <button type="submit" class="btn-action-primary">
                 {% if action == 'add' %}Tambah Buku{% else %}Simpan Perubahan{% endif %}
             </button>
         </div>
     </form>
+</div>
 
+<!-- Success Modal -->
+<div id="successModalOverlay">
+    <div class="modal">
+        <div class="frame">
+            <div class="close-vector" onclick="closeSuccessModal()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </div>
+        </div>
+        <div class="div-content">
+            <div class="success-icon">
+                <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="32" cy="32" r="30" stroke="#10b981" stroke-width="4"/>
+                    <path d="M18 32L28 42L46 24" stroke="#10b981" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </div>
+            <div class="frame-text">
+                <div class="heading">{% if action == 'add' %}Buku berhasil ditambahkan{% else %}Perubahan berhasil disimpan{% endif %}</div>
+                <p class="text-wrapper">"<span id="modalBookTitle">Judul buku</span>" telah berhasil disimpan ke dalam sistem.</p>
+            </div>
+            <button class="button-ok" id="modalOkBtn">
+                OK
+            </button>
+        </div>
+    </div>
+</div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-    // ── Highlight fields yang ada error dari server ────────────────────────────
+    // ── Pre-fill highlighting ──────────────────────────────────────────────────
     document.querySelectorAll('.field-error').forEach(el => {
-        if (el.textContent.trim()) {
-            const input = el.closest('div').querySelector('input, select, textarea');
+        if (el.textContent.trim() && !el.id) {
+            const input = el.closest('.form-group')?.querySelector('input, textarea');
             if (input) input.classList.add('input-has-error');
         }
     });
 
-    // ── Client-side validation untuk required fields ──────────────────────────
+    // ── Client-side validation ────────────────────────────────────────────────
     const REQUIRED_FIELDS = [
-        { id: 'id_isbn',         errId: null,               label: 'ISBN wajib diisi.' },
-        { id: 'id_title',        errId: 'err_title',        label: 'This field is required.' },
-        { id: 'id_author',       errId: 'err_author',       label: 'This field is required.' },
+        { id: 'id_isbn', errId: null, label: 'ISBN wajib diisi.' },
+        { id: 'id_title', errId: 'err_title', label: 'This field is required.' },
+        { id: 'id_author', errId: 'err_author', label: 'This field is required.' },
         { id: 'id_total_copies', errId: 'err_total_copies', label: 'This field is required.' },
     ];
 
-    document.getElementById('bookForm').addEventListener('submit', function(e) {
-        let valid = true;
+    const bookForm = document.getElementById('bookForm');
+    let nextRedirectUrl = '';
 
+    function closeSuccessModal() {
+        if (nextRedirectUrl) window.location.href = nextRedirectUrl;
+    }
+    
+    document.getElementById('modalOkBtn').addEventListener('click', closeSuccessModal);
+
+    bookForm.addEventListener('submit', function (e) {
+        e.preventDefault();
+        
+        // Clear previous errors
+        document.querySelectorAll('.field-error').forEach(el => {
+            if (el.id) { el.textContent = ''; el.style.display = 'none'; }
+        });
+        document.querySelectorAll('.form-input').forEach(el => el.classList.remove('input-has-error'));
+
+        let clientValid = true;
         REQUIRED_FIELDS.forEach(({ id, errId, label }) => {
             const input = document.getElementById(id);
             if (!input) return;
@@ -234,45 +569,90 @@
 
             if (!input.value.trim()) {
                 input.classList.add('input-has-error');
-                if (errEl) { errEl.textContent = label; errEl.style.display = 'flex'; }
-                valid = false;
+                if (errEl) { errEl.textContent = label; errEl.style.display = 'block'; }
+                clientValid = false;
+            }
+        });
+
+        if (!clientValid) {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            return;
+        }
+
+        // Submit via AJAX
+        const formData = new FormData(bookForm);
+        const submitBtn = bookForm.querySelector('button[type="submit"]');
+        const originalBtnText = submitBtn.textContent;
+        
+        submitBtn.disabled = true;
+        submitBtn.textContent = '⏳ Menyimpan...';
+
+        fetch(window.location.href, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById('modalBookTitle').textContent = data.title;
+                nextRedirectUrl = data.redirect_url;
+                document.getElementById('successModalOverlay').style.display = 'flex';
             } else {
-                input.classList.remove('input-has-error');
-                if (errEl) { errEl.textContent = ''; errEl.style.display = 'none'; }
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalBtnText;
+                
+                // Show server-side errors
+                if (data.errors) {
+                    for (const [field, msg] of Object.entries(data.errors)) {
+                        const input = document.getElementById(`id_${field}`);
+                        if (input) input.classList.add('input-has-error');
+                        
+                        // Try to find error element
+                        const errEl = document.getElementById(`err_${field}`);
+                        if (errEl) {
+                            errEl.textContent = msg;
+                            errEl.style.display = 'block';
+                        }
+                    }
+                }
+                window.scrollTo({ top: 0, behavior: 'smooth' });
             }
+        })
+        .catch(err => {
+            console.error('Submission error:', err);
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalBtnText;
+            alert('Terjadi kesalahan saat menyimpan data. Silakan coba lagi.');
         });
-
-        if (!valid) e.preventDefault();
     });
 
-    // ── Hapus error saat user mulai mengetik ──────────────────────────────────
-    REQUIRED_FIELDS.forEach(({ id, errId }) => {
-        const input = document.getElementById(id);
-        if (!input) return;
-        input.addEventListener('input', () => {
-            if (input.value.trim()) {
-                input.classList.remove('input-has-error');
-                const errEl = errId ? document.getElementById(errId) : null;
-                if (errEl) { errEl.textContent = ''; errEl.style.display = 'none'; }
-            }
-        });
-    });
-
-    // ── Cover URL live preview ────────────────────────────────────────────────
+    // ── Real-time Preview ──────────────────────────────────────────────────────
     const coverInput = document.getElementById('id_cover_url');
-    const coverWrap  = document.getElementById('coverPreviewWrap');
+    const coverWrap = document.getElementById('coverPreviewWrap');
 
     function updatePreview(url) {
-        if (!url) return;
-        const existing = document.getElementById('coverPreviewImg');
-        if (existing) { existing.src = url; }
-        else { coverWrap.innerHTML = `<img id="coverPreviewImg" src="${url}" alt="preview" class="w-full h-full object-cover">`; }
+        if (!url) {
+            coverWrap.innerHTML = '<span>Preview</span>';
+            return;
+        }
+        const img = new Image();
+        img.onload = () => {
+            coverWrap.innerHTML = `<img id="coverPreviewImg" src="${url}" alt="preview" class="w-full h-full object-cover">`;
+        };
+        img.onerror = () => {
+            coverWrap.innerHTML = '<span>Invalid URL</span>';
+        };
+        img.src = url;
     }
 
     coverInput?.addEventListener('input', e => updatePreview(e.target.value.trim()));
 
     // ── ISBN Auto-Fill ────────────────────────────────────────────────────────
-    const autofillBtn   = document.getElementById('autofillBtn');
+    const autofillBtn = document.getElementById('autofillBtn');
     const autofillLabel = document.getElementById('autofillLabel');
 
     autofillBtn?.addEventListener('click', async () => {
@@ -283,15 +663,17 @@
         autofillBtn.disabled = true;
 
         try {
-            const r    = await fetch(`/book/api/enrich/?isbn=${encodeURIComponent(isbn)}`);
+            const r = await fetch(`/book/api/enrich/?isbn=${encodeURIComponent(isbn)}`);
             const data = await r.json();
 
             const map = {
-                'id_cover_url':    data.cover_url,
-                'id_publisher':    data.publisher,
+                'id_title': data.title,
+                'id_author': data.author,
+                'id_cover_url': data.cover_url,
+                'id_publisher': data.publisher,
                 'id_publish_year': data.publish_year,
-                'id_category':     data.category,
-                'id_synopsis':     data.synopsis,
+                'id_category': data.category,
+                'id_synopsis': data.synopsis,
             };
 
             let filled = 0;
@@ -299,22 +681,22 @@
                 const el = document.getElementById(id);
                 if (el && value && !el.value) {
                     el.value = value;
-                    el.style.borderColor = '#86efac';
-                    el.style.background  = '#f0fdf4';
+                    el.style.borderColor = '#1e3a8a';
+                    el.style.backgroundColor = '#ffffff';
                     filled++;
                 }
             }
 
             if (data.cover_url) updatePreview(data.cover_url);
-            autofillLabel.textContent = filled > 0 ? `✅ ${filled} field diisi` : '⚠️ Data tidak ditemukan';
+            autofillLabel.textContent = filled > 0 ? `✅ Selesai` : '⚠️ Tak Ada Data';
 
-        } catch(e) {
+        } catch (e) {
             autofillLabel.textContent = '❌ Gagal';
             console.error(e);
         } finally {
             setTimeout(() => {
-                if (autofillLabel) autofillLabel.textContent = '🔍 Auto-Fill';
-                if (autofillBtn)   autofillBtn.disabled = false;
+                if (autofillLabel) autofillLabel.textContent = 'Auto-Fill';
+                if (autofillBtn) autofillBtn.disabled = false;
             }, 3000);
         }
     });

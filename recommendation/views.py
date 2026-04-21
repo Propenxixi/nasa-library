@@ -468,7 +468,10 @@ def get_personalized_recommendations(request):
     
     # Get top 10
     books = books[:10]
-    
+
+    # Prioritize available books first, then by popularity
+    books = sorted(books, key=lambda b: (not (b.available_copies > 0), -(b.loan_count or 0), -(b.avg_rating or 0)))
+
     # Build response
     recommendations = []
     for book in books:
@@ -531,7 +534,10 @@ def get_popular_books_internal(limit=10, category=None):
     ).order_by('-recent_count', '-total_loans', '-title')
     
     books = books[:limit]
-    
+
+    # Prioritize available books first, then by popularity
+    books = sorted(books, key=lambda b: (not (b.available_copies > 0), -(b.recent_count or 0), -(b.total_loans or 0)))
+
     # Build response
     result = []
     for book in books:

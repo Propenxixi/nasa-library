@@ -84,3 +84,39 @@ class ChangeUsernameForm(forms.Form):
         if User.objects.filter(username=new_username).exists():
             raise ValidationError('Username ini sudah digunakan. Silahkan pilih username lain.')
         return new_username
+
+
+class StudentBatchImportForm(forms.Form):
+    """Form for batch importing students from Excel file"""
+    
+    excel_file = forms.FileField(
+        label='File Excel (Daftar Siswa)',
+        help_text='Format: .xlsx | Kolom wajib: NIS, Nama, Jenis Kelamin, Kelas',
+        widget=forms.FileInput(attrs={
+            'accept': '.xlsx,.xls',
+            'class': 'hidden',
+            'id': 'file-input',
+        })
+    )
+    
+    update_existing = forms.BooleanField(
+        label='Update data siswa yang sudah ada',
+        required=False,
+        initial=False,
+        widget=forms.CheckboxInput(attrs={
+            'class': 'w-4 h-4 text-gray-800 cursor-pointer',
+        })
+    )
+    
+    def clean_excel_file(self):
+        file = self.cleaned_data.get('excel_file')
+        if file:
+            # Validate file extension
+            if not file.name.lower().endswith(('.xlsx', '.xls')):
+                raise ValidationError('File harus berformat .xlsx atau .xls')
+            
+            # Validate file size (max 10MB)
+            if file.size > 10 * 1024 * 1024:
+                raise ValidationError('Ukuran file tidak boleh lebih dari 10MB')
+        
+        return file

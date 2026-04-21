@@ -1,579 +1,862 @@
 {% extends 'base.html' %}
+{% load static %}
 
-{% block title %}MAN 61 Jakarta Library - Home{% endblock %}
+{% block title %}NASA Library — Beranda{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ─── Page-level bg ─── */
+    body { background-color: var(--color-bg); }
+
+    /* ─── Hero ─── */
+    .hero-section {
+        background: var(--color-surface);
+        border-radius: 20px;
+        border: 1px solid var(--color-border);
+        overflow: hidden;
+        position: relative;
+    }
+    .hero-badge {
+        display: inline-flex; align-items: center; gap: 6px;
+        background: var(--primary-50);
+        color: var(--primary-900);
+        font-family: 'Work Sans', sans-serif;
+        font-size: 0.75rem; font-weight: 600;
+        padding: 5px 12px;
+        border-radius: 9999px;
+    }
+    .hero-badge::before {
+        content: '';
+        display: inline-block; width: 6px; height: 6px;
+        background: var(--accent-500);
+        border-radius: 50%;
+    }
+
+    /* ─── Quote Banner ─── */
+    .quote-banner {
+        position: relative;
+        background-image: url("{% static 'assets/books-bg.jpg' %}"), linear-gradient(135deg, var(--primary-900) 0%, var(--primary-500) 100%);
+        background-size: cover;
+        background-position: center;
+        background-blend-mode: multiply;
+    }
+    .quote-banner::before {
+        content: '';
+        position: absolute; inset: 0;
+        background: rgba(13,24,58,0.75);
+    }
+
+    /* ─── Tab Buttons ─── */
+    .tab-btn {
+        padding: 8px 24px;
+        border-radius: 9999px;
+        font-family: 'Work Sans', sans-serif;
+        font-size: 0.875rem; font-weight: 600;
+        cursor: pointer; border: none;
+        transition: background 0.2s, color 0.2s;
+    }
+    .tab-btn.active   { background: var(--primary-900); color: var(--neutral-50); }
+    .tab-btn.inactive { background: var(--primary-50);  color: var(--neutral-600); }
+    .tab-btn.inactive:hover { background: var(--primary-100); }
+
+    /* ─── Book Cards ─── */
+    .book-card {
+        background: var(--color-surface);
+        border: 1px solid var(--color-border);
+        border-radius: 16px;
+        overflow: hidden;
+        transition: box-shadow 0.35s cubic-bezier(0.4,0,0.2,1), transform 0.35s cubic-bezier(0.4,0,0.2,1);
+        flex-shrink: 0;
+        width: 220px;
+        will-change: transform;
+    }
+    .book-card:hover {
+        box-shadow: 0 16px 40px rgba(13,24,58,0.16);
+        transform: translateY(-6px);
+    }
+    .book-card .book-cover-wrap {
+        position: relative;
+        aspect-ratio: 3/4;
+        overflow: hidden;
+        border-radius: 10px 10px 0 0;
+        background: linear-gradient(135deg, var(--primary-100) 0%, var(--primary-300) 100%);
+    }
+    .book-card .book-cover-wrap img {
+        width: 100%; height: 100%; object-fit: cover;
+        transition: transform 0.5s cubic-bezier(0.4,0,0.2,1);
+    }
+    .book-card:hover .book-cover-wrap img {
+        transform: scale(1.06);
+    }
+    /* Shimmer skeleton */
+    .book-skeleton {
+        border-radius: 16px;
+        overflow: hidden;
+        flex-shrink: 0;
+        width: 220px;
+        background: var(--color-surface);
+        border: 1px solid var(--color-border);
+    }
+    .skeleton-shimmer {
+        background: linear-gradient(90deg, var(--primary-50) 25%, var(--neutral-200) 50%, var(--primary-50) 75%);
+        background-size: 200% 100%;
+        animation: shimmer 1.6s infinite;
+        border-radius: 8px;
+    }
+    @keyframes shimmer {
+        0% { background-position: 200% 0; }
+        100% { background-position: -200% 0; }
+    }
+    .availability-badge {
+        display: inline-flex; align-items: center; gap: 4px;
+        font-size: 0.7rem; font-weight: 600;
+        padding: 3px 8px; border-radius: 9999px;
+        backdrop-filter: blur(8px);
+    }
+    .availability-badge.available   { background: rgba(220,252,231,0.92); color: var(--secondary-800); }
+    .availability-badge.unavailable { background: rgba(254,226,226,0.92); color: var(--error-700); }
+    .availability-badge::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: currentColor; display: inline-block; }
+
+    /* ─── Carousel ─── */
+    .book-carousel { overflow: hidden; position: relative; }
+    .book-carousel-track {
+        display: flex; gap: 16px;
+        transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .carousel-btn {
+        width: 36px; height: 36px;
+        background: var(--color-surface); border: 1px solid var(--color-border);
+        border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        cursor: pointer; transition: background 0.2s, box-shadow 0.2s;
+        flex-shrink: 0;
+    }
+    .carousel-btn:hover { background: var(--primary-50); box-shadow: 0 2px 8px rgba(13,24,58,0.10); }
+    .carousel-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+    /* ─── Leaderboard ─── */
+    .leaderboard-card {
+        background: var(--color-surface);
+        border: 1px solid var(--color-border);
+        border-radius: 20px;
+        overflow: hidden;
+    }
+    .podium-bar {
+        background: linear-gradient(180deg, rgba(13,24,58,0.08) 0%, rgba(13,24,58,0.04) 100%);
+        border-radius: 8px 8px 0 0;
+    }
+    .podium-bar.gold   { background: linear-gradient(180deg, var(--accent-300) 0%, var(--accent-500) 100%); }
+    .podium-bar.silver { background: linear-gradient(180deg, var(--neutral-300) 0%, var(--neutral-400) 100%); }
+    .podium-bar.bronze { background: linear-gradient(180deg, var(--accent-600) 0%, var(--accent-700) 100%); }
+
+    .rank-row {
+        display: flex; align-items: center; gap: 12px;
+        padding: 12px 16px;
+        border-radius: 12px;
+        transition: background 0.15s;
+    }
+    .rank-row:hover { background: var(--primary-50); }
+    .rank-avatar {
+        width: 36px; height: 36px;
+        border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        font-family: 'Work Sans', sans-serif;
+        font-weight: 700; font-size: 0.8125rem;
+        color: var(--neutral-50); flex-shrink: 0;
+    }
+    .points-pill {
+        display: inline-flex; align-items: center;
+        padding: 3px 10px;
+        border-radius: 9999px;
+        font-size: 0.75rem; font-weight: 700;
+        background: rgba(245,158,11,0.12);
+        color: var(--accent-600);
+        flex-shrink: 0;
+    }
+
+    /* ─── Stats Cards ─── */
+    .stat-card {
+        background: var(--color-surface);
+        border: 1px solid var(--color-border);
+        border-radius: 20px;
+        padding: 24px;
+        display: flex; align-items: center; gap: 16px;
+        transition: box-shadow 0.2s, transform 0.2s;
+    }
+    .stat-card:hover { box-shadow: 0 6px 24px rgba(13,24,58,0.08); transform: translateY(-2px); }
+    .stat-icon-wrap {
+        width: 52px; height: 52px;
+        border-radius: 14px;
+        display: flex; align-items: center; justify-content: center;
+        flex-shrink: 0;
+    }
+
+    /* ─── Section spacing ─── */
+    .page-section { padding: 0 1rem; margin-bottom: 32px; }
+    @media (min-width: 640px)  { .page-section { padding: 0 1.5rem; } }
+    @media (min-width: 1024px) { .page-section { padding: 0 2rem; } }
+
+    /* ─── Crown icon ─── */
+    .crown-icon { color: var(--accent-500); }
+
+    /* ─── See Details button ─── */
+    .see-details-btn {
+        display: block; width: 100%;
+        padding: 8px;
+        background: var(--primary-900); color: var(--neutral-50);
+        font-family: 'Work Sans', sans-serif;
+        font-size: 0.8125rem; font-weight: 600;
+        border-radius: 9px; border: none; cursor: pointer;
+        text-align: center; text-decoration: none;
+        transition: background 0.2s;
+    }
+    .see-details-btn:hover { background: var(--primary-800); }
+
+    /* ─── Stars ─── */
+    .star-rating { color: var(--accent-400); font-size: 0.8rem; letter-spacing: 1px; }
+
+    /* ─── View All / CTA link ─── */
+    .view-all-link {
+        display: inline-flex; align-items: center; gap: 6px;
+        width: 100%;
+        padding: 13px 24px;
+        background: var(--primary-900); color: var(--neutral-50);
+        font-family: 'Work Sans', sans-serif;
+        font-size: 0.875rem; font-weight: 600;
+        border-radius: 12px; border: none; cursor: pointer;
+        text-align: center; text-decoration: none;
+        justify-content: center;
+        transition: background 0.2s, box-shadow 0.2s;
+    }
+    .view-all-link:hover { background: var(--primary-800); box-shadow: 0 4px 16px rgba(13,24,58,0.2); }
+    .view-all-link svg { width: 16px; height: 16px; }
+</style>
+{% endblock %}
 
 {% block content %}
-<!-- Hero Section -->
-<section class="relative bg-gradient-to-br from-white via-white to-gray-50 border-b border-gray-100 overflow-hidden">
-    <div class="absolute inset-0 bg-noise opacity-30"></div>
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24 relative">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-            
-            <!-- Left Content -->
-            <div class="space-y-6 fade-in">
-                <div>
-                    <span class="inline-block text-sm font-sans font-semibold text-gray-600 mb-4 bg-gray-100 px-4 py-2 rounded-full">NASA Library</span>
-                </div>
-                <h1 class="font-display text-4xl md:text-5xl font-bold text-gray-900 leading-tight">
-                    Your Reading Journey <span class="text-gray-600">Starts Here</span>
-                </h1>
-                <p class="font-sans text-lg text-gray-600 max-w-md leading-relaxed">
-                    Foster your love for reading, track your literacy progress, and become part of our vibrant reading community.
-                </p>
-                <div class="flex flex-col sm:flex-row gap-4 pt-4">
-                    <button class="group relative px-8 py-4 bg-gradient-to-r from-gray-900 to-gray-800 text-white font-sans font-semibold rounded-xl overflow-hidden hover-lift transition-all duration-300 shadow-lg hover:shadow-2xl">
-                        <span class="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-0 group-hover:opacity-20 group-hover:animate-shimmer"></span>
-                        <span class="relative flex items-center justify-center gap-3">
-                            <span class="text-xl group-hover:animate-bounce">📖</span>
-                            <span>Start Reading</span>
-                        </span>
-                        <span class="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity" style="background: radial-gradient(circle at 50% 0%, rgba(255,255,255,0.1), transparent 60%);"></span>
-                    </button>
-                    <button class="group relative px-8 py-4 border-2 border-gray-900 text-gray-900 font-sans font-semibold rounded-xl overflow-hidden hover-lift transition-all duration-300 hover:border-gray-700 hover:shadow-lg">
-                        <span class="absolute inset-0 bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 opacity-0 group-hover:opacity-5 transition-opacity rounded-xl"></span>
-                        <span class="relative flex items-center justify-center gap-3">
-                            <span class="text-xl group-hover:scale-110 transition-transform group-hover:animate-pulse">✓</span>
-                            <span>Check In Now</span>
-                        </span>
-                    </button>
-                </div>
-            </div>
-            
-            <!-- Right Decorative Element -->
-            <div class="hidden md:block fade-in" style="animation-delay: 0.2s;">
-                <div class="relative w-full h-96">
-                    <!-- Stacked Books Graphic -->
-                    <div class="absolute top-0 right-0 w-64 h-80 bg-gradient-to-br from-gray-100 to-gray-50 rounded-2xl shadow-lg transform rotate-3 border border-gray-200 p-8 flex flex-col justify-center items-center space-y-4">
-                        <div class="w-32 h-40 bg-gradient-to-br from-gray-400 to-gray-600 rounded-lg shadow-md transform -rotate-6"></div>
-                        <div class="w-32 h-40 bg-gradient-to-br from-gray-500 to-gray-700 rounded-lg shadow-md transform rotate-3"></div>
-                        <div class="w-32 h-40 bg-gradient-to-br from-gray-600 to-gray-800 rounded-lg shadow-md transform -rotate-2"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-8">
 
-<!-- School Literacy Program Section -->
-<section class="bg-gradient-to-b from-white via-gray-50 to-white border-b border-gray-100">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
-            
-            <!-- Literacy Program -->
-            <div class="space-y-6">
-                <div>
-                    <h2 class="font-display text-2xl md:text-3xl font-bold text-gray-900">School Literacy Program</h2>
-                    <p class="font-sans text-gray-600 mt-3">Share your reading journey & get verified by your teacher</p>
-                </div>
-                
-                <div class="border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm hover:shadow-md transition-shadow">
-                    <div class="bg-gradient-to-r from-gray-50 to-gray-100 p-6 border-b border-gray-200">
-                        <h3 class="font-display font-bold text-lg text-gray-900 mb-4">Your Reading Stats</h3>
-                        <div class="grid grid-cols-3 gap-4">
-                            <div class="text-center">
-                                <div class="text-2xl font-display font-bold text-gray-900">7</div>
-                                <p class="text-xs font-sans text-gray-600 mt-1">Books Read</p>
-                            </div>
-                            <div class="text-center">
-                                <div class="text-2xl font-display font-bold text-gray-900">5</div>
-                                <p class="text-xs font-sans text-gray-600 mt-1">Verified</p>
-                            </div>
-                            <div class="text-center">
-                                <div class="text-2xl font-display font-bold text-gray-900">71%</div>
-                                <p class="text-xs font-sans text-gray-600 mt-1">Progress</p>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="p-6 space-y-3">
-                        <div class="flex items-center justify-between">
-                            <span class="font-sans text-sm text-gray-700">Goal: 10 books</span>
-                            <span class="font-sans text-sm font-semibold text-gray-900">7 / 10</span>
-                        </div>
-                        <div class="w-full bg-gray-200 rounded-full h-3">
-                            <div class="bg-gradient-to-r from-gray-900 to-gray-700 h-3 rounded-full" style="width: 71%"></div>
-                        </div>
-                        <p class="font-sans text-xs text-gray-600">3 more books to reach your goal 🎯</p>
-                    </div>
-                </div>
-                
-                <a href="{% url 'literacy:submit_review' %}" class="group relative px-6 py-3 w-full bg-gradient-to-r from-gray-900 to-gray-800 text-white font-sans font-semibold rounded-xl overflow-hidden hover-lift transition-all duration-300 shadow-md hover:shadow-lg inline-block text-center">
-                    <span class="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-0 group-hover:opacity-10 group-hover:animate-shimmer"></span>
-                    <span class="relative flex items-center justify-center gap-2">
-                        <span class="text-lg group-hover:scale-110 transition-transform">✍️</span>
-                        <span>Submit Reading Review</span>
-                    </span>
-                </a>
-            </div>
-            
-            <!-- Activity Timeline -->
-            <div class="space-y-6">
-                <div>
-                    <h2 class="font-display text-2xl md:text-3xl font-bold text-gray-900">Recent Activity</h2>
-                    <p class="font-sans text-gray-600 mt-3">Your library engagement & progress</p>
-                </div>
-                
-                <div class="space-y-4">
-                    <!-- Activity Card 1 -->
-                    <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow bg-white">
-                        <div class="flex items-start space-x-4">
-                            <div class="flex-shrink-0 w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center text-xl">
-                                📖
-                            </div>
-                            <div class="flex-grow">
-                                <h3 class="font-display font-semibold text-gray-900 text-sm">Book Review Submitted</h3>
-                                <p class="font-sans text-xs text-gray-600 mt-1">You submitted a review for "The Great Gatsby"</p>
-                                <p class="font-sans text-xs text-gray-400 mt-2">2 hours ago</p>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Activity Card 2 -->
-                    <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow bg-white">
-                        <div class="flex items-start space-x-4">
-                            <div class="flex-shrink-0 w-12 h-12 bg-green-50 rounded-lg flex items-center justify-center text-xl">
-                                ✅
-                            </div>
-                            <div class="flex-grow">
-                                <h3 class="font-display font-semibold text-gray-900 text-sm">Review Verified</h3>
-                                <p class="font-sans text-xs text-gray-600 mt-1">Your teacher verified your "1984" review</p>
-                                <p class="font-sans text-xs text-gray-400 mt-2">1 day ago</p>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Activity Card 3 -->
-                    <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow bg-white">
-                        <div class="flex items-start space-x-4">
-                            <div class="flex-shrink-0 w-12 h-12 bg-purple-50 rounded-lg flex items-center justify-center text-xl">
-                                📚
-                            </div>
-                            <div class="flex-grow">
-                                <h3 class="font-display font-semibold text-gray-900 text-sm">Book Borrowed</h3>
-                                <p class="font-sans text-xs text-gray-600 mt-1">You borrowed "To Kill a Mockingbird"</p>
-                                <p class="font-sans text-xs text-gray-400 mt-2">3 days ago</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- My Borrowing Section -->
-<section class="bg-gradient-to-b from-white via-gray-50 to-white border-b border-gray-100">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div class="mb-10">
-            <h2 class="font-display text-3xl md:text-4xl font-bold text-gray-900">Your Active Borrowings</h2>
-            <p class="font-sans text-gray-600 mt-2">Books you're currently reading</p>
-        </div>
-        
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <!-- Borrowing Card 1 -->
-            <div class="border border-gray-200 rounded-xl p-5 hover:shadow-lg transition-all bg-white hover:-translate-y-1">
-                <div class="flex justify-between items-start mb-3">
+    <!-- ══════════════════════════════════════════
+         HERO SECTION
+    ══════════════════════════════════════════ -->
+    <section class="hero-section fade-in">
+        <div class="p-6 sm:p-10 lg:p-14">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
+                <!-- Left -->
+                <div class="space-y-5">
                     <div>
-                        <h3 class="font-display font-bold text-gray-900">The Great Gatsby</h3>
-                        <p class="font-sans text-sm text-gray-600">F. Scott Fitzgerald</p>
+                        <span class="hero-badge">🚀 NASA Library — Temukan Bukumu</span>
                     </div>
-                    <span class="text-xs font-sans bg-blue-100 text-blue-700 px-3 py-1 rounded-full font-semibold whitespace-nowrap ml-2">5 days left</span>
-                </div>
-                <div class="w-full bg-gray-200 rounded-full h-2 mb-3">
-                    <div class="bg-blue-500 h-2 rounded-full" style="width: 65%"></div>
-                </div>
-                <div class="flex items-center justify-between text-xs font-sans text-gray-500">
-                    <span>Due: Feb 20, 2025</span>
-                    <button class="text-gray-700 hover:text-gray-900 font-semibold hover:underline">Renew</button>
-                </div>
-            </div>
-            
-            <!-- Borrowing Card 2 -->
-            <div class="border border-gray-200 rounded-xl p-5 hover:shadow-lg transition-all bg-white hover:-translate-y-1">
-                <div class="flex justify-between items-start mb-3">
-                    <div>
-                        <h3 class="font-display font-bold text-gray-900">To Kill a Mockingbird</h3>
-                        <p class="font-sans text-sm text-gray-600">Harper Lee</p>
+                    <h1 class="font-display text-3xl sm:text-4xl lg:text-[2.75rem] font-bold text-primary leading-[1.2]">
+                        Discover Your Next<br>
+                        Favorite Book at<br>
+                        <span class="italic">Nasa Library</span>
+                    </h1>
+                    <p class="font-sans text-base leading-relaxed max-w-sm" style="color:var(--neutral-500);">
+                        Explore a wide range of book collections, manage your borrowing, and get reading recommendations — all in one place.
+                    </p>
+                    <div class="flex flex-wrap gap-3 pt-2">
+                        <a href="{% url 'book:dashboard' %}" class="btn-primary text-sm px-5 py-2.5">
+                            Jelajahi Sekarang
+                        </a>
+                        <a href="#" class="btn-secondary text-sm px-5 py-2.5">
+                            Pelajari Lebih
+                        </a>
                     </div>
-                    <span class="text-xs font-sans bg-green-100 text-green-700 px-3 py-1 rounded-full font-semibold whitespace-nowrap ml-2">12 days</span>
                 </div>
-                <div class="w-full bg-gray-200 rounded-full h-2 mb-3">
-                    <div class="bg-green-500 h-2 rounded-full" style="width: 40%"></div>
-                </div>
-                <div class="flex items-center justify-between text-xs font-sans text-gray-500">
-                    <span>Due: Feb 27, 2025</span>
-                    <button class="text-gray-700 hover:text-gray-900 font-semibold hover:underline">Renew</button>
-                </div>
-            </div>
-            
-            <!-- Borrowing Card 3 -->
-            <div class="border border-gray-200 rounded-xl p-5 hover:shadow-lg transition-all bg-white hover:-translate-y-1">
-                <div class="flex justify-between items-start mb-3">
-                    <div>
-                        <h3 class="font-display font-bold text-gray-900">1984</h3>
-                        <p class="font-sans text-sm text-gray-600">George Orwell</p>
+                <!-- Right: Book Illustration -->
+                <div class="hidden md:flex justify-center items-center">
+                    <div class="relative w-56 h-56">
+                        <!-- Stacked books illustration using CSS -->
+                        <div class="absolute bottom-0 left-1/2 -translate-x-1/2" style="width:180px;">
+                            <!-- Book 5 (bottom) -->
+                            <div class="rounded-lg shadow-md mb-1" style="height:18px; background: linear-gradient(90deg,#e07b54,#d96a3f); transform: rotate(-2deg); margin-bottom:-2px;"></div>
+                            <!-- Book 4 -->
+                            <div class="rounded-lg shadow-md" style="height:18px; background: linear-gradient(90deg,#5b7ecb,#4466b0); transform: rotate(1deg); margin-bottom:-2px;"></div>
+                            <!-- Book 3 -->
+                            <div class="rounded-lg shadow-md" style="height:18px; background: linear-gradient(90deg,#f0c040,#e0a820); transform: rotate(-1deg); margin-bottom:-2px;"></div>
+                            <!-- Book 2 -->
+                            <div class="rounded-lg shadow-md" style="height:18px; background: linear-gradient(90deg,#6dbf8f,#4ea870); transform: rotate(2deg); margin-bottom:-2px;"></div>
+                            <!-- Stack top - open book pages -->
+                            <div class="relative mx-auto" style="width:160px; height:110px;">
+                                <svg viewBox="0 0 200 140" xmlns="http://www.w3.org/2000/svg" class="w-full h-full drop-shadow-lg">
+                                    <!-- Left pages -->
+                                    <path d="M100 20 Q60 25 20 40 L20 130 Q60 115 100 120 Z" fill="#f8f5f0" stroke="#e0d8cc" stroke-width="1"/>
+                                    <line x1="35" y1="55" x2="95" y2="47" stroke="#d0c8bc" stroke-width="1"/>
+                                    <line x1="35" y1="65" x2="95" y2="57" stroke="#d0c8bc" stroke-width="1"/>
+                                    <line x1="35" y1="75" x2="95" y2="67" stroke="#d0c8bc" stroke-width="1"/>
+                                    <line x1="35" y1="85" x2="95" y2="77" stroke="#d0c8bc" stroke-width="1"/>
+                                    <line x1="35" y1="95" x2="95" y2="87" stroke="#d0c8bc" stroke-width="1"/>
+                                    <line x1="35" y1="105" x2="95" y2="97" stroke="#d0c8bc" stroke-width="1"/>
+                                    <!-- Right pages -->
+                                    <path d="M100 20 Q140 25 180 40 L180 130 Q140 115 100 120 Z" fill="#f8f5f0" stroke="#e0d8cc" stroke-width="1"/>
+                                    <line x1="165" y1="55" x2="105" y2="47" stroke="#d0c8bc" stroke-width="1"/>
+                                    <line x1="165" y1="65" x2="105" y2="57" stroke="#d0c8bc" stroke-width="1"/>
+                                    <line x1="165" y1="75" x2="105" y2="67" stroke="#d0c8bc" stroke-width="1"/>
+                                    <line x1="165" y1="85" x2="105" y2="77" stroke="#d0c8bc" stroke-width="1"/>
+                                    <line x1="165" y1="95" x2="105" y2="87" stroke="#d0c8bc" stroke-width="1"/>
+                                    <!-- Spine -->
+                                    <line x1="100" y1="20" x2="100" y2="120" stroke="#c8bfb0" stroke-width="2"/>
+                                </svg>
+                            </div>
+                        </div>
                     </div>
-                    <span class="text-xs font-sans bg-orange-100 text-orange-700 px-3 py-1 rounded-full font-semibold whitespace-nowrap ml-2">1 day left</span>
-                </div>
-                <div class="w-full bg-gray-200 rounded-full h-2 mb-3">
-                    <div class="bg-orange-500 h-2 rounded-full" style="width: 95%"></div>
-                </div>
-                <div class="flex items-center justify-between text-xs font-sans text-gray-500">
-                    <span>Due: Feb 15, 2025</span>
-                    <button class="text-gray-700 hover:text-gray-900 font-semibold hover:underline">Renew</button>
                 </div>
             </div>
         </div>
-        
-        <div class="text-center mt-10">
-            <button class="px-8 py-3 border-2 border-gray-900 text-gray-900 font-sans font-semibold rounded-lg hover:bg-gray-50 transition-colors">
-                View All Borrowings
+    </section>
+
+    <!-- ══════════════════════════════════════════
+         QUOTE BANNER
+    ══════════════════════════════════════════ -->
+    <section class="quote-banner rounded-2xl overflow-hidden fade-in fade-in-delay-1">
+        <div class="relative px-6 sm:px-12 py-10 text-center">
+            <svg class="absolute top-4 left-6 w-8 h-8 text-white/20" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z"/>
+            </svg>
+            <p class="font-display text-white/90 text-base sm:text-lg md:text-xl italic leading-[1.5] max-w-3xl mx-auto">
+                "A reader lives a thousand lives before he dies. The man who never reads lives only one."
+            </p>
+            <p class="text-white/40 text-sm mt-3 font-sans">— George R.R. Martin</p>
+        </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════
+         BOOK RECOMMENDATIONS
+    ══════════════════════════════════════════ -->
+    <section class="fade-in fade-in-delay-1" id="recommendationSection">
+        <!-- Header -->
+        <div class="text-center mb-6 space-y-2">
+            <span class="section-label">Rekomendasi Minggu Ini</span>
+            <h2 class="font-display text-2xl sm:text-3xl font-bold text-primary">Book Recommendations</h2>
+        </div>
+
+        <!-- Tabs -->
+        <div class="flex gap-2 justify-center mb-6">
+            <button class="tab-btn active" id="tab-foryou" onclick="switchTab('foryou')">For You</button>
+            <button class="tab-btn inactive" id="tab-popular" onclick="switchTab('popular')">Popular</button>
+        </div>
+
+        <!-- Loading Skeleton (shown while fetching) -->
+        <div id="recommendationLoading" class="relative">
+            <div class="flex items-center gap-3">
+                <div style="width:36px;height:36px;flex-shrink:0;"></div>
+                <div class="flex gap-4 overflow-hidden flex-1">
+                    {% for i in "12345" %}
+                    <div class="book-skeleton" style="flex-shrink:0;">
+                        <div class="skeleton-shimmer" style="aspect-ratio:3/4;"></div>
+                        <div class="p-3 space-y-2">
+                            <div class="skeleton-shimmer h-4 w-3/4"></div>
+                            <div class="skeleton-shimmer h-3 w-1/2"></div>
+                            <div class="skeleton-shimmer h-3 w-1/3"></div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div style="width:36px;height:36px;flex-shrink:0;"></div>
+            </div>
+        </div>
+
+        <!-- No Match State -->
+        <div id="recommendationNoMatch" class="hidden text-center py-14">
+            <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-4" style="background:var(--primary-50);">
+                <span class="text-3xl">🔍</span>
+            </div>
+            <h3 class="font-display text-xl font-bold text-primary mb-2">Tidak ada buku yang cocok</h3>
+            <p class="font-sans mb-5 text-sm" style="color:var(--neutral-500);">Tidak ada buku yang sesuai dengan kategori minatmu saat ini.</p>
+            <button onclick="showPreferenceModal()" class="btn-primary text-sm px-6 py-2.5">
+                Ubah Preferensi
             </button>
         </div>
-    </div>
-</section>
-<!-- Top Readers Section with Opened Book Cards -->
-<section class="bg-gradient-to-b from-white via-gray-50 to-white border-b border-gray-100">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div class="mb-12">
-            <h2 class="font-display text-3xl md:text-4xl font-bold text-gray-900 mb-2">Top Readers</h2>
-            <p class="font-sans text-gray-600">Outstanding students leading our literacy journey</p>
-        </div>
-        
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <!-- Top Reader Card 1 (Gold) -->
-            <div class="group cursor-pointer fade-in">
-                <div class="book-opened-card book-flip-card h-52">
-                    <!-- Left Page -->
-                    <div class="book-page book-page-left">
-                        <div class="absolute top-0 right-0 w-12 h-12 rounded-bl-full" style="background: #F9CDD5; opacity: 0.15;"></div>
-                        <div class="p-6 flex flex-col justify-between h-full relative">
-                            <div>
-                                <div class="inline-block mb-3"><p class="text-3xl">🥇</p></div>
-                                <h3 class="font-display font-bold text-lg text-gray-900 leading-tight">Sarah Ahmad</h3>
-                                <p class="font-sans text-xs text-gray-600 mt-1">Class 10A</p>
-                            </div>
-                            <div class="text-left">
-                                <p class="font-display font-bold text-2xl text-gray-900">18</p>
-                                <p class="font-sans text-xs text-gray-600">Books Read</p>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- Right Page -->
-                    <div class="book-page book-page-right">
-                        <div class="absolute bottom-0 left-0 w-16 h-16 rounded-tr-full" style="background: #7A8450; opacity: 0.05;"></div>
-                        <div class="p-6 flex flex-col justify-between h-full relative">
-                            <div class="space-y-1">
-                                <p class="font-sans text-xs text-gray-500 font-semibold">ACHIEVEMENTS</p>
-                                <div class="flex gap-1"><span class="text-sm">⭐</span><span class="text-sm">📚</span><span class="text-sm">✓</span></div>
-                            </div>
-                            <div class="text-right">
-                                <p class="font-display font-bold text-gray-900" style="color: #7A8450;">540</p>
-                                <p class="font-sans text-xs text-gray-600">Points</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Top Reader Card 2 (Silver) -->
-            <div class="group cursor-pointer fade-in" style="animation-delay: 0.1s;">
-                <div class="book-opened-card book-flip-card h-52">
-                    <!-- Left Page -->
-                    <div class="book-page book-page-left">
-                        <div class="absolute top-0 right-0 w-12 h-12 rounded-bl-full" style="background: #F9CDD5; opacity: 0.1;"></div>
-                        <div class="p-6 flex flex-col justify-between h-full relative">
-                            <div>
-                                <div class="inline-block mb-3"><p class="text-3xl">🥈</p></div>
-                                <h3 class="font-display font-bold text-lg text-gray-900 leading-tight">Muhammad Rizki</h3>
-                                <p class="font-sans text-xs text-gray-600 mt-1">Class 10B</p>
-                            </div>
-                            <div class="text-left">
-                                <p class="font-display font-bold text-2xl text-gray-900">16</p>
-                                <p class="font-sans text-xs text-gray-600">Books Read</p>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- Right Page -->
-                    <div class="book-page book-page-right">
-                        <div class="absolute bottom-0 left-0 w-16 h-16 rounded-tr-full" style="background: #7A8450; opacity: 0.05;"></div>
-                        <div class="p-6 flex flex-col justify-between h-full relative">
-                            <div class="space-y-1">
-                                <p class="font-sans text-xs text-gray-500 font-semibold">ACHIEVEMENTS</p>
-                                <div class="flex gap-1"><span class="text-sm">⭐</span><span class="text-sm">📚</span><span class="text-sm">✓</span></div>
-                            </div>
-                            <div class="text-right">
-                                <p class="font-display font-bold text-gray-900" style="color: #7A8450;">480</p>
-                                <p class="font-sans text-xs text-gray-600">Points</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Top Reader Card 3 (Bronze) -->
-            <div class="group cursor-pointer fade-in" style="animation-delay: 0.2s;">
-                <div class="book-opened-card book-flip-card h-52">
-                    <!-- Left Page -->
-                    <div class="book-page book-page-left">
-                        <div class="absolute top-0 right-0 w-12 h-12 rounded-bl-full" style="background: #F9CDD5; opacity: 0.2;"></div>
-                        <div class="p-6 flex flex-col justify-between h-full relative">
-                            <div>
-                                <div class="inline-block mb-3"><p class="text-3xl">🥉</p></div>
-                                <h3 class="font-display font-bold text-lg text-gray-900 leading-tight">Eka Putri</h3>
-                                <p class="font-sans text-xs text-gray-600 mt-1">Class 10C</p>
-                            </div>
-                            <div class="text-left">
-                                <p class="font-display font-bold text-2xl text-gray-900">15</p>
-                                <p class="font-sans text-xs text-gray-600">Books Read</p>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- Right Page -->
-                    <div class="book-page book-page-right">
-                        <div class="absolute bottom-0 left-0 w-16 h-16 rounded-tr-full" style="background: #7A8450; opacity: 0.05;"></div>
-                        <div class="p-6 flex flex-col justify-between h-full relative">
-                            <div class="space-y-1">
-                                <p class="font-sans text-xs text-gray-500 font-semibold">ACHIEVEMENTS</p>
-                                <div class="flex gap-1"><span class="text-sm">⭐</span><span class="text-sm">📚</span><span class="text-sm">✓</span></div>
-                            </div>
-                            <div class="text-right">
-                                <p class="font-display font-bold text-gray-900" style="color: #7A8450;">450</p>
-                                <p class="font-sans text-xs text-gray-600">Points</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="text-center mt-12">
-            <a href="{% url 'literacy:leaderboard' %}" class="inline-block px-8 py-3 border-2 text-gray-900 font-sans font-semibold rounded-lg hover:bg-gray-50 transition-colors" style="border-color: #7A8450; color: #7A8450;">
-                View Full Leaderboard
-            </a>
-        </div>
-    </div>
-</section>
-<!-- Quick Stats Section -->
-<section class="bg-gradient-to-b from-white to-gray-50 border-b border-gray-100 border-opacity-50">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div class="mb-10">
-            <h2 class="font-display text-2xl md:text-3xl font-bold text-gray-900">Library Statistics</h2>
-            <p class="font-sans text-gray-600 mt-2">Our library in numbers</p>
-        </div>
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
-            <!-- Stat Card 1 -->
-            <div class="bg-white border border-gray-200 rounded-xl p-6 text-center hover:shadow-lg transition-all hover-lift">
-                <div class="inline-flex items-center justify-center w-12 h-12 bg-blue-50 rounded-lg mb-4">
-                    <span class="text-xl">📚</span>
-                </div>
-                <div class="text-3xl md:text-4xl font-display font-bold text-gray-900 mb-2">2,847</div>
-                <p class="font-sans text-sm md:text-base text-gray-700 font-medium">Books in Collection</p>
-                <p class="font-sans text-xs text-gray-500 mt-2">Updated regularly</p>
-            </div>
-            
-            <!-- Stat Card 2 -->
-            <div class="bg-white border border-gray-200 rounded-xl p-6 text-center hover:shadow-lg transition-all hover-lift">
-                <div class="inline-flex items-center justify-center w-12 h-12 bg-green-50 rounded-lg mb-4">
-                    <span class="text-xl">👥</span>
-                </div>
-                <div class="text-3xl md:text-4xl font-display font-bold text-gray-900 mb-2">1,234</div>
-                <p class="font-sans text-sm md:text-base text-gray-700 font-medium">Total Members</p>
-                <p class="font-sans text-xs text-gray-500 mt-2">Students & Teachers</p>
-            </div>
-            
-            <!-- Stat Card 3 -->
-            <div class="bg-white border border-gray-200 rounded-xl p-6 text-center hover:shadow-lg transition-all hover-lift">
-                <div class="inline-flex items-center justify-center w-12 h-12 bg-purple-50 rounded-lg mb-4">
-                    <span class="text-xl">📖</span>
-                </div>
-                <div class="text-3xl md:text-4xl font-display font-bold text-gray-900 mb-2">892</div>
-                <p class="font-sans text-sm md:text-base text-gray-700 font-medium">Borrowed This Month</p>
-                <p class="font-sans text-xs text-gray-500 mt-2">All books combined</p>
-            </div>
-            
-            <!-- Stat Card 4 -->
-            <div class="bg-white border border-gray-200 rounded-xl p-6 text-center hover:shadow-lg transition-all hover-lift">
-                <div class="inline-flex items-center justify-center w-12 h-12 bg-orange-50 rounded-lg mb-4">
-                    <span class="text-xl">🚪</span>
-                </div>
-                <div class="text-3xl md:text-4xl font-display font-bold text-gray-900 mb-2">3,456</div>
-                <p class="font-sans text-sm md:text-base text-gray-700 font-medium">Library Visits</p>
-                <p class="font-sans text-xs text-gray-500 mt-2">This month</p>
-            </div>
-        </div>
-    </div>
-</section>
 
-
-
-<!-- Book Recommendations Section -->
-
-<section class="bg-gradient-to-b from-white via-gray-50 to-white border-b border-gray-100">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        {% include 'book_recommendation_cards.html' %}
-    </div>
-</section>
-
-<!-- Quick Actions & Features Section -->
-<section class="bg-gradient-to-b from-white via-gray-50 to-white border-b border-gray-100">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div class="mb-10">
-            <h2 class="font-display text-3xl md:text-4xl font-bold text-gray-900">Quick Actions</h2>
-            <p class="font-sans text-gray-600">Everything you need in one place</p>
-        </div>
-        
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <!-- Feature Card 1 -->
-            <button class="group p-6 border border-gray-100 rounded-lg hover:shadow-lg hover:border-gray-200 transition-all duration-300 text-left">
-                <div class="w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform">
-                    🔍
-                </div>
-                <h3 class="font-display font-bold text-gray-900 mb-2">Search Books</h3>
-                <p class="font-sans text-sm text-gray-600">Find any book in our collection instantly</p>
-            </button>
-            
-            <!-- Feature Card 2 -->
-            <button class="group p-6 border border-gray-100 rounded-lg hover:shadow-lg hover:border-gray-200 transition-all duration-300 text-left">
-                <div class="w-12 h-12 bg-green-50 rounded-lg flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform">
-                    📱
-                </div>
-                <h3 class="font-display font-bold text-gray-900 mb-2">Check-in/Out</h3>
-                <p class="font-sans text-sm text-gray-600">Scan QR or enter manually for attendance</p>
-            </button>
-            
-            <!-- Feature Card 3 -->
-            <a href="{% url 'literacy:submit_review' %}" class="group p-6 border border-gray-100 rounded-lg hover:shadow-lg hover:border-gray-200 transition-all duration-300 text-left">
-                <div class="w-12 h-12 bg-purple-50 rounded-lg flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform">
-                    💬
-                </div>
-                <h3 class="font-display font-bold text-gray-900 mb-2">Book Reviews</h3>
-                <p class="font-sans text-sm text-gray-600">Share ratings & reviews with the community</p>
-            </a>
-            
-            <!-- Feature Card 4 -->
-            <button class="group p-6 border border-gray-100 rounded-lg hover:shadow-lg hover:border-gray-200 transition-all duration-300 text-left">
-                <div class="w-12 h-12 bg-red-50 rounded-lg flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform">
-                    💡
-                </div>
-                <h3 class="font-display font-bold text-gray-900 mb-2">Recommendations</h3>
-                <p class="font-sans text-sm text-gray-600">Get personalized book suggestions</p>
-            </button>
-        </div>
-    </div>
-</section>
-
-<!-- CTA Section -->
-<section class="bg-gray-50 border-b border-gray-100">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div class="text-center space-y-8">
-            <div>
-                <h2 class="font-display text-3xl md:text-4xl font-bold text-gray-900 mb-4">Ready to Explore?</h2>
-                <p class="font-sans text-lg text-gray-600 max-w-2xl mx-auto">
-                    Discover thousands of books, connect with fellow readers, and unlock your reading potential.
-                </p>
-            </div>
-            <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                <button class="group relative px-8 py-4 bg-gradient-to-r from-gray-900 to-gray-800 text-white font-sans font-semibold rounded-xl overflow-hidden hover-lift transition-all duration-300 shadow-lg hover:shadow-2xl">
-                    <span class="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-0 group-hover:opacity-10 group-hover:animate-shimmer"></span>
-                    <span class="relative flex items-center justify-center gap-2">
-                        <span class="text-lg group-hover:animate-bounce">📚</span>
-                        <span>Browse Book Collection</span>
-                    </span>
+        <!-- Carousel Wrapper (books) -->
+        <div id="carouselWrapper" class="relative hidden">
+            <div class="flex items-center gap-3">
+                <button class="carousel-btn" id="prev-btn" onclick="scrollCarousel(-1)">
+                    <svg class="w-4 h-4" style="color:var(--neutral-600);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                    </svg>
                 </button>
-                <button class="group relative px-8 py-4 border-2 border-gray-900 text-gray-900 font-sans font-semibold rounded-xl overflow-hidden hover-lift transition-all duration-300 hover:border-gray-700 hover:shadow-lg">
-                    <span class="absolute inset-0 bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 opacity-0 group-hover:opacity-5 transition-opacity rounded-xl"></span>
-                    <span class="relative flex items-center justify-center gap-2">
-                        <span class="text-lg group-hover:scale-110 transition-transform">+</span>
-                        <a href="{% url 'book_request:request_list' %}" class="menu-text">📖 Request a Book</a>
-                    </span>
+                <div class="book-carousel flex-1">
+                    <div class="book-carousel-track" id="carousel-track">
+                        <!-- Cards injected by renderRecommendations() -->
+                    </div>
+                </div>
+                <button class="carousel-btn" id="next-btn" onclick="scrollCarousel(1)">
+                    <svg class="w-4 h-4" style="color:var(--neutral-600);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                    </svg>
                 </button>
             </div>
         </div>
-    </div>
-</section>
+
+        <!-- View All Link -->
+        <div id="viewAllLink" class="text-center mt-8 hidden">
+            <a href="{% url 'book:book_list' %}" class="inline-flex items-center gap-2 px-8 py-3 font-sans font-semibold rounded-xl transition-all duration-200"
+               style="border: 2px solid var(--primary-900); color:var(--primary-900);"
+               onmouseover="this.style.background='var(--primary-900)';this.style.color='#fff'"
+               onmouseout="this.style.background='transparent';this.style.color='var(--primary-900)'">
+                Lihat Semua Buku
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+            </a>
+        </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════
+         LEADERBOARD
+    ══════════════════════════════════════════ -->
+    <section class="fade-in fade-in-delay-2">
+        <div class="text-center mb-6 space-y-2">
+            <span class="section-label">🏆 Top Pembaca Bulan Ini</span>
+            <h2 class="font-display text-2xl sm:text-3xl font-bold text-primary">Leaderboard</h2>
+        </div>
+
+        <div class="leaderboard-card">
+            <div class="p-6 md:p-8">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
+
+                    <!-- Podium (left col) -->
+                    <div>
+                        <!-- Crown + 1st place name -->
+                        <div class="flex items-end justify-center gap-4 mb-4" style="height: 280px;">
+                            <!-- 2nd -->
+                            <div class="text-center flex flex-col items-center gap-1.5">
+                                <div class="relative inline-flex">
+                                    <div class="user-avatar w-12 h-12 text-base" style="background:var(--neutral-400);">
+                                        {% if top_readers|length > 1 %}{{ top_readers.1.first_name|make_list|first|upper }}{{ top_readers.1.last_name|make_list|first|upper }}{% else %}HH{% endif %}
+                                    </div>
+                                    <span style="position:absolute;bottom:-4px;right:-4px;width:18px;height:18px;border-radius:50%;background:var(--neutral-400);border:2px solid var(--color-surface);display:flex;align-items:center;justify-content:center;font-size:0.6rem;font-weight:800;color:var(--neutral-50);">2</span>
+                                </div>
+                                <p class="text-xs font-semibold" style="color:var(--neutral-700);">{% if top_readers|length > 1 %}{{ top_readers.1.first_name }} {{ top_readers.1.last_name }}{% else %}Hanina Hasanah{% endif %}</p>
+                                <span class="points-pill">{% if top_readers|length > 1 %}{{ top_readers.1.points }}{% else %}800{% endif %} pts</span>
+                                <div class="podium-bar silver" style="width: 64px; height: 60px;"></div>
+                            </div>
+                            <!-- 1st -->
+                            <div class="text-center flex flex-col items-center gap-1.5">
+                                <svg class="crown-icon w-6 h-6 mb-0.5" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M3 18h18v2H3v-2zm-.5-5l3.33-6.67L9.5 11l2.5-7 2.5 7 3.67-4.67L21.5 13H2.5z"/>
+                                </svg>
+                                <div class="relative inline-flex">
+                                    <div class="user-avatar w-14 h-14 text-lg" style="background:var(--primary-900);">
+                                        {% if top_readers|length > 0 %}{{ top_readers.0.first_name|make_list|first|upper }}{{ top_readers.0.last_name|make_list|first|upper }}{% else %}AA{% endif %}
+                                    </div>
+                                    <span style="position:absolute;bottom:-4px;right:-4px;width:20px;height:20px;border-radius:50%;background:var(--accent-500);border:2px solid var(--color-surface);display:flex;align-items:center;justify-content:center;font-size:0.65rem;font-weight:800;color:var(--neutral-50);">1</span>
+                                </div>
+                                <p class="text-sm font-bold text-primary">{% if top_readers|length > 0 %}{{ top_readers.0.first_name }} {{ top_readers.0.last_name }}{% else %}Alisha Aline{% endif %}</p>
+                                <span class="points-pill" style="background:rgba(245,158,11,0.15); color:var(--accent-700);">{% if top_readers|length > 0 %}{{ top_readers.0.points }}{% else %}1000{% endif %} pts</span>
+                                <div class="podium-bar gold" style="width: 64px; height: 90px;"></div>
+                            </div>
+                            <!-- 3rd -->
+                            <div class="text-center flex flex-col items-center gap-1.5">
+                                <div class="relative inline-flex">
+                                    <div class="user-avatar w-12 h-12 text-base" style="background:var(--accent-600);">
+                                        {% if top_readers|length > 2 %}{{ top_readers.2.first_name|make_list|first|upper }}{{ top_readers.2.last_name|make_list|first|upper }}{% else %}CI{% endif %}
+                                    </div>
+                                    <span style="position:absolute;bottom:-4px;right:-4px;width:18px;height:18px;border-radius:50%;background:var(--accent-600);border:2px solid var(--color-surface);display:flex;align-items:center;justify-content:center;font-size:0.6rem;font-weight:800;color:var(--neutral-50);">3</span>
+                                </div>
+                                <p class="text-xs font-semibold" style="color:var(--neutral-700);">{% if top_readers|length > 2 %}{{ top_readers.2.first_name }} {{ top_readers.2.last_name }}{% else %}Clarissa Indriana{% endif %}</p>
+                                <span class="points-pill">{% if top_readers|length > 2 %}{{ top_readers.2.points }}{% else %}700{% endif %} pts</span>
+                                <div class="podium-bar bronze" style="width: 64px; height: 45px;"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Rankings 4–6 (right col) -->
+                    <div>
+                        <p class="text-xs font-semibold uppercase tracking-widest mb-3" style="color:var(--neutral-400);">Peringkat Berikutnya</p>
+                        <div class="space-y-1">
+                            {% for reader in next_readers %}
+                            <div class="rank-row">
+                                <span class="text-sm font-bold w-5 text-center" style="color:var(--neutral-400);">{{ forloop.counter|add:3 }}</span>
+                                <div class="rank-avatar" style="background: var(--primary-400);">
+                                    {{ reader.first_name|make_list|first|upper }}{{ reader.last_name|make_list|first|upper }}
+                                </div>
+                                <p class="flex-1 text-sm font-medium" style="color:var(--neutral-800);">{{ reader.first_name }} {{ reader.last_name }}</p>
+                                <span class="points-pill">{{ reader.points }} pts</span>
+                            </div>
+                            {% empty %}
+                            <!-- Fallback -->
+                            <div class="rank-row">
+                                <span class="text-sm font-bold w-5 text-center" style="color:var(--neutral-400);">4</span>
+                                <div class="rank-avatar" style="background:var(--primary-400);">NI</div>
+                                <p class="flex-1 text-sm font-medium" style="color:var(--neutral-800);">Naurah Iradya</p>
+                                <span class="points-pill">198 pts</span>
+                            </div>
+                            <div class="rank-row">
+                                <span class="text-sm font-bold w-5 text-center" style="color:var(--neutral-400);">5</span>
+                                <div class="rank-avatar" style="background:var(--primary-400);">SS</div>
+                                <p class="flex-1 text-sm font-medium" style="color:var(--neutral-800);">Samuel Sips</p>
+                                <span class="points-pill">134 pts</span>
+                            </div>
+                            <div class="rank-row">
+                                <span class="text-sm font-bold w-5 text-center" style="color:var(--neutral-400);">6</span>
+                                <div class="rank-avatar" style="background:var(--primary-400);">AL</div>
+                                <p class="flex-1 text-sm font-medium" style="color:var(--neutral-800);">Alamak Lamak</p>
+                                <span class="points-pill">100 pts</span>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <div class="mt-4">
+                            <a href="{% url 'literacy:leaderboard' %}" class="view-all-link">
+                                Lihat Leaderboard Selengkapnya
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+                            </a>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════
+         YOUR STATISTICS
+    ══════════════════════════════════════════ -->
+    {% if user.is_authenticated %}
+    <section class="fade-in fade-in-delay-2">
+        <div class="text-center mb-6 space-y-2">
+            <span class="section-label">📊 Statistik Kamu</span>
+            <h2 class="font-display text-2xl sm:text-3xl font-bold text-primary">Your Statistic</h2>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <!-- Rank -->
+            <div class="stat-card">
+                <div class="stat-icon-wrap" style="background: var(--primary-50);">
+                    <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 18h18v2H3v-2zm-.5-5l3.33-6.67L9.5 11l2.5-7 2.5 7 3.67-4.67L21.5 13H2.5z"/>
+                    </svg>
+                </div>
+                <div>
+                    <p class="font-display text-2xl font-bold text-primary">#{{ user_rank|default:"12" }}</p>
+                    <p class="text-xs mt-0.5" style="color:var(--neutral-500);">your rank out of {{ total_students|default:"100" }} students!</p>
+                </div>
+            </div>
+            <!-- Books Read -->
+            <div class="stat-card">
+                <div class="stat-icon-wrap" style="background: var(--primary-50);">
+                    <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                    </svg>
+                </div>
+                <div>
+                    <p class="font-display text-2xl font-bold text-primary">{{ books_read_this_month|default:"20" }}</p>
+                    <p class="text-xs mt-0.5" style="color:var(--neutral-500);">books read this month</p>
+                </div>
+            </div>
+            <!-- Currently Borrowed -->
+            <div class="stat-card">
+                <div class="stat-icon-wrap" style="background: var(--primary-50);">
+                    <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                    </svg>
+                </div>
+                <div>
+                    <p class="font-display text-2xl font-bold text-primary">{{ active_loans|default:"3" }}</p>
+                    <p class="text-xs mt-0.5" style="color:var(--neutral-500);">books currently borrowed</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
+</div><!-- /max-w-7xl -->
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Initialize book page flip animations
-    const bookFlipCards = document.querySelectorAll('.book-flip-card');
-    
-    bookFlipCards.forEach((card, index) => {
-        // Add staggered animation delays for visual interest
-        const delay = (index * 0.3) % 4;
-        card.style.animationDelay = delay + 's';
-        
-        // Add click interaction for manual page flip
-        card.addEventListener('click', function(e) {
-            e.stopPropagation();
-            this.classList.toggle('flipped');
-            
-            // Trigger page flip animation
-            const pageLeft = this.querySelector('.book-page-left');
-            const pageRight = this.querySelector('.book-page-right');
-            
-            if (this.classList.contains('flipped')) {
-                pageLeft.style.transform = 'rotateY(-90deg)';
-                pageRight.style.transform = 'rotateY(90deg)';
-            } else {
-                pageLeft.style.transform = 'rotateY(0deg)';
-                pageRight.style.transform = 'rotateY(0deg)';
-            }
-        });
-        
-        // Add hover effect for desktop
-        if (window.innerWidth > 768) {
-            card.addEventListener('mouseenter', function() {
-                this.style.animationPlayState = 'paused';
-            });
-            
-            card.addEventListener('mouseleave', function() {
-                this.style.animationPlayState = 'running';
-            });
+    /* ─── Carousel ─── */
+    let currentIndex = 0;
+    const cardWidth = 236; // 220 + 16 gap
+
+    function scrollCarousel(direction) {
+        const track = document.getElementById('carousel-track');
+        if (!track) return;
+        const cards = track.querySelectorAll('.book-card');
+        if (!cards.length) return;
+        const carouselEl = track.parentElement;
+        const visible = Math.floor(carouselEl.offsetWidth / cardWidth);
+        const maxIndex = Math.max(0, cards.length - visible);
+        currentIndex = Math.max(0, Math.min(currentIndex + direction, maxIndex));
+        track.style.transform = `translateX(-${currentIndex * cardWidth}px)`;
+        document.getElementById('prev-btn').disabled = currentIndex === 0;
+        document.getElementById('next-btn').disabled = currentIndex >= maxIndex;
+    }
+
+    /* ─── Book Card Template (hidden) ─── */
+    const bookCardTemplate = `
+        <div class="book-card group cursor-pointer" onclick="goToBookDetail(this.dataset.bookId)">
+            <div class="book-cover-wrap">
+                <!-- Cover Image -->
+                <img class="book-cover" src="" alt="" style="display:none;">
+                <!-- Placeholder -->
+                <div class="book-placeholder absolute inset-0 flex items-center justify-center p-4"
+                     style="background: linear-gradient(135deg, var(--primary-500) 0%, var(--primary-900) 100%);">
+                    <span class="book-placeholder-text text-white font-display text-base font-bold text-center leading-snug"></span>
+                </div>
+                <!-- Availability Badge -->
+                <div class="absolute top-2.5 right-2.5 z-10">
+                    <span class="availability-badge"></span>
+                </div>
+                <!-- Interest Badge -->
+                <div class="absolute top-2.5 left-2.5 z-10 interest-badge hidden">
+                    <span class="text-xs font-semibold px-2 py-1 rounded-full"
+                          style="background:rgba(13,24,58,0.85);color:#fff;backdrop-filter:blur(6px);">
+                        ✦ Minatmu
+                    </span>
+                </div>
+                <!-- Hover overlay with See Details CTA -->
+                <div class="absolute inset-0 flex flex-col justify-end p-3 opacity-0 group-hover:opacity-100 transition-all duration-300"
+                     style="background: linear-gradient(to top, rgba(13,24,58,0.88) 0%, rgba(13,24,58,0.3) 60%, transparent 100%);">
+                    <button class="see-details-btn w-full py-2 rounded-lg text-sm font-semibold font-sans
+                                   translate-y-2 group-hover:translate-y-0 transition-transform duration-300"
+                            style="background:#fff;color:var(--primary-900);">
+                        Lihat Detail
+                    </button>
+                </div>
+            </div>
+            <!-- Book Info -->
+            <div class="p-3">
+                <h3 class="book-title font-display font-bold text-sm leading-snug line-clamp-2 mb-0.5" style="color:var(--primary-900);"></h3>
+                <p class="book-author font-sans text-xs line-clamp-1 mb-2" style="color:var(--neutral-500);"></p>
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-1">
+                        <span class="stars text-xs" style="color:var(--accent-500);letter-spacing:1px;"></span>
+                        <span class="rating-text font-sans text-xs" style="color:var(--neutral-400);"></span>
+                    </div>
+                    <span class="loan-count hidden font-sans text-xs" style="color:var(--neutral-400);"></span>
+                </div>
+            </div>
+        </div>
+    `;
+
+    /* ─── Tab Switch ─── */
+    let currentRecommendationType = 'popular'; // Default to popular books
+    let userHasPreferences = false;
+    let isLoggedIn = false;
+
+    function switchTab(tab) {
+        currentRecommendationType = tab === 'foryou' ? 'personal' : 'popular';
+
+        if (currentRecommendationType === 'personal' && !isLoggedIn) {
+            currentRecommendationType = 'popular';
+            tab = 'popular';
+        } else if (currentRecommendationType === 'personal' && !userHasPreferences) {
+            if (typeof showPreferenceModal === 'function') showPreferenceModal();
         }
-    });
-    
-    // Handle window resize for responsive animations
-    window.addEventListener('resize', function() {
-        bookFlipCards.forEach(card => {
-            if (window.innerWidth <= 768) {
-                card.style.animationPlayState = 'running';
-            }
+
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.classList.toggle('active',   btn.id === `tab-${tab}`);
+            btn.classList.toggle('inactive', btn.id !== `tab-${tab}`);
         });
-    });
-    
-    // Add touch support for mobile
-    bookFlipCards.forEach(card => {
-        let touchStartX = 0;
-        let touchEndX = 0;
-        
-        card.addEventListener('touchstart', function(e) {
-            touchStartX = e.changedTouches[0].screenX;
-        }, false);
-        
-        card.addEventListener('touchend', function(e) {
-            touchEndX = e.changedTouches[0].screenX;
-            handleSwipe(this);
-        }, false);
-        
-        function handleSwipe(element) {
-            const diff = touchStartX - touchEndX;
-            if (Math.abs(diff) > 50) { // Minimum swipe distance
-                element.classList.toggle('flipped');
-                const pageLeft = element.querySelector('.book-page-left');
-                const pageRight = element.querySelector('.book-page-right');
-                
-                if (element.classList.contains('flipped')) {
-                    pageLeft.style.transform = 'rotateY(-90deg)';
-                    pageRight.style.transform = 'rotateY(90deg)';
-                } else {
-                    pageLeft.style.transform = 'rotateY(0deg)';
-                    pageRight.style.transform = 'rotateY(0deg)';
+
+        loadRecommendations();
+    }
+
+    async function checkUserAuth() {
+        try {
+            const response = await fetch('/recommendation/api/users/preferences/check', {
+                headers: { 'X-CSRFToken': getCookie('csrftoken') }
+            });
+
+            if (response.ok) {
+                isLoggedIn = true;
+                const data = await response.json();
+                userHasPreferences = data.has_preferences;
+
+                if (userHasPreferences) {
+                    currentRecommendationType = 'personal';
+                    document.querySelectorAll('.tab-btn').forEach(btn => {
+                        btn.classList.toggle('active',   btn.id === 'tab-foryou');
+                        btn.classList.toggle('inactive', btn.id !== 'tab-foryou');
+                    });
+                }
+            } else {
+                isLoggedIn = false;
+                userHasPreferences = false;
+            }
+
+            loadRecommendations();
+        } catch (error) {
+            console.log('User not logged in, showing popular books');
+            isLoggedIn = false;
+            userHasPreferences = false;
+            loadRecommendations();
+        }
+    }
+
+    async function loadRecommendations() {
+        const loading = document.getElementById('recommendationLoading');
+        const carouselWrapper = document.getElementById('carouselWrapper');
+        const noMatchState = document.getElementById('recommendationNoMatch');
+        const track = document.getElementById('carousel-track');
+
+        if (!loading || !track) return;
+
+        loading.classList.remove('hidden');
+        carouselWrapper.classList.add('hidden');
+        noMatchState.classList.add('hidden');
+        document.getElementById('viewAllLink').classList.add('hidden');
+
+        try {
+            const endpoint = currentRecommendationType === 'personal'
+                ? '/recommendation/api/books/recommendations/personalized'
+                : '/recommendation/api/books/recommendations';
+
+            const response = await fetch(endpoint, {
+                headers: { 'X-CSRFToken': getCookie('csrftoken') }
+            });
+
+            const data = await response.json();
+
+            loading.classList.add('hidden');
+
+            if (data.recommendations && data.recommendations.length > 0) {
+                renderRecommendations(data.recommendations, currentRecommendationType === 'personal');
+                carouselWrapper.classList.remove('hidden');
+                document.getElementById('viewAllLink').classList.remove('hidden');
+                currentIndex = 0;
+                scrollCarousel(0);
+            } else {
+                if (currentRecommendationType === 'personal' && userHasPreferences) {
+                    noMatchState.classList.remove('hidden');
+                }
+            }
+        } catch (error) {
+            console.error('Error loading recommendations:', error);
+            loading.classList.add('hidden');
+        }
+    }
+
+    function renderRecommendations(books, showInterestBadge = false) {
+        const container = document.getElementById('carousel-track');
+
+        if (!container) return;
+
+        container.innerHTML = '';
+
+        books.slice(0, 10).forEach((book, idx) => {
+            const cardDiv = document.createElement('div');
+            cardDiv.innerHTML = bookCardTemplate.trim();
+            const cardElement = cardDiv.firstElementChild;
+
+            cardElement.style.opacity = '0';
+            cardElement.style.transform = 'translateY(16px)';
+            cardElement.style.transition = `opacity 0.4s ease ${idx * 60}ms, transform 0.4s ease ${idx * 60}ms`;
+
+            cardElement.dataset.bookId = book.id;
+
+            const coverImg = cardElement.querySelector('.book-cover');
+            const placeholder = cardElement.querySelector('.book-placeholder');
+            const placeholderText = cardElement.querySelector('.book-placeholder-text');
+            placeholderText.textContent = book.title;
+
+            if (book.cover_url) {
+                coverImg.src = book.cover_url;
+                coverImg.style.display = 'block';
+                coverImg.style.position = 'absolute';
+                coverImg.style.inset = '0';
+                coverImg.style.width = '100%';
+                coverImg.style.height = '100%';
+                coverImg.style.objectFit = 'cover';
+                coverImg.onerror = function() {
+                    this.style.display = 'none';
+                    placeholder.style.display = 'flex';
+                };
+            } else {
+                coverImg.style.display = 'none';
+                placeholder.style.display = 'flex';
+            }
+
+            const availabilityBadge = cardElement.querySelector('.availability-badge');
+            if (book.is_available) {
+                availabilityBadge.textContent = 'Tersedia';
+                availabilityBadge.classList.add('available');
+            } else {
+                availabilityBadge.textContent = 'Tidak Tersedia';
+                availabilityBadge.classList.add('unavailable');
+            }
+
+            if (showInterestBadge) {
+                cardElement.querySelector('.interest-badge').classList.remove('hidden');
+            }
+
+            cardElement.querySelector('.book-title').textContent = book.title;
+            cardElement.querySelector('.book-author').textContent = book.author;
+
+            const starsContainer = cardElement.querySelector('.stars');
+            const ratingText = cardElement.querySelector('.rating-text');
+            if (book.avg_rating) {
+                const full = Math.floor(book.avg_rating);
+                const half = book.avg_rating % 1 >= 0.5;
+                let starsHtml = '';
+                for (let i = 0; i < 5; i++) {
+                    starsHtml += (i < full || (i === full && half)) ? '★' : '☆';
+                }
+                starsContainer.innerHTML = starsHtml;
+                ratingText.textContent = `(${book.avg_rating})`;
+            } else {
+                starsContainer.innerHTML = `<span style="color:var(--neutral-300);font-size:0.7rem;">Belum ada rating</span>`;
+                ratingText.textContent = '';
+            }
+
+            const loanCount = cardElement.querySelector('.loan-count');
+            if (book.loan_count !== undefined) {
+                loanCount.textContent = `Dipinjam ${book.loan_count}x`;
+                loanCount.classList.remove('hidden');
+            }
+
+            container.appendChild(cardElement);
+
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    cardElement.style.opacity = '1';
+                    cardElement.style.transform = 'translateY(0)';
+                });
+            });
+        });
+    }
+
+    function goToBookDetail(bookId) {
+        window.location.href = `/book/catalog/${bookId}/`;
+    }
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
                 }
             }
         }
+        return cookieValue;
+    }
+
+    /* ─── showPreferenceModal() is defined in navbar.html — do NOT redefine here ─── */
+
+    /* ─── Init ─── */
+    document.addEventListener('DOMContentLoaded', () => {
+        checkUserAuth();
+
+        window.addEventListener('preferencesSaved', () => {
+            userHasPreferences = true;
+            if (currentRecommendationType === 'personal') {
+                loadRecommendations();
+            }
+        });
+
+        const els = document.querySelectorAll('.fade-in');
+        const obs = new IntersectionObserver((entries) => {
+            entries.forEach(e => { if (e.isIntersecting) { e.target.style.opacity = '1'; } });
+        }, { threshold: 0.1 });
+        els.forEach(el => { el.style.opacity = '0'; obs.observe(el); });
     });
-});
+
 </script>
+
+<!-- Include Preference Modal & Book Recommendations -->
+{% include 'preference_modal.html' %}
 
 {% endblock %}

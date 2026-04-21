@@ -95,6 +95,8 @@ def fetch_perpusnas(isbn: str) -> dict:
         category  = _clean_categories([seri]) if seri else None
 
         return {
+            "title":        book.get("Judul", "").strip() or None,
+            "author":       book.get("Pengarang", "").strip() or None,
             "cover_url":    None,
             "publisher":    publisher,
             "publish_year": year,
@@ -144,7 +146,12 @@ def fetch_open_library(isbn: str) -> dict:
         if isinstance(desc, dict):
             desc = desc.get("value")
 
+        authors     = book.get("authors", [])
+        author      = ", ".join([a.get("name") for a in authors]) if authors else None
+
         return {
+            "title":        book.get("title"),
+            "author":       author,
             "cover_url":    cover_url,
             "publisher":    publisher,
             "publish_year": book.get("publish_date"),
@@ -188,7 +195,12 @@ def fetch_google_books(isbn: str) -> dict:
         year = info.get("publishedDate", "")
         year = year[:4] if year else None
 
+        authors = info.get("authors", [])
+        author  = ", ".join(authors) if authors else None
+
         return {
+            "title":        info.get("title"),
+            "author":       author,
             "cover_url":    cover,
             "publisher":    info.get("publisher"),
             "publish_year": year,
@@ -209,7 +221,7 @@ def enrich_book_from_isbn(isbn: str) -> dict:
     gb     = fetch_google_books(isbn)
 
     result = {}
-    for field in ("cover_url", "publisher", "publish_year", "category", "synopsis"):
+    for field in ("title", "author", "cover_url", "publisher", "publish_year", "category", "synopsis"):
         result[field] = perpus.get(field) or ol.get(field) or gb.get(field)
 
     return result

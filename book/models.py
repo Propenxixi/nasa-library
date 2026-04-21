@@ -121,13 +121,21 @@ class Review(models.Model):
     rating     = models.PositiveSmallIntegerField(
         validators=[MinValueValidator(1), MaxValueValidator(5)]
     )
-    comment    = models.TextField()
+    comment    = models.TextField(blank=True, max_length=500)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    deleted_at = models.DateTimeField(null=True, blank=True)
+    deleted_by = models.ForeignKey(
+        User, null=True, blank=True,
+        on_delete=models.SET_NULL, related_name='deleted_reviews'
+    )
 
     class Meta:
-        unique_together = ('book', 'user')
         ordering = ['-created_at']
 
     def __str__(self):
         return f"Review {self.user} → {self.book.title}"
+
+    @property
+    def is_deleted(self):
+        return self.deleted_at is not None

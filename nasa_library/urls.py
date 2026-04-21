@@ -28,4 +28,7 @@ urlpatterns = [
     path('recommendation/', include('recommendation.urls')),
     path('book-request/', include('book_request.urls')),
     path("users/", include("user.urls", namespace="user")),
+    path('report/', include('report.urls')),
+    path('dashboard/', include('dashboard.urls')),
+    path('api/dashboard/', include('dashboard.api_urls')),
 ]

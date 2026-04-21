@@ -3,69 +3,262 @@
 {% block title %}Usulan Terkirim — NASA Library{% endblock %}
 
 {% block content %}
-<div class="min-h-screen bg-gradient-to-br from-white via-gray-50 to-white flex items-center justify-center px-4 py-12">
-  <div class="max-w-md w-full text-center">
 
-    <!-- Ikon Sukses -->
-    <div class="inline-flex items-center justify-center w-24 h-24 bg-green-100 rounded-full mb-6 shadow-lg">
-      <span class="text-5xl">✅</span>
+<style>
+  :root {
+    --yellow:    #F8BE5C;
+    --green:     #0FA875;
+    --red:       #d93e3e;
+    --green-pop: #e7f8f2;
+    --red-pop:   #fdecec;
+    --table-bg:  #E9EBF3;
+    --gray-ui:   #595959;
+    --blue:      #1E3A8A;
+    --blue-mid:  #3B5FCC;
+  }
+
+  .ss-page {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #f0f4ff 0%, #ffffff 50%, #f0f4ff 100%);
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 3rem 1.25rem 4rem;
+  }
+
+  .ss-wrap {
+    max-width: 480px;
+    width: 100%;
+    text-align: center;
+  }
+
+  /* ── Ikon centang ── */
+  .ss-icon-ring {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 6rem;
+    height: 6rem;
+    border-radius: 50%;
+    background: var(--green);
+    margin-bottom: 1.4rem;
+    box-shadow: 0 6px 24px rgba(15,168,117,.3);
+  }
+
+  .ss-icon-inner {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 4rem;
+    height: 4rem;
+    border-radius: 50%;
+    background: #fff;
+  }
+
+  .ss-icon-inner svg {
+    width: 2.2rem;
+    height: 2.2rem;
+  }
+
+  /* ── Heading ── */
+  .ss-title {
+    font-size: 2rem;
+    font-weight: 800;
+    color: #111827;
+    margin: 0 0 .6rem;
+    letter-spacing: -.02em;
+  }
+
+  .ss-subtitle {
+    font-size: .9rem;
+    color: var(--gray-ui);
+    line-height: 1.65;
+    margin: 0 0 1.75rem;
+  }
+
+  /* ── Summary card ── */
+  .ss-card {
+    background: #fff;
+    border: 1.5px solid var(--table-bg);
+    border-radius: 1.1rem;
+    box-shadow: 0 4px 20px rgba(30,58,138,.07);
+    padding: 1.5rem 1.75rem;
+    text-align: left;
+    margin-bottom: 1.25rem;
+  }
+
+  .ss-field {
+    padding: .85rem 0;
+    border-bottom: 1px solid var(--table-bg);
+  }
+
+  .ss-field:last-child { border-bottom: none; padding-bottom: 0; }
+  .ss-field:first-child { padding-top: 0; }
+
+  .ss-field__label {
+    font-size: .95rem;
+    font-weight: 700;
+    color: #111827;
+    margin: 0 0 .25rem;
+  }
+
+  .ss-field__val {
+    font-size: .9rem;
+    font-weight: 400;
+    color: #6b7280;
+    margin: 0;
+  }
+
+  /* ── Badge menunggu ── */
+  .badge-pending {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: .3rem .85rem;
+    background: #fff8e6;
+    border: 1px solid var(--yellow);
+    border-radius: 999px;
+    font-size: .75rem;
+    font-weight: 700;
+    color: #9a6700;
+  }
+
+  /* ── Info banner ── */
+  .ss-banner {
+    background: var(--green-pop);
+    border: 1.5px solid #a3e9cf;
+    border-radius: .875rem;
+    padding: .9rem 1.1rem;
+    display: flex;
+    gap: .75rem;
+    text-align: left;
+    margin-bottom: 1.75rem;
+    align-items: flex-start;
+  }
+
+  .ss-banner__icon {
+    font-size: 1.25rem;
+    flex-shrink: 0;
+    margin-top: .05rem;
+  }
+
+  .ss-banner__text {
+    font-size: .84rem;
+    color: #0a6647;
+    margin: 0;
+    line-height: 1.6;
+  }
+
+  .ss-banner__text strong { color: #0a5c3e; }
+
+  /* ── Buttons ── */
+  .ss-actions {
+    display: flex;
+    gap: .75rem;
+    justify-content: center;
+  }
+
+  .ss-btn-primary {
+    flex: 1;
+    padding: .8rem 1.25rem;
+    background: var(--blue);
+    color: #fff;
+    font-weight: 700;
+    font-size: .9rem;
+    border-radius: .875rem;
+    text-decoration: none;
+    text-align: center;
+    box-shadow: 0 4px 14px rgba(30,58,138,.28);
+    transition: background .15s, transform .1s;
+    display: inline-block;
+  }
+
+  .ss-btn-primary:hover { background: #162f73; transform: translateY(-1px); }
+
+  .ss-btn-secondary {
+    flex: 1;
+    padding: .8rem 1.25rem;
+    background: var(--blue);
+    color: #fff;
+    font-weight: 700;
+    font-size: .9rem;
+    border-radius: .875rem;
+    text-decoration: none;
+    text-align: center;
+    box-shadow: 0 4px 14px rgba(30,58,138,.25);
+    transition: background .15s, transform .1s;
+    display: inline-block;
+  }
+
+  .ss-btn-secondary:hover { background: #162f73; transform: translateY(-1px); }
+</style>
+
+<div class="ss-page">
+  <div class="ss-wrap">
+
+    <!-- Ikon centang SVG -->
+    <div class="ss-icon-ring">
+      <div class="ss-icon-inner">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M5 13l4 4L19 7" stroke="#0FA875" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
     </div>
 
-    <h1 class="font-display text-4xl font-bold text-gray-900 mb-3">Usulan Terkirim!</h1>
-    <p class="font-sans text-gray-600 mb-8">
-      Usulan buku Anda sedang menunggu persetujuan petugas perpustakaan. Kami akan memberi tahu Anda di halaman riwayat setelah ditinjau.
+    <h1 class="ss-title">Usulan Terkirim!</h1>
+    <p class="ss-subtitle">
+      Usulan buku Anda sedang menunggu persetujuan petugas<br>
+      perpustakaan. Kami akan memberi tahu Anda di halaman<br>
+      riwayat setelah ditinjau.
     </p>
 
-    <!-- Ringkasan Usulan -->
-    <div class="bg-white border border-gray-200 rounded-2xl shadow-sm p-6 mb-8 text-left space-y-4">
-      <div>
-        <p class="font-sans text-xs text-gray-500 uppercase tracking-wide mb-1">Judul Buku</p>
-        <p class="font-sans font-semibold text-gray-900">{{ book_request.title }}</p>
+    <!-- Ringkasan -->
+    <div class="ss-card">
+      <div class="ss-field">
+        <p class="ss-field__label">Judul Buku *</p>
+        <p class="ss-field__val">{{ book_request.title }}</p>
       </div>
-      <div>
-        <p class="font-sans text-xs text-gray-500 uppercase tracking-wide mb-1">Penulis</p>
-        <p class="font-sans font-semibold text-gray-900">{{ book_request.author }}</p>
+      <div class="ss-field">
+        <p class="ss-field__label">Penulis *</p>
+        <p class="ss-field__val">{{ book_request.author }}</p>
       </div>
       {% if book_request.publisher %}
-      <div>
-        <p class="font-sans text-xs text-gray-500 uppercase tracking-wide mb-1">Penerbit</p>
-        <p class="font-sans font-semibold text-gray-900">{{ book_request.publisher }}</p>
+      <div class="ss-field">
+        <p class="ss-field__label">Penerbit (Opsional)</p>
+        <p class="ss-field__val">{{ book_request.publisher }}</p>
       </div>
       {% endif %}
       {% if book_request.category %}
-      <div>
-        <p class="font-sans text-xs text-gray-500 uppercase tracking-wide mb-1">Kategori</p>
-        <p class="font-sans font-semibold text-gray-900">{{ book_request.category }}</p>
+      <div class="ss-field">
+        <p class="ss-field__label">Kategori (Opsional)</p>
+        <p class="ss-field__val">{{ book_request.category }}</p>
       </div>
       {% endif %}
-      <div>
-        <p class="font-sans text-xs text-gray-500 uppercase tracking-wide mb-1">Status</p>
-        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-800">
-          ⏳ Menunggu Persetujuan
-        </span>
+      {% if book_request.reason %}
+      <div class="ss-field">
+        <p class="ss-field__label">Alasan Pengajuan*</p>
+        <p class="ss-field__val">{{ book_request.reason }}</p>
       </div>
+      {% endif %}
     </div>
 
-    <!-- Catatan info -->
-    <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-8 text-left flex gap-3">
-      <span class="text-xl flex-shrink-0">📬</span>
-      <p class="font-sans text-sm text-blue-800">
-        Cek halaman <strong>Riwayat Usulan</strong> untuk memantau status terkini. Pop-up notifikasi akan muncul saat usulan Anda disetujui atau ditolak.
+    <!-- Banner info -->
+    <div class="ss-banner">
+      <span class="ss-banner__icon">📬</span>
+      <p class="ss-banner__text">
+        <strong>Perhatikan!</strong><br>
+        Cek halaman Riwayat Usulan untuk memantau status terkini. Pop-up notifikasi akan muncul saat usulan Anda disetujui atau ditolak.
       </p>
     </div>
 
-    <!-- Tombol Aksi -->
-    <div class="flex flex-col sm:flex-row gap-3 justify-center">
-      <a href="{% url 'book_request:request_list' %}"
-         class="px-6 py-3 bg-gray-900 text-white font-sans font-semibold rounded-xl hover:bg-gray-800 transition-colors">
-        Lihat Usulan Saya
-      </a>
-      <a href="{% url 'book_request:request_create' %}"
-         class="px-6 py-3 bg-gray-100 text-gray-700 font-sans font-semibold rounded-xl hover:bg-gray-200 transition-colors">
-        Ajukan Lagi
-      </a>
+    <!-- Tombol -->
+    <div class="ss-actions">
+      <a href="{% url 'book_request:request_list' %}" class="ss-btn-primary">Lihat Usulan Saya</a>
+      <a href="{% url 'book_request:request_create' %}" class="ss-btn-secondary">Ajukan Lagi</a>
     </div>
 
   </div>
 </div>
+
 {% endblock %}

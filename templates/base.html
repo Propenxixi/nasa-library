@@ -3,92 +3,764 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}SMAN 61 Jakarta Library{% endblock %}</title>
-    
+    <title>{% block title %}NASA Library — SMAN 61 Jakarta{% endblock %}</title>
+
+    <!-- Google Fonts: Playfair Display (display) + Work Sans (sans) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,700&family=Work+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    
+
     <!-- Custom Styles -->
     {% load static %}
     <link rel="stylesheet" href="{% static 'style.css' %}">
-    
+
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ctext x='12' y='18' font-size='24' font-weight='bold' text-anchor='middle'%3E📚%3C/text%3E%3C/svg%3E">
-    
+
+    <style>
+        /* ─── Design System Tokens ─── */
+        :root {
+            /* Primary */
+            --primary-50:  #e9ebf3;
+            --primary-100: #b9c2db;
+            --primary-200: #98a4c9;
+            --primary-300: #687bb1;
+            --primary-400: #4b61a1;
+            --primary-500: #1e3a8a;
+            --primary-600: #1b357e;
+            --primary-700: #152962;
+            --primary-800: #11204c;
+            --primary-900: #0d183a;
+
+            /* Secondary (teal-green) */
+            --secondary-50:  #e7f8f2;
+            --secondary-100: #b5e9d8;
+            --secondary-200: #91dfc5;
+            --secondary-300: #5fd0ab;
+            --secondary-400: #40c79a;
+            --secondary-500: #10b981;
+            --secondary-600: #0fa875;
+            --secondary-700: #0b835c;
+            --secondary-800: #096647;
+            --secondary-900: #074e36;
+
+            /* Accent (amber/gold) */
+            --accent-50:  #fef5e7;
+            --accent-100: #fce1b3;
+            --accent-200: #fad28f;
+            --accent-300: #f8be5c;
+            --accent-400: #f7b13c;
+            --accent-500: #f59e0b;
+            --accent-600: #df900a;
+            --accent-700: #ae7008;
+            --accent-800: #875706;
+            --accent-900: #674205;
+
+            /* Neutral */
+            --neutral-50:  #ffffff;
+            --neutral-100: #fcfcfc;
+            --neutral-200: #f0f0f0;
+            --neutral-300: #bfbfbf;
+            --neutral-400: #8c8c8c;
+            --neutral-500: #595959;
+            --neutral-600: #454545;
+            --neutral-700: #262626;
+            --neutral-800: #1f1f1f;
+            --neutral-900: #000000;
+
+            /* Error */
+            --error-50:  #fdecec;
+            --error-100: #fac5c5;
+            --error-200: #f8a9a9;
+            --error-300: #f48282;
+            --error-400: #f26969;
+            --error-500: #ef4444;
+            --error-600: #d93e3e;
+            --error-700: #aa3030;
+            --error-800: #832525;
+            --error-900: #641d1d;
+
+            /* Semantic */
+            --color-bg:         #f5f6fa;
+            --color-surface:    #ffffff;
+            --color-border:     rgba(13, 24, 58, 0.10);
+            --color-text:       #0d183a;
+            --color-text-muted: #595959; /* was #6b7280 (Tailwind gray-500) — now neutral-500 */
+
+            /* Spacing */
+            --space-xs: 0.25rem;
+            --space-sm: 0.5rem;
+            --space-md: 1rem;
+            --space-lg: 1.5rem;
+            --space-xl: 2rem;
+            --space-2xl: 3rem;
+
+            /* Border Radius */
+            --radius-sm: 0.375rem;
+            --radius-md: 0.5rem;
+            --radius-lg: 0.75rem;
+            --radius-xl: 1rem;
+            --radius-2xl: 1.5rem;
+            --radius-full: 9999px;
+
+            /* Shadows */
+            --shadow-sm: 0 1px 2px rgba(13, 24, 58, 0.05);
+            --shadow-md: 0 4px 6px rgba(13, 24, 58, 0.07);
+            --shadow-lg: 0 8px 16px rgba(13, 24, 58, 0.10);
+            --shadow-xl: 0 16px 32px rgba(13, 24, 58, 0.15);
+        }
+
+        /* ─── Base Reset ─── */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'Work Sans', sans-serif;
+            background-color: var(--color-bg);
+            color: var(--color-text);
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ─── Typography ─── */
+        .font-display { font-family: 'Playfair Display', serif; }
+        .font-sans    { font-family: 'Work Sans', sans-serif; }
+
+        /* ─── Color Utilities ─── */
+        .text-primary { color: var(--primary-900); }
+        .bg-primary { background-color: var(--primary-900); }
+        .border-primary { border-color: var(--primary-900); }
+        .text-accent { color: var(--accent-500); }
+        .bg-accent { background-color: var(--accent-500); }
+        .text-muted { color: var(--color-text-muted); }
+        .bg-surface { background-color: var(--color-surface); }
+        .border-default { border-color: var(--color-border); }
+
+        /* ─── Typography Scale ─── */
+        .heading-1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.5rem;
+            font-weight: 700;
+            line-height: 1.2;   /* 120% */
+            letter-spacing: -0.02em;
+        }
+        .heading-2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2rem;
+            font-weight: 700;
+            line-height: 1.2;   /* 120% */
+            letter-spacing: -0.01em;
+        }
+        .heading-3 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            line-height: 1.2;   /* 120% */
+        }
+        .subheading {
+            font-family: 'Work Sans', sans-serif;
+            font-size: 1.125rem;
+            font-weight: 600;
+            line-height: 1.2;   /* 120% */
+        }
+        .body-lg {
+            font-family: 'Work Sans', sans-serif;
+            font-size: 1.125rem;
+            font-weight: 400;
+            line-height: 1.5;   /* 150% */
+        }
+        .body-md {
+            font-family: 'Work Sans', sans-serif;
+            font-size: 1rem;
+            font-weight: 400;
+            line-height: 1.5;   /* 150% */
+        }
+        .body-sm {
+            font-family: 'Work Sans', sans-serif;
+            font-size: 0.875rem;
+            font-weight: 400;
+            line-height: 1.5;   /* 150% */
+        }
+        .caption {
+            font-family: 'Work Sans', sans-serif;
+            font-size: 0.75rem;
+            font-weight: 400;
+            line-height: 1.5;   /* 150% */
+            letter-spacing: 0.02em;
+        }
+
+        /* ─── Navbar ─── */
+        .nasa-nav {
+            background: rgba(255,255,255,0.92);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--color-border);
+        }
+        .nasa-nav .nav-link {
+            font-family: 'Work Sans', sans-serif;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--neutral-600);
+            position: relative;
+            transition: color 0.2s;
+        }
+        .nasa-nav .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: -4px; left: 0; right: 0;
+            height: 2px;
+            background: var(--primary-900);
+            border-radius: 2px;
+            transform: scaleX(0);
+            transition: transform 0.2s;
+        }
+        .nasa-nav .nav-link:hover { color: var(--primary-900); }
+        .nasa-nav .nav-link:hover::after { transform: scaleX(1); }
+        .nasa-nav .nav-link.active { color: var(--primary-900); font-weight: 600; }
+        .nasa-nav .nav-link.active::after { transform: scaleX(1); }
+
+        /* Register / CTA button */
+        .btn-primary {
+            display: inline-flex; align-items: center; gap: 0.4rem;
+            background: var(--primary-900);
+            color: #fff;
+            font-family: 'Work Sans', sans-serif;
+            font-weight: 600;
+            font-size: 0.875rem;
+            padding: 0.55rem 1.25rem;
+            border-radius: 9999px;
+            border: none;
+            cursor: pointer;
+            transition: background 0.2s, box-shadow 0.2s, transform 0.15s;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+        .btn-primary:hover {
+            background: var(--primary-700); /* was hardcoded #1a2d6b */
+            box-shadow: 0 4px 18px rgba(13,24,58,0.25);
+            transform: translateY(-1px);
+        }
+        .btn-primary svg { width: 1em; height: 1em; }
+
+        .btn-secondary {
+            display: inline-flex; align-items: center; gap: 0.4rem;
+            background: transparent;
+            color: var(--primary-900);
+            font-family: 'Work Sans', sans-serif;
+            font-weight: 600;
+            font-size: 0.875rem;
+            padding: 0.55rem 1.25rem;
+            border-radius: 9999px;
+            border: 1.5px solid var(--primary-900);
+            cursor: pointer;
+            transition: background 0.2s, box-shadow 0.2s, transform 0.15s;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+        .btn-secondary:hover {
+            background: rgba(13,24,58,0.05);
+            transform: translateY(-1px);
+        }
+
+        /* ─── Dropdown ─── */
+        .nasa-dropdown {
+            position: absolute;
+            top: calc(100% + 8px); left: 0;
+            min-width: 200px;
+            background: #fff;
+            border: 1px solid var(--color-border);
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(13,24,58,0.12);
+            padding: 6px;
+            opacity: 0; visibility: hidden;
+            transform: translateY(6px);
+            transition: opacity 0.18s, visibility 0.18s, transform 0.18s;
+            z-index: 200;
+        }
+        .nasa-dropdown-trigger:hover .nasa-dropdown,
+        .nasa-dropdown-trigger:focus-within .nasa-dropdown {
+            opacity: 1; visibility: visible; transform: translateY(0);
+        }
+        .nasa-dropdown a, .nasa-dropdown button {
+            display: flex; align-items: center; gap: 8px;
+            width: 100%;
+            padding: 8px 12px;
+            font-family: 'Work Sans', sans-serif;
+            font-size: 0.8125rem;
+            color: var(--neutral-600);
+            border-radius: 8px;
+            text-decoration: none;
+            background: none; border: none; cursor: pointer;
+            transition: background 0.15s, color 0.15s;
+            text-align: left;
+        }
+        .nasa-dropdown a:hover, .nasa-dropdown button:hover {
+            background: var(--primary-50); color: var(--primary-900);
+        }
+
+        /* ─── User Avatar ─── */
+        .user-avatar {
+            width: 36px; height: 36px;
+            background: var(--primary-900);
+            color: #fff;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-family: 'Work Sans', sans-serif;
+            font-weight: 700;
+            font-size: 0.875rem;
+            flex-shrink: 0;
+        }
+
+        /* ─── Toast ─── */
+        #toastContainer {
+            position: fixed; bottom: 1.25rem; right: 1.25rem;
+            z-index: 9999;
+            display: flex; flex-direction: column; gap: 0.5rem;
+        }
+        .toast-item {
+            display: flex; align-items: center; gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            font-size: 0.875rem; font-weight: 500;
+            transform: translateX(120%); opacity: 0;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        }
+        .toast-item.show { transform: translateX(0); opacity: 1; }
+
+        /* ─── Mobile Drawer ─── */
+        #mobile-menu .drawer-header {
+            background: var(--primary-900);
+        }
+        #drawer-panel {
+            transform: translateX(100%);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        #drawer-panel.open { transform: translateX(0); }
+
+        /* ─── Section helpers ─── */
+        .section-label {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: rgba(13,24,58,0.06);
+            color: var(--primary-900);
+            font-family: 'Work Sans', sans-serif;
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+            padding: 4px 12px;
+            border-radius: 9999px;
+        }
+
+        /* ─── Cards ─── */
+        .card {
+            background: #fff;
+            border: 1px solid rgba(13,24,58,0.08);
+            border-radius: 16px;
+            transition: box-shadow 0.2s, transform 0.2s;
+        }
+        .card:hover {
+            box-shadow: 0 8px 32px rgba(13,24,58,0.10);
+            transform: translateY(-2px);
+        }
+
+        /* ─── Fade-in animation ─── */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(24px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .fade-in { animation: fadeInUp 0.6s ease both; }
+        .fade-in-delay-1 { animation-delay: 0.1s; }
+        .fade-in-delay-2 { animation-delay: 0.2s; }
+        .fade-in-delay-3 { animation-delay: 0.3s; }
+
+        /* ─── Shimmer animation ─── */
+        @keyframes shimmer {
+            from { background-position: -200% center; }
+            to   { background-position: 200% center; }
+        }
+
+        /* ─── Scrollbar ─── */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(13,24,58,0.2); border-radius: 6px; }
+
+        /* ─── Message banner ─── */
+        .msg-banner {
+            display: flex; align-items: center; gap: 10px;
+            padding: 12px 16px;
+            border-radius: 12px;
+            border: 1px solid;
+            font-size: 0.875rem;
+            margin-bottom: 1rem;
+        }
+        .msg-banner.success { background: var(--secondary-50); border-color: var(--secondary-100); color: var(--secondary-800); }
+        .msg-banner.error   { background: var(--error-50); border-color: var(--error-100); color: var(--error-800); }
+        .msg-banner.info    { background: var(--primary-50); border-color: var(--primary-100); color: var(--primary-700); }
+
+        /* ─── Preference modal checkboxes ─── */
+        #categoryList label.selected {
+            border-color: var(--primary-900);
+            background: var(--primary-50);
+        }
+
+        /* ─── Notification badge ─── */
+        .notif-badge {
+            position: absolute;
+            top: 2px; right: 2px;
+            width: 18px; height: 18px;
+            background: var(--error-500);
+            color: #fff;
+            font-size: 0.6rem;
+            font-weight: 700;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            border: 2px solid #fff;
+        }
+    </style>
+
     {% block extra_css %}{% endblock %}
 </head>
+
+<!-- Toast container (Django messages) -->
 {% if messages %}
-    <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2">
-        {% for msg in messages %}
-            <div class="toast-item flex items-center gap-3 px-4 py-3 rounded-xl shadow-lg text-sm font-medium
-        {% if 'success' in msg.tags %}bg-gray-900 text-white
-        {% elif 'error' in msg.tags %}bg-red-600 text-white
-        {% else %}bg-gray-700 text-white{% endif %}
-        translate-x-full opacity-0 transition-all duration-300">
-                {% if 'success' in msg.tags %}✅{% elif 'error' in msg.tags %}❌{% else %}ℹ️{% endif %}
-                {{ msg }}
-            </div>
-        {% endfor %}
+<div id="toastContainer">
+    {% for msg in messages %}
+    <div class="toast-item {% if 'success' in msg.tags %}bg-primary-900 text-white{% elif 'error' in msg.tags %}text-white{% else %}text-white{% endif %}"
+         style="{% if 'success' in msg.tags %}background:var(--primary-900);{% elif 'error' in msg.tags %}background:var(--error-600);{% else %}background:var(--primary-700);{% endif %}">
+        {% if 'success' in msg.tags %}
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+        {% elif 'error' in msg.tags %}
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><circle cx="12" cy="16" r="1" fill="currentColor"/></svg>
+        {% else %}
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><circle cx="12" cy="8" r="1" fill="currentColor"/></svg>
+        {% endif %}
+        <span>{{ msg }}</span>
     </div>
-    <script>
-        document.querySelectorAll('.toast-item').forEach((el, i) => {
+    {% endfor %}
+</div>
+<script>
+    document.querySelectorAll('.toast-item').forEach((el, i) => {
+        setTimeout(() => {
+            el.classList.add('show');
             setTimeout(() => {
-                el.classList.remove('translate-x-full', 'opacity-0');
-                setTimeout(() => {
-                    el.classList.add('translate-x-full', 'opacity-0');
-                    setTimeout(() => el.remove(), 300);
-                }, 3000);
-            }, i * 150);
-        });
-    </script>
+                el.classList.remove('show');
+                setTimeout(() => el.remove(), 350);
+            }, 3200);
+        }, i * 150);
+    });
+</script>
 {% endif %}
-<body class="bg-gradient-to-br from-white via-gray-50 to-white overflow-x-hidden">
-    <!-- Navbar -->
-    {% include 'navbar.html' %}
-    
-    <!-- Main Content -->
-    <main>
-        {% if messages %}
-        <div class="max-w-7xl mx-auto px-4 mt-4">
-            {% for message in messages %}
-            <div class="flex items-center gap-3 px-4 py-3 rounded-xl border text-sm mb-4 shadow-sm {% if message.tags == 'success' %}bg-green-50 border-green-100 text-green-700{% elif message.tags == 'error' %}bg-red-50 border-red-100 text-red-700{% else %}bg-blue-50 border-blue-100 text-blue-700{% endif %}">
-                {% if message.tags == 'success' %}
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-                {% elif message.tags == 'error' %}
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                {% else %}
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-                {% endif %}
-                {{ message }}
+
+<body>
+<!-- ─── Navbar ─── -->
+{% include 'navbar.html' %}
+
+<!-- ─── Mobile Drawer (outside nav for z-index) ─── -->
+<div id="mobile-menu" class="fixed inset-0 z-[9999] md:hidden hidden">
+    <!-- Backdrop -->
+    <div id="mobile-menu-backdrop" class="absolute inset-0 bg-black/50 backdrop-blur-sm"></div>
+
+    <!-- Drawer -->
+    <div id="drawer-panel" class="fixed right-0 top-0 bottom-0 w-80 max-w-[90vw] bg-white shadow-2xl overflow-y-auto z-[10000]">
+        <!-- Header -->
+        <div class="drawer-header sticky top-0 px-5 py-5 flex items-center justify-between z-10">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0 border border-white/30">
+                        <span class="font-bold text-sm text-white leading-none">
+                            {% firstof user.first_name|make_list|first|upper 'U' %}
+                        </span>
+                </div>
+                <div>
+                    <p class="text-sm font-semibold text-white leading-tight">{{ user.first_name }}</p>
+                    <p class="text-xs text-white/60">
+                        {% if user.profile.role == 'student' %}Student
+                        {% elif user.profile.role == 'teacher' %}Teacher
+                        {% elif user.profile.role == 'librarian' %}Librarian
+                        {% else %}Member{% endif %}
+                    </p>
+                </div>
             </div>
-            {% endfor %}
+            <button id="close-mobile-menu" class="w-8 h-8 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors text-white">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+
+        <!-- Nav Links -->
+        <nav class="px-4 py-4 space-y-1">
+            <a href="{% url 'main:mainpage' %}" class="flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-xl transition-colors"
+               style="color:var(--neutral-600);"
+               onmouseover="this.style.color='var(--primary-900)';this.style.background='var(--primary-50)'"
+               onmouseout="this.style.color='var(--neutral-600)';this.style.background='transparent'">
+                <svg class="w-5 h-5" style="color:var(--primary-900);opacity:0.7;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-3m0 0l7-4 7 4M5 9v10a2 2 0 002 2h10a2 2 0 002-2V9"/></svg>
+                Beranda
+            </a>
+            <a href="{% url 'book:dashboard' %}" class="flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-xl transition-colors"
+               style="color:var(--neutral-600);"
+               onmouseover="this.style.color='var(--primary-900)';this.style.background='var(--primary-50)'"
+               onmouseout="this.style.color='var(--neutral-600)';this.style.background='transparent'">
+                <svg class="w-5 h-5" style="color:var(--primary-900);opacity:0.7;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+                Jelajahi Buku
+            </a>
+            <a href="#" class="flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-xl transition-colors"
+               style="color:var(--neutral-600);"
+               onmouseover="this.style.color='var(--primary-900)';this.style.background='var(--primary-50)'"
+               onmouseout="this.style.color='var(--neutral-600)';this.style.background='transparent'">
+                <svg class="w-5 h-5" style="color:var(--primary-900);opacity:0.7;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                Katalog
+            </a>
+
+            {% if user.is_authenticated %}
+            <div class="pt-1">
+                <button id="mobile-tools-btn" class="w-full flex items-center justify-between gap-3 px-3 py-2.5 text-sm font-medium rounded-xl transition-colors"
+                        style="color:var(--neutral-600);"
+                        onmouseover="this.style.color='var(--primary-900)';this.style.background='var(--primary-50)'"
+                        onmouseout="this.style.color='var(--neutral-600)';this.style.background='transparent'">
+                        <span class="flex items-center gap-3">
+                            <svg class="w-5 h-5" style="color:var(--primary-900);opacity:0.7;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
+                            Fitur
+                        </span>
+                    <svg id="mobile-tools-icon" class="w-4 h-4 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </button>
+                <div id="mobile-tools-menu" class="hidden ml-8 mt-1 space-y-0.5">
+                    {% load static %}
+                    {% if user.profile.is_student or user.profile.is_teacher %}
+                    <a href="{% url 'book_loan:loan_history' %}" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors" style="color:var(--neutral-500);" onmouseover="this.style.color='var(--primary-900)';this.style.background='var(--primary-50)'" onmouseout="this.style.color='var(--neutral-500)';this.style.background='transparent'">
+                        <img src="{% static 'assets/OpenBook.svg' %}" class="w-4 h-4" alt=""> Peminjaman Saya
+                    </a>
+                    <a href="{% url 'book_loan:waiting_list' %}" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors" style="color:var(--neutral-500);" onmouseover="this.style.color='var(--primary-900)';this.style.background='var(--primary-50)'" onmouseout="this.style.color='var(--neutral-500)';this.style.background='transparent'">
+                        <img src="{% static 'assets/Clock.svg' %}" class="w-4 h-4" alt=""> Waiting List
+                    </a>
+                    <a href="{% url 'attendance:check_in' %}" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors" style="color:var(--neutral-500);" onmouseover="this.style.color='var(--primary-900)';this.style.background='var(--primary-50)'" onmouseout="this.style.color='var(--neutral-500)';this.style.background='transparent'">
+                        <img src="{% static 'assets/Bookmark.svg' %}" class="w-4 h-4" alt=""> Check-in
+                    </a>
+                    {% endif %}
+                    {% if user.profile.is_student %}
+                    <a href="{% url 'literacy:forum' %}" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors" style="color:var(--neutral-500);" onmouseover="this.style.color='var(--primary-900)';this.style.background='var(--primary-50)'" onmouseout="this.style.color='var(--neutral-500)';this.style.background='transparent'">
+                        <img src="{% static 'assets/Pen.svg' %}" class="w-4 h-4" alt=""> Forum
+                    </a>
+                    {% endif %}
+                    {% if user.profile.is_librarian %}
+                    <a href="{% url 'book_loan:loan_management' %}" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors" style="color:var(--neutral-500);" onmouseover="this.style.color='var(--primary-900)';this.style.background='var(--primary-50)'" onmouseout="this.style.color='var(--neutral-500)';this.style.background='transparent'">
+                        <img src="{% static 'assets/Book.svg' %}" class="w-4 h-4" alt=""> Manajemen Peminjaman
+                    </a>
+                    <a href="{% url 'user:user_list' %}" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors" style="color:var(--neutral-500);" onmouseover="this.style.color='var(--primary-900)';this.style.background='var(--primary-50)'" onmouseout="this.style.color='var(--neutral-500)';this.style.background='transparent'">
+                        <img src="{% static 'assets/People.svg' %}" class="w-4 h-4" alt=""> Manajemen User
+                    </a>
+                    <a href="{% url 'book:book_add' %}" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors" style="color:var(--neutral-500);" onmouseover="this.style.color='var(--primary-900)';this.style.background='var(--primary-50)'" onmouseout="this.style.color='var(--neutral-500)';this.style.background='transparent'">
+                        <svg class="w-4 h-4 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 5v14M5 12h14"/>
+                        </svg> Tambah Buku
+                    </a>
+                    {% endif %}
+                    {% if user.profile.is_librarian or user.profile.is_teacher %}
+                    <a href="{% url 'report:index' %}" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors" style="color:var(--neutral-500);" onmouseover="this.style.color='var(--primary-900)';this.style.background='var(--primary-50)'" onmouseout="this.style.color='var(--neutral-500)';this.style.background='transparent'">
+                        <img src="{% static 'assets/Computer.svg' %}" class="w-4 h-4" alt=""> Laporan & Analitik
+                    </a>
+                    <a href="{% url 'literacy:teacher_verify_reviews' %}" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors" style="color:var(--neutral-500);" onmouseover="this.style.color='var(--primary-900)';this.style.background='var(--primary-50)'" onmouseout="this.style.color='var(--neutral-500)';this.style.background='transparent'">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                        Verifikasi Ulasan
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+        </nav>
+
+        <!-- Account Section -->
+        {% if user.is_authenticated %}
+        <div class="px-4 py-4 space-y-1" style="border-top: 1px solid var(--neutral-200);">
+            <p class="px-3 py-1 text-[0.7rem] font-semibold uppercase tracking-widest" style="color:var(--neutral-400);">Akun</p>
+            {% if user.profile.is_student %}
+            <button onclick="showPreferenceModal(); document.getElementById('mobile-menu').classList.add('hidden');" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors text-sm font-medium"
+                    style="color:var(--neutral-600);"
+                    onmouseover="this.style.color='var(--primary-900)';this.style.background='var(--primary-50)'"
+                    onmouseout="this.style.color='var(--neutral-600)';this.style.background='transparent'">
+                {% load static %}<img src="{% static 'assets/Book.svg' %}" class="w-5 h-5" alt=""> Minat Baca
+            </button>
+            {% endif %}
+            <a href="{% url 'authentication:change_password' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors text-sm font-medium"
+               style="color:var(--neutral-600);"
+               onmouseover="this.style.color='var(--primary-900)';this.style.background='var(--primary-50)'"
+               onmouseout="this.style.color='var(--neutral-600)';this.style.background='transparent'">
+                <svg class="w-5 h-5" style="color:var(--primary-900);opacity:0.6;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>
+                Ganti Password
+            </a>
+            <form method="post" action="{% url 'authentication:logout' %}">
+                {% csrf_token %}
+                <button type="submit" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors text-sm font-medium"
+                        style="color:var(--error-500);"
+                        onmouseover="this.style.color='var(--error-600)';this.style.background='var(--error-50)'"
+                        onmouseout="this.style.color='var(--error-500)';this.style.background='transparent'">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+                    Logout
+                </button>
+            </form>
+        </div>
+        {% else %}
+        <div class="px-4 py-4" style="border-top: 1px solid var(--neutral-200);">
+            <a href="{% url 'authentication:login' %}" class="btn-primary w-full justify-center">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14"/></svg>
+                Masuk
+            </a>
         </div>
         {% endif %}
-        
-        {% block content %}{% endblock %}
-    </main>
-    
-    <!-- Footer -->
-    {% include 'footer.html' %}
-    
-    <!-- Tailwind Config Script -->
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        'display': ["'Cormorant Garamond'", 'serif'],
-                        'body': ["'Spectral'", 'serif'],
-                        'sans': ["'Work Sans'", 'sans-serif'],
+    </div><!-- /drawer-panel -->
+</div><!-- /mobile-menu -->
+
+<!-- ─── Main Content ─── -->
+<main>
+    {% if messages %}
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
+        {% for message in messages %}
+        <div class="msg-banner {% if message.tags == 'success' %}success{% elif message.tags == 'error' %}error{% else %}info{% endif %}">
+            {% if message.tags == 'success' %}
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>
+            {% elif message.tags == 'error' %}
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/></svg>
+            {% else %}
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/></svg>
+            {% endif %}
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% block content %}{% endblock %}
+</main>
+
+<!-- ─── Footer ─── -->
+{% include 'footer.html' %}
+
+<!-- ─── Tailwind Config ─── -->
+<script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                fontFamily: {
+                    'display': ["'Playfair Display'", 'serif'],
+                    'sans':    ["'Work Sans'", 'sans-serif'],
+                    'body':    ["'Work Sans'", 'sans-serif'],
+                },
+                colors: {
+                    primary: {
+                        50:  '#e9ebf3',
+                        100: '#b9c2db',
+                        200: '#98a4c9',
+                        300: '#687bb1',
+                        400: '#4b61a1',
+                        500: '#1e3a8a',
+                        600: '#1b357e',
+                        700: '#152962',
+                        800: '#11204c',
+                        900: '#0d183a',
                     },
-                    colors: {
-                        'offwhite': '#fafafa',
+                    secondary: {
+                        50:  '#e7f8f2',
+                        100: '#b5e9d8',
+                        200: '#91dfc5',
+                        300: '#5fd0ab',
+                        400: '#40c79a',
+                        500: '#10b981',
+                        600: '#0fa875',
+                        700: '#0b835c',
+                        800: '#096647',
+                        900: '#074e36',
+                    },
+                    accent: {
+                        50:  '#fef5e7',
+                        100: '#fce1b3',
+                        200: '#fad28f',
+                        300: '#f8be5c',
+                        400: '#f7b13c',
+                        500: '#f59e0b',
+                        600: '#df900a',
+                        700: '#ae7008',
+                        800: '#875706',
+                        900: '#674205',
+                    },
+                    neutral: {
+                        50:  '#ffffff',
+                        100: '#fcfcfc',
+                        200: '#f0f0f0',
+                        300: '#bfbfbf',
+                        400: '#8c8c8c',
+                        500: '#595959',
+                        600: '#454545',
+                        700: '#262626',
+                        800: '#1f1f1f',
+                        900: '#000000',
+                    },
+                    error: {
+                        50:  '#fdecec',
+                        100: '#fac5c5',
+                        200: '#f8a9a9',
+                        300: '#f48282',
+                        400: '#f26969',
+                        500: '#ef4444',
+                        600: '#d93e3e',
+                        700: '#aa3030',
+                        800: '#832525',
+                        900: '#641d1d',
                     }
+                },
+                borderRadius: {
+                    'xl':  '0.75rem',
+                    '2xl': '1rem',
+                    '3xl': '1.5rem',
                 }
             }
         }
-    </script>
-    
-    {% block extra_js %}{% endblock %}
+    }
+</script>
+
+<!-- ─── Mobile Menu Script ─── -->
+<script>
+    (function() {
+        const btn      = document.getElementById('mobile-menu-btn');
+        const menu     = document.getElementById('mobile-menu');
+        const backdrop = document.getElementById('mobile-menu-backdrop');
+        const drawer   = document.getElementById('drawer-panel');
+        const closeBtn = document.getElementById('close-mobile-menu');
+        const toolsBtn = document.getElementById('mobile-tools-btn');
+        const toolsMenu= document.getElementById('mobile-tools-menu');
+        const toolsIcon= document.getElementById('mobile-tools-icon');
+
+        function openMenu() {
+            menu.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+            requestAnimationFrame(() => drawer.classList.add('open'));
+        }
+        function closeMenu() {
+            drawer.classList.remove('open');
+            document.body.style.overflow = '';
+            setTimeout(() => menu.classList.add('hidden'), 300);
+        }
+
+        if (btn)      btn.addEventListener('click', openMenu);
+        if (closeBtn) closeBtn.addEventListener('click', closeMenu);
+        if (backdrop) backdrop.addEventListener('click', closeMenu);
+
+        if (toolsBtn && toolsMenu) {
+            toolsBtn.addEventListener('click', () => {
+                toolsMenu.classList.toggle('hidden');
+                if (toolsIcon) toolsIcon.classList.toggle('rotate-180');
+            });
+        }
+
+        // Close on link click
+        document.querySelectorAll('#drawer-panel a').forEach(link => {
+            link.addEventListener('click', () => {
+                if (!link.closest('form')) closeMenu();
+            });
+        });
+    })();
+</script>
+
+{% block extra_js %}{% endblock %}
 </body>
 </html>

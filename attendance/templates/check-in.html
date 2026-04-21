@@ -1,166 +1,192 @@
 {% extends 'base.html' %}
+{% load static %}
 
-{% block title %}Library Check-In - SMAN 61 Jakarta{% endblock %}
+{% block title %}Library Check-In - NASA Library{% endblock %}
 
 {% block content %}
-<div class="min-h-screen bg-gradient-to-br from-white via-gray-50 to-white">
-    <!-- Main Container -->
-    <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        
-        <!-- Welcome Section -->
-        <div class="mb-12 text-center">
-            <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full mb-4 shadow-lg">
-                <span class="text-3xl">📖</span>
+<div class="w-full min-h-screen bg-white">
+
+    <!-- Hero Section -->
+    <div class="w-full h-60 overflow-hidden relative" style="background-color: #0D183A;">
+        <div class="w-72 h-72 left-[897.40px] top-[-86.40px] absolute opacity-5 bg-blue-400 rounded-full blur-[80px]"></div>
+        <div class="w-64 h-64 left-[-76.80px] top-[84.54px] absolute opacity-5 bg-indigo-400 rounded-full blur-[80px]"></div>
+        <div class="flex flex-col justify-center items-center h-full relative z-10 px-4">
+            <div class="w-auto h-9 bg-white/10 rounded-full border border-white/20 flex justify-center items-center gap-2 mb-6">
+                <div class="w-2 h-2 bg-white rounded-full"></div>
+                <div class="text-center text-white/80 text-sm font-medium font-['Work_Sans'] leading-5">Library is open · <span id="hero-time">--:--</span></div>
             </div>
-            <h1 class="font-display text-4xl md:text-5xl font-bold text-gray-900 mb-2">Welcome to NASA Library</h1>
-            <p class="font-sans text-lg text-gray-600">Hi, <span class="font-semibold">{{ user.first_name }}</span>! Let's check you in.</p>
-        </div>
-
-        <!-- User Info Card -->
-        <div class="bg-white border border-gray-200 rounded-2xl p-6 md:p-8 mb-8 shadow-sm hover:shadow-md transition-shadow">
-            <div class="grid grid-cols-3 gap-4 md:gap-6">
-                <div class="text-center">
-                    <p class="font-sans text-sm text-gray-500 mb-1">Class</p>
-                    <p class="font-sans font-semibold text-gray-900">{{ user_profile.kelas }}</p>
-                </div>
-                <div class="text-center border-l border-r border-gray-200">
-                    <p class="font-sans text-sm text-gray-500 mb-1">Role</p>
-                    <p class="font-sans font-semibold text-gray-900">Student</p>
-                </div>
-                <div class="text-center">
-                    <p class="font-sans text-sm text-gray-500 mb-1">Time</p>
-                    <p class="font-sans font-semibold text-gray-900" id="current-time">--:--</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Reading Gamification Card -->
-        <div class="bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-amber-200 rounded-2xl p-6 md:p-8 mb-8">
-            <div class="flex items-start justify-between mb-4">
-                <div>
-                    <h3 class="font-display text-2xl font-bold text-amber-900 mb-1">📚 Reading Challenge</h3>
-                    <p class="font-sans text-sm text-amber-800">Keep your reading streak alive!</p>
-                </div>
-                <div class="flex items-center justify-center w-12 h-12 bg-amber-200 rounded-full">
-                    <span class="text-xl">🔥</span>
-                </div>
-            </div>
-            
-            <div class="grid grid-cols-2 gap-4 mb-4">
-                <!-- Streak Counter -->
-                <div class="bg-white rounded-xl p-4 border border-amber-100">
-                    <p class="font-sans text-xs text-amber-700 uppercase tracking-wide mb-1">Reading Streak</p>
-                    <p class="font-display text-3xl font-bold text-amber-900">{{ reading_stats.reading_streak }}</p>
-                    <p class="font-sans text-xs text-amber-600 mt-1">days</p>
-                </div>
-                <!-- Books This Month -->
-                <div class="bg-white rounded-xl p-4 border border-amber-100">
-                    <p class="font-sans text-xs text-amber-700 uppercase tracking-wide mb-1">This Month</p>
-                    <p class="font-display text-3xl font-bold text-amber-900">{{ reading_stats.books_read_this_month }}</p>
-                    <p class="font-sans text-xs text-amber-600 mt-1">books read</p>
-                </div>
-            </div>
-
-            <!-- Challenge Progress -->
-            <div class="bg-white rounded-xl p-4 border border-amber-100">
-                <div class="flex justify-between items-center mb-3">
-                    <span class="font-sans text-sm font-semibold text-gray-700">Challenge Progress</span>
-                    <span class="font-sans text-sm font-bold text-amber-700">{{ reading_stats.books_read_this_month }}/{{ reading_stats.next_milestone }}</span>
-                </div>
-                <div class="w-full bg-amber-200 rounded-full h-2 overflow-hidden">
-                    <div class="bg-gradient-to-r from-amber-400 to-orange-500 h-2 rounded-full transition-all duration-300 progress-bar"
-                         data-current="{{ reading_stats.books_read_this_month }}" data-max="{{ reading_stats.next_milestone }}"></div>
-                </div>
-                <p class="font-sans text-xs text-amber-700 mt-2">{{ reading_stats.message }}</p>
-            </div>
-            <script>
-                // Set progress bar width
-                const progressBar = document.querySelector('.progress-bar');
-                if (progressBar) {
-                    const current = parseInt(progressBar.dataset.current) || 0;
-                    const max = parseInt(progressBar.dataset.max) || 1;
-                    const percentage = (current / max) * 100;
-                    progressBar.style.width = percentage + '%';
-                }
-            </script>
-        </div>
-
-        <!-- Check-In Form -->
-        <form id="checkin-form" class="bg-white border border-gray-200 rounded-2xl p-6 md:p-8 shadow-sm">
-            {% csrf_token %}
-            
-            <!-- Activities Section -->
-            <div class="mb-8">
-                <h2 class="font-display text-2xl font-bold text-gray-900 mb-2">
-                    <span class="inline-block mr-2">🎯</span>What will you do today?
-                </h2>
-                <p class="font-sans text-gray-600 text-sm mb-6">Select all activities that apply</p>
-                
-                <!-- Activity Checkboxes -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {% for activity in activities %}
-                        <label class="relative flex items-center p-4 rounded-xl border-2 border-gray-200 hover:border-blue-400 cursor-pointer transition-all hover:bg-blue-50 group has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50">
-                            <input type="checkbox" name="activities" value="{{ activity.id }}" class="w-5 h-5">
-                            <span class="ml-3 font-sans text-sm text-gray-700 group-has-[:checked]:text-blue-700 group-has-[:checked]:font-semibold">
-                                {{ activity.emoji }} {{ activity.name }}
-                            </span>
-                        </label>
-                    {% empty %}
-                        <p class="text-gray-500 text-sm col-span-2">No activities available. Please contact the librarian.</p>
-                    {% endfor %}
-                </div>
-
-                <!-- Custom Activity Field -->
-                <div class="mt-6">
-                    <div class="relative">
-                        {{ form.custom_activity }}
-                        <span class="absolute right-4 top-14 text-gray-400 text-2xl">✏️</span>
-                    </div>
-                    {% if form.custom_activity.errors %}
-                        <p class="text-red-600 font-sans text-sm mt-2">{{ form.custom_activity.errors }}</p>
-                    {% endif %}
-                </div>
-            </div>
-
-            <!-- Confirmation Message -->
-            <div class="bg-gray-50 border border-gray-200 rounded-xl p-4 mb-6">
-                <p class="font-sans text-sm text-gray-700">
-                    <span class="font-semibold">Heads up!</span> You're about to check in at <span id="checkin-time" class="font-mono font-bold text-gray-900">--:--</span>. If you forget to check out, we'll automatically do it at 3:00 PM (closing time).
-                </p>
-            </div>
-
-            <!-- Submit Button -->
-            <button type="submit" id="submit-btn" class="w-full py-4 px-6 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-sans font-semibold rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 text-lg">
-                ✨ Check Me In
-            </button>
-
-            <!-- Alternative Action -->
-            <p class="text-center font-sans text-sm text-gray-600 mt-4">
-                Already checked in? <a href="{% url 'attendance:active_attendance' %}" class="text-blue-600 hover:text-blue-700 font-semibold underline">View your session</a> • 
-                <a href="{% url 'attendance:history' %}" class="text-purple-600 hover:text-purple-700 font-semibold underline">View history</a>
+            <h1 class="text-center text-white text-4xl md:text-5xl font-bold font-['Playfair_Display'] leading-tight md:leading-[54.95px] mb-4">Welcome to NASA Library</h1>
+            <p class="text-center text-white/90 text-base md:text-lg font-['Work_Sans'] leading-7">
+                Hi, <span class="font-semibold text-blue-200">{{ user.first_name }}</span>! Let's check you in for today's session.
             </p>
-        </form>
-
-        <!-- Features Showcase -->
-        <div class="mt-12 grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div class="bg-white border border-gray-200 rounded-xl p-4 hover:shadow-md transition-shadow">
-                <p class="text-2xl mb-2">⏱️</p>
-                <p class="font-sans font-semibold text-gray-900 text-sm mb-1">Track Your Time</p>
-                <p class="font-sans text-xs text-gray-600">Automatically logs your visit duration</p>
-            </div>
-            <div class="bg-white border border-gray-200 rounded-xl p-4 hover:shadow-md transition-shadow">
-                <p class="text-2xl mb-2">📊</p>
-                <p class="font-sans font-semibold text-gray-900 text-sm mb-1">Earn Badges</p>
-                <p class="font-sans text-xs text-gray-600">Coming soon - unlock reading achievements</p>
-            </div>
+        </div>
     </div>
-</div>
+
+    <!-- Main Content -->
+    <div class="w-full flex justify-center px-6 py-12">
+        <div class="w-full max-w-4xl">
+            <!-- User Info Card -->
+            <div class="w-full h-40 p-px bg-white rounded-2xl shadow-[0px_4px_24px_0px_rgba(30,58,138,0.10)] border border-slate-200 inline-flex flex-col justify-start items-start overflow-hidden mb-8">
+                <div class="self-stretch h-20 relative border-b border-gray-100 flex items-center px-6">
+                    <div class="w-12 h-12 bg-blue-900 rounded-2xl flex justify-center items-center mr-4">
+                        <div class="text-white text-xl font-bold font-['Playfair_Display'] leading-7">{{ user.first_name|first|upper }}</div>
+                    </div>
+                    <div class="flex-1 flex flex-col justify-start">
+                        <div class="text-slate-900 text-base font-bold font-['Work_Sans'] leading-6">{{ user.first_name }}</div>
+                        <div class="text-zinc-600 text-sm font-normal font-['Work_Sans'] leading-5">Student · {{ user_profile.kelas }}</div>
+                    </div>
+                    <div class="w-20 h-8 px-3 bg-emerald-50 rounded-full border border-emerald-500/30 flex justify-start items-center gap-2">
+                        <div class="w-1.5 h-1.5 bg-emerald-500 rounded-full"></div>
+                        <div class="text-emerald-500 text-xs font-semibold font-['Work_Sans'] leading-5">Active</div>
+                    </div>
+                </div>
+                <div class="self-stretch h-20 relative flex">
+                    <div class="flex-1 h-20 pr-px pt-4 border-r border-gray-100 flex flex-col justify-start items-center gap-0.5">
+                        <div class="text-zinc-600 text-xs font-medium font-['Work_Sans'] uppercase leading-5 tracking-wide">Class</div>
+                        <div class="text-slate-900 text-base font-bold font-['Work_Sans'] leading-6">{{ user_profile.kelas }}</div>
+                    </div>
+                    <div class="flex-1 h-20 pr-px pt-4 border-r border-gray-100 flex flex-col justify-start items-center gap-0.5">
+                        <div class="text-zinc-600 text-xs font-medium font-['Work_Sans'] uppercase leading-5 tracking-wide">Role</div>
+                        <div class="text-slate-900 text-base font-bold font-['Work_Sans'] leading-6">Student</div>
+                    </div>
+                    <div class="flex-1 h-20 pt-4 flex flex-col justify-start items-center gap-0.5">
+                        <div class="text-zinc-600 text-xs font-medium font-['Work_Sans'] uppercase leading-5 tracking-wide">Time</div>
+                        <div class="text-slate-900 text-base font-bold font-['Work_Sans'] leading-6" id="current-time">--:--</div>
+                    </div>
+                </div>
+            </div>
+
+
+
+            <!-- Check-In Form Card -->
+            <div class="w-full bg-white rounded-2xl shadow-[0px_4px_24px_0px_rgba(30,58,138,0.08)] border border-slate-200 overflow-hidden mb-8 p-px">
+                <div class="h-1 bg-gradient-to-r from-blue-900 to-slate-500"></div>
+                
+                <form id="checkin-form" class="p-6">
+                    {% csrf_token %}
+                    
+                    <!-- Activities Section -->
+                    <div class="mb-8">
+                        <div class="flex justify-start items-center gap-3 mb-6">
+                            <div class="w-10 h-10 px-2.5 bg-slate-200 rounded-2xl flex justify-center items-center">
+                                <img src="{% static 'assets/StarBlue.svg' %}" alt="Activities" class="w-6 h-6">
+                            </div>
+                            <div class="flex-1">
+                                <div class="text-slate-900 text-lg font-bold font-['Playfair_Display'] leading-7">What will you do today?</div>
+                                <div class="text-zinc-600 text-sm font-normal font-['Work_Sans'] leading-5">Select all activities that apply</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Activity Checkboxes Grid -->
+                        <div class="grid grid-cols-2 gap-4">
+                            {% for activity in activities %}
+                                <label class="w-full h-16 pl-3.5 bg-white rounded-2xl border border-slate-200 flex justify-start items-center gap-3 cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-all group has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50">
+                                    <input type="checkbox" name="activities" value="{{ activity.id }}" class="w-5 h-5 appearance-none border-2 border-gray-300 rounded checkbox-input">
+                                    <span class="text-gray-700 text-sm font-medium font-['Work_Sans'] leading-6 group-has-[:checked]:text-blue-700 group-has-[:checked]:font-semibold flex items-center gap-2">
+                                        {% if 'Reading Books' in activity.name %}
+                                            <img src="{% static 'assets/Book.svg' %}" alt="Books" class="w-4 h-4">
+                                        {% elif 'Homework' in activity.name or 'Doing' in activity.name %}
+                                            <img src="{% static 'assets/PenBlue.svg' %}" alt="Homework" class="w-4 h-4">
+                                        {% elif 'Borrowing' in activity.name %}
+                                            <img src="{% static 'assets/OpenBook.svg' %}" alt="Borrowing" class="w-4 h-4">
+                                        {% elif 'Research' in activity.name %}
+                                            <img src="{% static 'assets/Search.svg' %}" alt="Research" class="w-4 h-4">
+                                        {% elif 'Group' in activity.name %}
+                                            <img src="{% static 'assets/People.svg' %}" alt="Group" class="w-4 h-4">
+                                        {% elif 'Magazines' in activity.name %}
+                                            <img src="{% static 'assets/OpenBook.svg' %}" alt="Magazines" class="w-4 h-4">
+                                        {% elif 'Computer' in activity.name %}
+                                            <img src="{% static 'assets/Computer.svg' %}" alt="Computer" class="w-4 h-4">
+                                        {% elif 'Quiet' in activity.name %}
+                                            <img src="{% static 'assets/Sound.svg' %}" alt="Quiet" class="w-4 h-4">
+                                        {% else %}
+                                            <span class="text-sm">{{ activity.emoji }}</span>
+                                        {% endif %}
+                                        {{ activity.name }}
+                                    </span>
+                                </label>
+                            {% empty %}
+                                <p class="text-gray-500 text-sm col-span-2">No activities available. Please contact the librarian.</p>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Custom Activity Field -->
+                        <div class="mt-6 relative">
+                            {{ form.custom_activity }}
+                            <img src="{% static 'assets/Pen.svg' %}" alt="Custom" class="absolute right-4 top-3 pointer-events-none w-5 h-5">
+                        </div>
+                        {% if form.custom_activity.errors %}
+                            <p class="text-red-600 font-sans text-sm mt-2">{{ form.custom_activity.errors }}</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Confirmation Message -->
+                    <div class="w-full bg-indigo-50 rounded-2xl border border-indigo-200 p-4 mb-6 flex items-start gap-3">
+                        <div class="w-4 h-4 flex-shrink-0 mt-1">
+                            <svg class="w-4 h-4 text-blue-900" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 5v8a2 2 0 01-2 2h-5l-5 4v-4H4a2 2 0 01-2-2V5a2 2 0 012-2h12a2 2 0 012 2zm-11-1a1 1 0 11-2 0 1 1 0 012 0z" clip-rule="evenodd"/></svg>
+                        </div>
+                        <div class="w-full text-xs md:text-sm">
+                            <span class="text-blue-900 font-semibold font-['Work_Sans'] leading-5">Heads up!</span>
+                            <span class="text-gray-700 font-normal font-['Work_Sans'] leading-5"> You're about to check in at </span>
+                            <span class="text-blue-900 font-semibold font-['Work_Sans'] leading-5" id="checkin-time">--:--</span>
+                            <span class="text-gray-700 font-normal font-['Work_Sans'] leading-5">. If you forget to check out, we'll automatically do it at </span>
+                            <span class="text-blue-900 font-semibold font-['Work_Sans'] leading-5">3:00 PM</span>
+                            <span class="text-gray-700 font-normal font-['Work_Sans'] leading-5"> (closing time).</span>
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <button type="submit" id="submit-btn" class="w-full h-12 pl-4 pr-12 py-3 rounded-2xl shadow-[0px_8px_32px_0px_rgba(30,58,138,0.30)] flex justify-center items-center gap-2 hover:shadow-lg transition-all" style="background-color: #1E3A8A;">
+                        <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20"><path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z"/></svg>
+                        <span class="text-center text-white text-base font-bold font-['Work_Sans'] leading-6 tracking-tight">Check Me In</span>
+                    </button>
+
+                    <!-- Alternative Actions -->
+                    <p class="text-center text-zinc-600 text-sm font-normal font-['Work_Sans'] leading-5 mt-6">
+                        Already checked in? 
+                        <span class="text-gray-300">·</span>
+                        <a href="{% url 'attendance:history' %}" class="text-slate-500 font-semibold underline hover:text-slate-600">View history</a>
+                    </p>
+                </form>
+            </div>
+
+            <!-- Features Showcase -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-8">
+                <!-- Track Your Time Card -->
+                <div class="w-full bg-white rounded-xl shadow-sm border border-slate-100 p-5 hover:shadow-md transition-shadow">
+                    <div class="flex items-start gap-4">
+                        <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <svg class="w-5 h-5 text-blue-900" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="text-slate-900 text-base font-semibold font-['Playfair_Display'] mb-1">Track Your Time</h3>
+                            <p class="text-slate-600 text-sm font-normal font-['Work_Sans']">Automatically logs your visit duration.</p>
+                        </div>
+                    </div>
+                </div>
+                <!-- Earn Badges Card -->
+                <div class="w-full bg-white rounded-xl shadow-sm border border-slate-100 p-5 hover:shadow-md transition-shadow">
+                    <div class="flex items-start gap-4">
+                        <div class="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <svg class="w-5 h-5 text-indigo-900" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="text-slate-900 text-base font-semibold font-['Playfair_Display'] mb-1">Earn Badges</h3>
+                            <p class="text-slate-600 text-sm font-normal font-['Work_Sans']">Unlock achievements and milestones soon.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
 
 <!-- Loading Modal -->
 <div id="loading-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50 transition-opacity duration-300">
     <div class="bg-white rounded-2xl p-8 text-center shadow-2xl">
         <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full mb-4 animate-pulse">
-            <span class="text-3xl">📖</span>
+            <img src="{% static 'assets/OpenBook.svg' %}" alt="Processing" class="w-8 h-8">
         </div>
         <p class="font-sans font-semibold text-gray-900 text-lg mb-2">Processing Check-In</p>
         <p class="font-sans text-gray-600 text-sm">Please wait...</p>
@@ -176,15 +202,39 @@
 
 <!-- Success Modal -->
 <div id="success-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50 transition-opacity duration-300">
-    <div class="bg-white rounded-2xl p-8 text-center shadow-2xl max-w-md">
-        <div class="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-green-400 to-green-500 rounded-full mb-4">
-            <span class="text-4xl animate-bounce">✓</span>
+    <div class="w-96 bg-white rounded-3xl shadow-2xl overflow-hidden">
+        <!-- Header with Icon -->
+        <div class="px-8 pt-8 pb-4 flex justify-center">
+            <img src="{% static 'assets/ChecklistModal.svg' %}" alt="Success" class="w-14 h-14">
         </div>
-        <h3 class="font-display text-2xl font-bold text-gray-900 mb-2">Check-In Success!</h3>
-        <p id="success-message" class="font-sans text-gray-600 mb-6 text-center"></p>
-        <button id="success-btn" class="w-full py-3 px-6 bg-gradient-to-r from-green-600 to-green-700 text-white font-sans font-semibold rounded-xl hover:from-green-700 hover:to-green-800 transition-all">
-            Continue →
-        </button>
+
+        <!-- Title -->
+        <div class="px-8 pb-6 text-center">
+            <h3 class="text-slate-900 text-3xl font-bold font-['Playfair_Display']">Check-In Success!</h3>
+        </div>
+
+        <!-- Message with Time -->
+        <div class="px-8 pb-8 text-center">
+            <p class="text-zinc-600 text-base font-normal font-['Work_Sans'] leading-6">
+                Welcome! You checked in at 
+                <span id="success-time" class="text-blue-900 font-bold">--:--</span>
+            </p>
+        </div>
+
+        <!-- Continue Button -->
+        <div class="px-8 pb-4">
+            <button id="success-btn" class="w-full h-14 rounded-2xl shadow-[0px_4px_20px_0px_rgba(30,58,138,0.30)] inline-flex justify-center items-center gap-2 hover:opacity-90 transition-all" style="background-color: #1E3A8A;">
+                <span class="text-center text-white text-base font-bold font-['Work_Sans'] tracking-tight">Continue</span>
+                <img src="{% static 'assets/ArrowModal.svg' %}" alt="Arrow" class="w-4 h-4">
+            </button>
+        </div>
+
+        <!-- Footer Links -->
+        <div class="border-t border-slate-200 px-8 py-4 text-center text-sm">
+            <span class="text-zinc-600 font-normal font-['Work_Sans']">Already checked in? </span>
+            <span class="text-gray-300 font-normal font-['Work_Sans']"> · </span>
+            <a href="{% url 'attendance:history' %}" class="text-blue-900 font-semibold font-['Work_Sans'] hover:underline">View history</a>
+        </div>
     </div>
 </div>
 
@@ -209,6 +259,7 @@
         const timeString = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
         document.getElementById('current-time').textContent = timeString;
         document.getElementById('checkin-time').textContent = timeString;
+        document.getElementById('hero-time').textContent = timeString;
     }
     
     updateTime();
@@ -237,7 +288,8 @@
         // Get form data
         const formData = new FormData(form);
         const activities = Array.from(document.querySelectorAll('input[name="activities"]:checked')).map(cb => cb.value);
-        const customActivity = document.querySelector('textarea[name="custom_activity"]').value;
+        const customActivityField = document.querySelector('textarea[name="custom_activity"]');
+        const customActivity = customActivityField ? customActivityField.value : '';
         
         // Prepare JSON data
         const data = {
@@ -265,8 +317,10 @@
             hideModal('loading-modal');
             
             if (status === 201 || data.status === 'success') {
-                // Show success modal
-                document.getElementById('success-message').textContent = data.message;
+                // Update success time display
+                const now = new Date();
+                const timeString = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+                document.getElementById('success-time').textContent = timeString;
                 showModal('success-modal');
                 
                 // Redirect on button click
@@ -319,7 +373,7 @@
 
 <style>
     /* Custom checkbox styling */
-    input[type="checkbox"] {
+    .checkbox-input {
         appearance: none;
         -webkit-appearance: none;
         width: 20px;
@@ -331,7 +385,7 @@
         transition: all 0.3s ease;
     }
 
-    input[type="checkbox"]:checked {
+    .checkbox-input:checked {
         background-color: #3b82f6;
         border-color: #3b82f6;
         background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3E%3Cpath d='M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z'/%3E%3C/svg%3E");
@@ -340,11 +394,11 @@
         background-repeat: no-repeat;
     }
 
-    input[type="checkbox"]:hover {
+    .checkbox-input:hover {
         border-color: #93c5fd;
     }
 
-    input[type="checkbox"]:focus {
+    .checkbox-input:focus {
         outline: none;
         box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
     }
@@ -352,7 +406,18 @@
     /* Textarea styling */
     textarea {
         font-family: inherit;
-        padding-right: 45px !important;
+        padding: 0.75rem 1rem;
+        padding-right: 45px;
+        border: 1px solid #d1d5db;
+        border-radius: 1rem;
+        font-size: 0.875rem;
+        color: #6b7280;
+        background-color: #f3f4f6;
+        width: 100%;
+    }
+
+    textarea::placeholder {
+        color: #9ca3af;
     }
 
     /* Loading animation */
