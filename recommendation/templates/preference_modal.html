@@ -66,7 +66,8 @@ async function checkPreferences() {
         const response = await fetch('/recommendation/api/users/preferences/check', {
             headers: {
                 'X-CSRFToken': getCookie('csrftoken')
-            }
+            },
+            credentials: 'include'
         });
         const data = await response.json();
         
@@ -102,7 +103,8 @@ async function loadCategories() {
         const prefResponse = await fetch('/recommendation/api/users/preferences', {
             headers: {
                 'X-CSRFToken': getCookie('csrftoken')
-            }
+            },
+            credentials: 'include'
         });
         const prefData = await prefResponse.json();
         selectedCategories = prefData.categories || [];
@@ -210,6 +212,7 @@ async function savePreferences() {
                 'Content-Type': 'application/json',
                 'X-CSRFToken': getCookie('csrftoken')
             },
+            credentials: 'include',
             body: JSON.stringify({
                 categories: selectedCategories
             })
@@ -265,13 +268,13 @@ function getCookie(name) {
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
-    // Only check preferences for logged-in students
-    /* {% if user.is_authenticated and user.profile.role == 'student' %} */
-    var isStudent = true;
+    // Only check preferences for logged-in users
+    /* {% if user.is_authenticated %} */
+    var isAuthenticated = true;
     /* {% else %} */
-    var isStudent = false;
+    var isAuthenticated = false;
     /* {% endif %} */
-    if (isStudent) {
+    if (isAuthenticated) {
         checkPreferences();
     }
 });

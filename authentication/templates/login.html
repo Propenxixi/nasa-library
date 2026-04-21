@@ -1,73 +1,109 @@
 {% extends 'base.html' %}
+{% load static %}
 
-{% block title %}Login - MAN 61 Jakarta Library{% endblock %}
+{% block title %}Login - NASA Library{% endblock %}
 
 {% block content %}
-<div class="min-h-screen bg-gradient-to-br from-white via-gray-50 to-white flex items-center justify-center px-4 py-12">
-    <div class="w-full max-w-md">
-        <!-- Header Section -->
-        <div class="text-center mb-12 fade-in">
-            <h1 class="font-display text-4xl md:text-5xl font-bold text-gray-900 mb-3">
-                Welcome Back
-            </h1>
-            <p class="font-sans text-gray-600 text-lg">
-                Login to access the library
-            </p>
-        </div>
-
-        <!-- Messages Section -->
-        {% if messages %}
-            {% for message in messages %}
-                <div class="mb-6 p-4 rounded-lg border {% if message.tags %}border-red-300 bg-red-50 text-red-700{% else %}border-green-300 bg-green-50 text-green-700{% endif %} fade-in">
-                    <p class="font-sans font-medium">{{ message }}</p>
-                </div>
-            {% endfor %}
-        {% endif %}
-
-        <!-- Login Form -->
-        <form method="post" class="bg-white rounded-2xl border border-gray-200 p-8 md:p-10 shadow-lg hover:shadow-xl transition-shadow fade-in" style="animation-delay: 0.1s;">
-            {% csrf_token %}
+<div class="min-h-screen flex items-center justify-center px-4 py-4 bg-gray-50">
+    <div class="w-full max-w-sm md:max-w-2xl lg:max-w-5xl">
+        <!-- Login Card -->
+        <div class="bg-white rounded-3xl shadow-[0px_4px_20px_0px_rgba(0,0,0,0.10)] border border-gray-200 overflow-hidden">
             
-            <!-- NIS Field -->
-            <div class="mb-6">
-                <label for="id_nis" class="block font-sans font-semibold text-gray-900 mb-3 text-sm">
-                    {{ form.nis.label }}
-                </label>
-                {{ form.nis }}
-                {% if form.nis.errors %}
-                    <p class="text-red-600 font-sans text-sm mt-2">
-                        {{ form.nis.errors.0 }}
+            <!-- Main Container - Flex row on desktop -->
+            <div class="flex flex-col lg:flex-row">
+                
+                <!-- Header Section with Dark Background -->
+                <div class="h-64 md:h-80 lg:h-auto lg:w-2/5 relative bg-slate-900 flex flex-col justify-center items-center pt-8 md:pt-12 lg:pt-0 pb-6 md:pb-8 lg:pb-0 lg:px-8">
+                    <!-- NASA Logo -->
+                    <div class="w-16 md:w-20 lg:w-24 h-16 md:h-20 lg:h-24 mb-4 md:mb-6 lg:mb-8 flex justify-center items-center">
+                        <div class="w-16 md:w-20 lg:w-24 h-16 md:h-20 lg:h-24 bg-white rounded-full shadow-[0px_4px_6px_-4px_rgba(0,0,0,0.10)] flex justify-center items-center">
+                            <img class="w-12 md:w-16 lg:w-20 h-12 md:h-16 lg:h-20" src="{% static 'assets/NASALibraryLogo.png' %}" alt="NASA Logo" />
+                        </div>
+                    </div>
+                    
+                    <!-- Title -->
+                    <h1 class="text-center text-white text-2xl md:text-3xl lg:text-3xl font-bold font-['Playfair_Display'] leading-tight md:leading-10 lg:leading-10 mb-2 md:mb-3 lg:mb-4">
+                        Selamat Datang Kembali
+                    </h1>
+                    
+                    <!-- Subtitle -->
+                    <p class="text-center text-white text-opacity-60 text-xs md:text-sm lg:text-sm font-normal font-['Work_Sans'] leading-4 md:leading-5 lg:leading-5 px-4">
+                        Masuk untuk mengakses akun Perpustakaan NASA Anda
                     </p>
-                {% endif %}
+                </div>
+
+                <!-- Form Section -->
+                <div class="px-6 md:px-8 lg:px-10 py-8 md:py-10 lg:py-12 lg:w-3/5 space-y-5 md:space-y-6 lg:space-y-6 flex flex-col justify-center">
+                    <!-- Messages Section -->
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="p-3 md:p-4 rounded-xl border text-xs md:text-sm" style="{% if message.tags %}border-color: #fca5a5; background-color: #fee2e2; color: #991b1b;{% else %}border-color: #bfdbfe; background-color: #eff6ff; color: #1e40af;{% endif %}">
+                                <p class="font-['Work_Sans'] font-medium">{{ message }}</p>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <!-- Tip Box -->
+                    <div class="p-3 md:p-4 bg-sky-50 rounded-xl border border-sky-200">
+                        <p class="text-slate-900 text-xs md:text-sm font-['Work_Sans'] leading-4 md:leading-5">
+                            <span class="font-bold">💡 Tip:</span>
+                            <span class="font-normal"> Username dan password default Anda adalah nomor NIS Anda.</span>
+                        </p>
+                    </div>
+
+                    <!-- Login Form -->
+                    <form method="post" class="space-y-5 md:space-y-6 lg:space-y-5">
+                        {% csrf_token %}
+                        
+                        <!-- NIS Field -->
+                        <div class="space-y-2 md:space-y-3">
+                            <label for="id_nis" class="block text-zinc-600 text-xs font-semibold font-['Work_Sans'] uppercase leading-4 tracking-wide">
+                                Username (NIS)
+                            </label>
+                            <div class="relative">
+                                {{ form.nis }}
+                            </div>
+                            {% if form.nis.errors %}
+                                <p class="text-red-600 text-xs font-medium">
+                                    {{ form.nis.errors.0 }}
+                                </p>
+                            {% endif %}
+                        </div>
+
+                        <!-- Password Field -->
+                        <div class="space-y-2 md:space-y-3">
+                            <label for="id_password" class="block text-zinc-600 text-xs font-semibold font-['Work_Sans'] uppercase leading-4 tracking-wide">
+                                Kata Sandi
+                            </label>
+                            <div class="relative">
+                                {{ form.password }}
+                                <div class="absolute right-3 md:right-4 top-1/2 -translate-y-1/2 text-zinc-600">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                                    </svg>
+                                </div>
+                            </div>
+                            {% if form.password.errors %}
+                                <p class="text-red-600 text-xs font-medium">
+                                    {{ form.password.errors.0 }}
+                                </p>
+                            {% endif %}
+                        </div>
+
+                        <!-- Submit Button -->
+                        <button type="submit" class="w-full py-2.5 md:py-3 lg:py-3 px-6 bg-blue-900 text-white text-sm md:text-base lg:text-base font-semibold font-['Work_Sans'] leading-6 rounded-xl shadow-[0px_4px_12px_0px_rgba(30,58,138,0.30)] hover:bg-blue-950 transition-all duration-300 transform hover:scale-105 active:scale-95">
+                            Masuk
+                        </button>
+                    </form>
+
+                    <!-- Footer Help Box -->
+                    <div class="p-3 md:p-4 bg-amber-50 rounded-xl border border-amber-200">
+                        <p class="text-center text-amber-900 text-xs md:text-sm font-normal font-['Work_Sans'] leading-4 md:leading-5">
+                            Lupa kata sandi? Silakan kunjungi perpustakaan dan hubungi pustakawan untuk bantuan.
+                        </p>
+                    </div>
+                </div>
             </div>
-
-            <!-- Password Field -->
-            <div class="mb-8">
-                <label for="id_password" class="block font-sans font-semibold text-gray-900 mb-3 text-sm">
-                    {{ form.password.label }}
-                </label>
-                {{ form.password }}
-                {% if form.password.errors %}
-                    <p class="text-red-600 font-sans text-sm mt-2">
-                        {{ form.password.errors.0 }}
-                    </p>
-                {% endif %}
-            </div>
-
-            <!-- Submit Button -->
-            <button type="submit" class="w-full py-3 px-6 bg-gray-900 text-white font-sans font-semibold rounded-lg hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900 transition-all transform hover:scale-105 active:scale-95">
-                Login
-            </button>
-        </form>
-
-        <!-- Footer Info -->
-        <div class="mt-10 text-center fade-in" style="animation-delay: 0.2s;">
-            <p class="font-sans text-gray-600 text-sm">
-                Default password: Your NIS number
-            </p>
-            <p class="font-sans text-gray-600 text-sm mt-2">
-                Need help? <a href="mailto:admin@man61jakarta.school" class="text-gray-900 font-semibold hover:underline">Contact Admin</a>
-            </p>
         </div>
     </div>
 </div>
@@ -77,24 +113,31 @@
     input[type="password"] {
         width: 100%;
         padding: 12px 16px;
-        border: 1px solid #d1d5db;
-        border-radius: 8px;
-        font-family: 'Poppins', sans-serif;
-        font-size: 1rem;
+        border: 1px solid #e5e7eb;
+        border-radius: 11px;
+        font-family: 'Work Sans', sans-serif;
+        font-size: 0.875rem;
         transition: all 0.3s ease;
-        background-color: #ffffff;
-    }
-
-    input[type="text"]:focus,
-    input[type="password"]:focus {
-        outline: none;
-        border-color: #1f2937;
-        box-shadow: 0 0 0 3px rgba(31, 41, 55, 0.1);
+        background-color: #f9fafb;
+        color: #111827;
     }
 
     input[type="text"]::placeholder,
     input[type="password"]::placeholder {
         color: #9ca3af;
+    }
+
+    input[type="text"]:focus,
+    input[type="password"]:focus {
+        outline: none;
+        border-color: #1e3a8a;
+        background-color: #ffffff;
+        box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.1);
+    }
+
+    input[type="text"]:hover,
+    input[type="password"]:hover {
+        border-color: #d1d5db;
     }
 </style>
 {% endblock %}

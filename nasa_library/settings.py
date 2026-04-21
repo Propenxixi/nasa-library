@@ -55,6 +55,8 @@ INSTALLED_APPS = [
     'recommendation',
     'book_request',
     'book_loan',
+    'report',
+    'dashboard',
 ]
 
 MIDDLEWARE = [

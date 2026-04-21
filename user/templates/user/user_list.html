@@ -2,286 +2,761 @@
 {% load static %}
 {% block title %}Manajemen Pengguna — Nasa Library{% endblock %}
 
+{% block extra_css %}
+<style>
+    /* ── PAGE HEADER ── */
+    .um-header {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        margin-bottom: 32px;
+        gap: 16px;
+        flex-wrap: wrap;
+    }
+    .um-header-left h1 {
+        font-family: 'Playfair Display', serif;
+        font-size: clamp(1.6rem, 3vw, 2.2rem);
+        font-weight: 700;
+        color: var(--primary-900);
+        line-height: 1.2;
+        margin-bottom: 4px;
+    }
+    .um-header-left p {
+        font-size: .88rem;
+        color: var(--neutral-500);
+    }
+    .um-header-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+    /* ── STAT CARDS ── */
+    .um-stats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+        margin-bottom: 28px;
+    }
+    .um-stat-card {
+        background: var(--neutral-50);
+        border: 1px solid var(--neutral-200);
+        border-radius: var(--radius-md);
+        padding: 20px 24px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        box-shadow: var(--shadow-sm);
+        transition: box-shadow var(--transition), transform var(--transition);
+        position: relative;
+        overflow: hidden;
+    }
+    .um-stat-card::after {
+        content: '';
+        position: absolute;
+        left: 0; top: 0; bottom: 0;
+        width: 4px;
+        border-radius: 4px 0 0 4px;
+    }
+    .um-stat-card--total::after  { background: var(--primary-500); }
+    .um-stat-card--active::after { background: var(--secondary-500); }
+    .um-stat-card--inactive::after { background: var(--error-400); }
+    .um-stat-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+
+    .um-stat-icon {
+        width: 44px; height: 44px;
+        border-radius: var(--radius-sm);
+        display: flex; align-items: center; justify-content: center;
+        flex-shrink: 0;
+    }
+    .um-stat-icon--total    { background: var(--primary-50); color: var(--primary-500); }
+    .um-stat-icon--active   { background: var(--secondary-50); color: var(--secondary-600); }
+    .um-stat-icon--inactive { background: var(--error-50); color: var(--error-500); }
+
+    .um-stat-num {
+        font-family: 'Playfair Display', serif;
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: var(--primary-900);
+        line-height: 1;
+    }
+    .um-stat-label { font-size: .78rem; color: var(--neutral-500); margin-top: 3px; }
+
+    /* ── FILTER BAR ── */
+    .um-filter-bar {
+        background: var(--neutral-50);
+        border: 1px solid var(--neutral-200);
+        border-radius: var(--radius-md);
+        padding: 16px 20px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
+        margin-bottom: 20px;
+        box-shadow: var(--shadow-sm);
+    }
+    .um-search-wrap {
+        position: relative;
+        flex: 1;
+        min-width: 200px;
+    }
+    .um-search-wrap svg {
+        position: absolute;
+        left: 12px; top: 50%;
+        transform: translateY(-50%);
+        color: var(--neutral-400);
+        pointer-events: none;
+    }
+    .um-search-input {
+        width: 100%;
+        padding: 9px 14px 9px 38px;
+        border: 1.5px solid var(--neutral-200);
+        border-radius: var(--radius-sm);
+        font-family: 'Work Sans', sans-serif;
+        font-size: .88rem;
+        color: var(--primary-900);
+        background: var(--neutral-100);
+        outline: none;
+        transition: border-color var(--transition), box-shadow var(--transition), background var(--transition);
+    }
+    .um-search-input:focus {
+        border-color: var(--primary-500);
+        box-shadow: 0 0 0 3px rgba(30, 58, 138, .07);
+        background: var(--neutral-50);
+    }
+    .um-select {
+        padding: 9px 36px 9px 12px;
+        border: 1.5px solid var(--neutral-200);
+        border-radius: var(--radius-sm);
+        font-family: 'Work Sans', sans-serif;
+        font-size: .88rem;
+        color: var(--primary-900);
+        background: var(--neutral-100);
+        outline: none;
+        cursor: pointer;
+        appearance: none;
+        -webkit-appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%238c8c8c' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 10px center;
+        transition: border-color var(--transition), background-color var(--transition);
+        min-width: 140px;
+    }
+    .um-select:focus { border-color: var(--primary-500); background-color: var(--neutral-50); }
+
+    .um-filter-actions { display: flex; gap: 8px; align-items: center; }
+
+    /* ── META ROW ── */
+    .um-meta {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 12px;
+        font-size: .82rem;
+        color: var(--neutral-500);
+    }
+
+    /* ── TABLE (desktop) ── */
+    .um-table-wrap {
+        background: var(--neutral-50);
+        border: 1px solid var(--neutral-200);
+        border-radius: var(--radius-md);
+        box-shadow: var(--shadow-sm);
+        overflow: hidden;
+    }
+    .um-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    .um-table thead tr {
+        background: var(--primary-900);
+    }
+    .um-table thead th {
+        padding: 12px 16px;
+        text-align: left;
+        font-size: .7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .09em;
+        color: rgba(255,255,255,.7);
+        white-space: nowrap;
+    }
+    .um-table thead th:first-child { border-radius: var(--radius-sm) 0 0 0; }
+    .um-table thead th:last-child  { border-radius: 0 var(--radius-sm) 0 0; text-align: right; }
+
+    .um-table tbody tr {
+        border-bottom: 1px solid var(--neutral-200);
+        transition: background var(--transition);
+    }
+    .um-table tbody tr:last-child { border-bottom: none; }
+    .um-table tbody tr:hover { background: var(--primary-50); }
+    .um-table tbody tr.row--inactive { opacity: .72; }
+
+    .um-table td { padding: 14px 16px; font-size: .88rem; vertical-align: middle; }
+    .um-table td:last-child { text-align: right; }
+
+    .um-num {
+        font-size: .78rem;
+        font-weight: 700;
+        color: var(--neutral-400);
+        width: 32px;
+    }
+
+    /* Avatar */
+    .um-avatar {
+        width: 38px; height: 38px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--primary-700), var(--primary-500));
+        color: #fff;
+        font-weight: 700;
+        font-size: .88rem;
+        display: flex; align-items: center; justify-content: center;
+        flex-shrink: 0;
+    }
+    .um-user-cell { display: flex; align-items: center; gap: 12px; }
+    .um-user-name {
+        font-weight: 700;
+        color: var(--primary-900);
+        font-size: .9rem;
+    }
+    .um-user-sub { font-size: .75rem; color: var(--neutral-500); margin-top: 1px; }
+
+    /* Role badges */
+    .um-badge {
+        display: inline-block;
+        padding: 3px 10px;
+        border-radius: 20px;
+        font-size: .7rem;
+        font-weight: 700;
+        letter-spacing: .04em;
+        text-transform: uppercase;
+    }
+    .um-badge--student    { background: var(--primary-50); color: var(--primary-700); }
+    .um-badge--teacher    { background: #f0f0ff; color: #5b21b6; }
+    .um-badge--librarian  { background: var(--accent-50); color: var(--accent-800); }
+    .um-badge--superuser  { background: var(--neutral-200); color: var(--neutral-700); }
+    .um-badge--aktif      { background: var(--secondary-50); color: var(--secondary-700); }
+    .um-badge--nonaktif   { background: var(--error-50); color: var(--error-700); }
+
+    /* Action buttons in table */
+    .um-action-group { display: flex; align-items: center; gap: 8px; justify-content: flex-end; }
+    .um-btn-edit {
+        display: inline-flex; align-items: center; gap: 5px;
+        padding: 6px 14px; border-radius: var(--radius-sm);
+        font-family: 'Work Sans', sans-serif;
+        font-size: .78rem; font-weight: 700;
+        background: var(--accent-500); color: var(--primary-900);
+        border: none; cursor: pointer;
+        transition: background var(--transition), transform var(--transition);
+        text-decoration: none;
+    }
+    .um-btn-edit:hover { background: var(--accent-400); transform: translateY(-1px); }
+
+    .um-btn-deactivate {
+        display: inline-flex; align-items: center; gap: 5px;
+        padding: 6px 14px; border-radius: var(--radius-sm);
+        font-family: 'Work Sans', sans-serif;
+        font-size: .78rem; font-weight: 700;
+        background: var(--error-500); color: #fff;
+        border: none; cursor: pointer;
+        transition: background var(--transition), transform var(--transition);
+    }
+    .um-btn-deactivate:hover { background: var(--error-600); transform: translateY(-1px); }
+
+    .um-btn-activate {
+        display: inline-flex; align-items: center; gap: 5px;
+        padding: 6px 14px; border-radius: var(--radius-sm);
+        font-family: 'Work Sans', sans-serif;
+        font-size: .78rem; font-weight: 700;
+        background: var(--secondary-500); color: #fff;
+        border: none; cursor: pointer;
+        transition: background var(--transition), transform var(--transition);
+    }
+    .um-btn-activate:hover { background: var(--secondary-600); transform: translateY(-1px); }
+
+    /* ── MOBILE CARDS ── */
+    .um-card-list { display: none; flex-direction: column; gap: 12px; }
+
+    .um-card {
+        background: var(--neutral-50);
+        border: 1px solid var(--neutral-200);
+        border-radius: var(--radius-md);
+        box-shadow: var(--shadow-sm);
+        overflow: hidden;
+        transition: box-shadow var(--transition);
+    }
+    .um-card:hover { box-shadow: var(--shadow-md); }
+    .um-card--inactive { opacity: .75; }
+
+    .um-card-header {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 16px 16px 12px;
+        border-bottom: 1px solid var(--neutral-200);
+    }
+    .um-card-no {
+        width: 28px; height: 28px;
+        border-radius: 50%;
+        background: var(--primary-900);
+        color: #fff;
+        font-size: .72rem;
+        font-weight: 700;
+        display: flex; align-items: center; justify-content: center;
+        flex-shrink: 0;
+    }
+    .um-card-identity { flex: 1; min-width: 0; }
+    .um-card-name {
+        font-weight: 700;
+        font-size: .95rem;
+        color: var(--primary-900);
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .um-card-email { font-size: .75rem; color: var(--neutral-500); margin-top: 1px; }
+    .um-card-status-wrap { flex-shrink: 0; }
+
+    .um-card-body { padding: 12px 16px; display: flex; gap: 24px; flex-wrap: wrap; }
+    .um-card-meta-item { }
+    .um-card-meta-label { font-size: .65rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--neutral-400); margin-bottom: 3px; }
+    .um-card-meta-value { font-size: .82rem; font-weight: 600; color: var(--neutral-700); }
+
+    .um-card-footer {
+        padding: 10px 16px;
+        border-top: 1px solid var(--neutral-200);
+        display: flex; gap: 10px;
+        background: var(--neutral-100);
+    }
+    .um-card-footer .um-btn-edit,
+    .um-card-footer .um-btn-deactivate,
+    .um-card-footer .um-btn-activate { flex: 1; justify-content: center; }
+
+    /* ── EMPTY STATE ── */
+    .um-empty {
+        text-align: center;
+        padding: 72px 24px;
+        background: var(--neutral-50);
+        border: 1px solid var(--neutral-200);
+        border-radius: var(--radius-md);
+    }
+    .um-empty-icon {
+        width: 72px; height: 72px;
+        background: var(--primary-50);
+        border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        margin: 0 auto 20px;
+        font-size: 2rem;
+    }
+    .um-empty h3 { font-family: 'Playfair Display', serif; font-size: 1.2rem; color: var(--primary-900); margin-bottom: 8px; }
+    .um-empty p  { font-size: .88rem; color: var(--neutral-500); margin-bottom: 20px; }
+
+    /* ── PAGINATION ── */
+    .um-pagination {
+        display: flex; justify-content: center; align-items: center;
+        gap: 6px; margin-top: 28px;
+    }
+    .um-page-btn {
+        display: inline-flex; align-items: center; justify-content: center;
+        min-width: 38px; height: 38px;
+        border-radius: var(--radius-sm);
+        font-family: 'Work Sans', sans-serif;
+        font-size: .88rem; font-weight: 700;
+        border: 1.5px solid var(--neutral-200);
+        color: var(--primary-900);
+        background: var(--neutral-50);
+        transition: all var(--transition);
+        text-decoration: none;
+        padding: 0 10px;
+    }
+    .um-page-btn:hover { background: var(--primary-900); color: #fff; border-color: var(--primary-900); }
+    .um-page-btn--active { background: var(--primary-900); color: #fff; border-color: var(--primary-900); }
+
+    /* ── MODAL override (using design system classes) ── */
+    .um-modal-icon {
+        width: 48px; height: 48px;
+        border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.4rem;
+        margin-bottom: 16px;
+    }
+    .um-modal-icon--danger   { background: var(--error-50); color: var(--error-600); }
+    .um-modal-icon--success  { background: var(--secondary-50); color: var(--secondary-600); }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 900px) {
+        .um-stats { grid-template-columns: repeat(3, 1fr); }
+    }
+    @media (max-width: 768px) {
+        .um-stats { grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+        .um-stat-card { padding: 14px 14px; gap: 10px; }
+        .um-stat-num { font-size: 1.4rem; }
+        .um-table-wrap { display: none; }
+        .um-card-list { display: flex; }
+    }
+    @media (max-width: 540px) {
+        .um-stats { grid-template-columns: 1fr; }
+        .um-header { flex-direction: column; align-items: flex-start; }
+        .um-filter-bar { flex-direction: column; align-items: stretch; }
+        .um-search-wrap { min-width: unset; }
+        .um-select { min-width: unset; }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-    <div class="max-w-6xl mx-auto px-6 py-8">
+<div class="main-content">
 
-        <!-- Header -->
-        <div class="flex items-center justify-between mb-6">
-            <h1 class="text-3xl font-bold text-gray-800" style="font-family:'Playfair Display',serif">Manajemen Pengguna</h1>
-            {% if is_librarian %}
-                <a href="{% url 'user:user_create' %}"
-                   class="inline-flex items-center gap-2 bg-gray-800 hover:bg-gray-700 text-white text-sm font-semibold px-5 py-2.5 rounded-lg transition">
-                    + Tambah Pengguna
-                </a>
-            {% endif %}
+    <!-- Header -->
+    <div class="um-header">
+        <div class="um-header-left">
+            <h1>Manajemen Pengguna</h1>
+            <p>Kelola semua pengguna perpustakaan NASA Library</p>
         </div>
-
-        <!-- Pesan -->
-        {% if messages %}
-            {% for msg in messages %}
-                <div class="mb-4 px-4 py-3 rounded-lg text-sm font-medium
-                    {% if 'success' in msg.tags %}bg-green-50 text-green-700 border border-green-200
-                    {% elif 'error' in msg.tags %}bg-red-50 text-red-700 border border-red-200
-                    {% else %}bg-gray-50 text-gray-700 border border-gray-200{% endif %}">
-                    {{ msg }}
-                </div>
-            {% endfor %}
+        {% if is_librarian %}
+        <div class="um-header-actions">
+            <a href="{% url 'authentication:batch_import_students' %}" class="btn btn-secondary btn-sm">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1M8 12l4 4 4-4M12 4v12"/></svg>
+                Batch Import
+            </a>
+            <a href="{% url 'user:user_create' %}" class="btn btn-primary btn-sm">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Tambah Pengguna
+            </a>
+        </div>
         {% endif %}
+    </div>
 
-        <!-- Filter & Pencarian -->
-        <form method="get" class="flex flex-wrap gap-3 items-center bg-white border border-gray-200 rounded-xl px-5 py-4 shadow-sm mb-5">
-            <div class="relative flex-1 min-w-[220px]">
-                <svg class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
-                     xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
-                     fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-                </svg>
-                <input type="text" name="search" value="{{ request.GET.search }}"
-                       placeholder="Cari nama atau username…"
-                       class="w-full pl-9 pr-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-gray-500 bg-gray-50">
+    <!-- Messages -->
+    {% if messages %}
+    {% for msg in messages %}
+    <div class="toast {% if 'success' in msg.tags %}toast--success{% elif 'error' in msg.tags %}toast--error{% endif %}" style="position:relative;top:auto;right:auto;margin-bottom:16px;max-width:100%;">
+        <span>{{ msg }}</span>
+    </div>
+    {% endfor %}
+    {% endif %}
+
+    <!-- Stat Cards -->
+    <div class="um-stats">
+        <div class="um-stat-card um-stat-card--total">
+            <div class="um-stat-icon um-stat-icon--total">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
             </div>
-            <select name="role"
-                    class="px-3 py-2.5 border border-gray-200 rounded-lg text-sm bg-gray-50 focus:outline-none focus:border-gray-500 cursor-pointer">
-                <option value="">Semua Role</option>
-                <option value="student"   {% if request.GET.role == 'student'   %}selected{% endif %}>Siswa</option>
-                <option value="teacher"   {% if request.GET.role == 'teacher'   %}selected{% endif %}>Guru</option>
-                <option value="librarian" {% if request.GET.role == 'librarian' %}selected{% endif %}>Petugas Perpustakaan</option>
-            </select>
-            <select name="is_active"
-                    class="px-3 py-2.5 border border-gray-200 rounded-lg text-sm bg-gray-50 focus:outline-none focus:border-gray-500 cursor-pointer">
-                <option value="">Semua Status</option>
-                <option value="true"  {% if request.GET.is_active == 'true'  %}selected{% endif %}>Aktif</option>
-                <option value="false" {% if request.GET.is_active == 'false' %}selected{% endif %}>Nonaktif</option>
-            </select>
-            <button type="submit"
-                    class="bg-gray-800 hover:bg-gray-700 text-white text-sm font-semibold px-5 py-2.5 rounded-lg transition">
-                Cari
-            </button>
+            <div>
+                <div class="um-stat-num">{{ page_obj.paginator.count }}</div>
+                <div class="um-stat-label">Total Pengguna</div>
+            </div>
+        </div>
+        <div class="um-stat-card um-stat-card--active">
+            <div class="um-stat-icon um-stat-icon--active">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><polyline points="16 11 18 13 22 9"/></svg>
+            </div>
+            <div>
+                <div class="um-stat-num">{{ active_count|default:"—" }}</div>
+                <div class="um-stat-label">Pengguna Aktif</div>
+            </div>
+        </div>
+        <div class="um-stat-card um-stat-card--inactive">
+            <div class="um-stat-icon um-stat-icon--inactive">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="18" y1="8" x2="23" y2="13"/><line x1="23" y1="8" x2="18" y2="13"/></svg>
+            </div>
+            <div>
+                <div class="um-stat-num">{{ inactive_count|default:"—" }}</div>
+                <div class="um-stat-label">Pengguna Nonaktif</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Bar -->
+    <form method="get" class="um-filter-bar">
+        <div class="um-search-wrap">
+            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            <input type="text" name="search" value="{{ request.GET.search }}"
+                   placeholder="Cari nama atau username…"
+                   class="um-search-input">
+        </div>
+        <select name="role" class="um-select">
+            <option value="">Semua Peran</option>
+            <option value="student"   {% if request.GET.role == 'student'   %}selected{% endif %}>Siswa</option>
+            <option value="teacher"   {% if request.GET.role == 'teacher'   %}selected{% endif %}>Guru</option>
+            <option value="librarian" {% if request.GET.role == 'librarian' %}selected{% endif %}>Petugas Perpustakaan</option>
+        </select>
+        <select name="is_active" class="um-select">
+            <option value="">Semua Status</option>
+            <option value="true"  {% if request.GET.is_active == 'true'  %}selected{% endif %}>Aktif</option>
+            <option value="false" {% if request.GET.is_active == 'false' %}selected{% endif %}>Nonaktif</option>
+        </select>
+        <div class="um-filter-actions">
+            <button type="submit" class="btn btn-primary btn-sm">Terapkan</button>
             {% if request.GET.search or request.GET.role or request.GET.is_active %}
-                <a href="{% url 'user:user_list' %}"
-                   class="text-sm text-gray-500 hover:text-gray-800 border border-gray-200 px-4 py-2.5 rounded-lg transition">
-                    Reset
-                </a>
+            <a href="{% url 'user:user_list' %}" class="btn btn-ghost btn-sm">Reset</a>
             {% endif %}
-        </form>
+        </div>
+    </form>
 
-        <p class="text-xs text-gray-400 mb-4">{{ page_obj.paginator.count }} pengguna ditemukan</p>
+    <!-- Meta -->
+    <div class="um-meta">
+        <span>Menampilkan <strong>{{ page_obj.paginator.count }}</strong> dari <strong>{{ page_obj.paginator.count }}</strong> pengguna</span>
+        {% if page_obj.has_other_pages %}
+        <span>Halaman <strong>{{ page_obj.number }}</strong> / {{ page_obj.paginator.num_pages }}</span>
+        {% endif %}
+    </div>
 
-        <!-- Daftar Pengguna -->
-        {% if page_obj %}
-            <div class="flex flex-col gap-1">
-                {% for u in page_obj %}
-                    <div class="flex items-center gap-4 bg-white border border-gray-100 rounded-lg px-4 py-3 hover:bg-gray-50 hover:border-gray-300 transition-all duration-150 group">
-
-                        <!-- Avatar -->
-                        <div class="w-10 h-10 flex-shrink-0 rounded-full bg-gradient-to-br from-gray-700 to-gray-500 flex items-center justify-center text-white font-bold text-sm{% if not u.is_active %} opacity-50{% endif %}">
-                            {{ u.first_name|make_list|first|upper }}
-                        </div>
-
-                        <!-- Info -->
-                        <div class="flex-1 min-w-0{% if not u.is_active %} opacity-50{% endif %}">
-                            <p class="text-sm font-semibold text-gray-800 truncate">
+    <!-- Desktop Table -->
+    {% if page_obj %}
+    <div class="um-table-wrap">
+        <table class="um-table">
+            <thead>
+            <tr>
+                <th style="width:48px;">No</th>
+                <th>Nama Pengguna</th>
+                <th>NIS</th>
+                <th>Peran</th>
+                <th>Status</th>
+                {% if is_librarian %}<th>Aksi</th>{% endif %}
+            </tr>
+            </thead>
+            <tbody>
+            {% for u in page_obj %}
+            <tr class="{% if not u.is_active %}row--inactive{% endif %}">
+                <td class="um-num">{{ forloop.counter|add:page_obj.start_index|add:"-1" }}</td>
+                <td>
+                    <div class="um-user-cell">
+                        <div class="um-avatar">{{ u.first_name|make_list|first|upper }}</div>
+                        <div>
+                            <div class="um-user-name">
                                 {{ u.first_name }} {{ u.last_name }}
-                                {% if u.is_superuser %}
-                                    <span class="ml-1 text-xs bg-gray-800 text-white px-2 py-0.5 rounded-full font-semibold">Admin</span>
-                                {% endif %}
-                            </p>
-                            <p class="text-xs text-gray-500 mt-0.5">
-                                {{ u.username }}
-                                {% if u.profile.nis %}<span class="text-gray-300 mx-1">·</span>NIS {{ u.profile.nis }}{% endif %}
-                                {% if u.profile.kelas %}<span class="text-gray-300 mx-1">·</span>{{ u.profile.kelas }}{% endif %}
-                            </p>
-                        </div>
-
-                        <!-- Badge Role -->
-                        <div class="flex-shrink-0">
-                            {% if u.is_superuser %}
-                                <span class="text-xs bg-gray-100 text-gray-700 px-2.5 py-0.5 rounded-full font-semibold">Superuser</span>
-                            {% elif u.profile.role == 'student' %}
-                                <span class="text-xs bg-blue-50 text-blue-700 px-2.5 py-0.5 rounded-full font-semibold">Siswa</span>
-                            {% elif u.profile.role == 'teacher' %}
-                                <span class="text-xs bg-purple-50 text-purple-700 px-2.5 py-0.5 rounded-full font-semibold">Guru</span>
-                            {% elif u.profile.role == 'librarian' %}
-                                <span class="text-xs bg-amber-50 text-amber-700 px-2.5 py-0.5 rounded-full font-semibold">Petugas</span>
-                            {% endif %}
-                        </div>
-
-                        <!-- Badge Status -->
-                        <div class="flex-shrink-0">
-                            {% if u.is_active %}
-                                <span class="text-xs bg-green-50 text-green-700 px-2.5 py-0.5 rounded-full font-semibold">Aktif</span>
-                            {% else %}
-                                <span class="text-xs bg-red-50 text-red-700 px-2.5 py-0.5 rounded-full font-semibold">Nonaktif</span>
-                            {% endif %}
-                        </div>
-
-                        <!-- Aksi -->
-                        {% if is_librarian %}
-                            <div class="flex items-center gap-2 flex-shrink-0">
-                                <a href="{% url 'user:user_update' u.pk %}"
-                                   class="text-xs font-semibold text-gray-600 border border-gray-200 px-3 py-1.5 rounded-lg hover:bg-gray-800 hover:text-white hover:border-gray-800 transition">
-                                    Edit
-                                </a>
-
-                                {% if u.is_active and u != request.user and not u.is_superuser %}
-                                    <!-- Tombol Nonaktifkan -->
-                                    <button type="button"
-                                            class="deactivate-btn text-xs font-semibold text-red-600 border border-red-200 px-3 py-1.5 rounded-lg hover:bg-red-600 hover:text-white hover:border-red-600 transition"
-                                            data-url="{% url 'user:user_deactivate' u.pk %}"
-                                            data-name="{{ u.first_name }} {{ u.last_name }}">
-                                        Nonaktifkan
-                                    </button>
-                                {% endif %}
-
-                                {% if not u.is_active and not u.is_superuser %}
-                                    <!-- Tombol Aktifkan Kembali -->
-                                    <button type="button"
-                                            class="activate-btn text-xs font-semibold text-green-700 border border-green-300 px-3 py-1.5 rounded-lg hover:bg-green-600 hover:text-white hover:border-green-600 transition"
-                                            data-url="{% url 'user:user_activate' u.pk %}"
-                                            data-name="{{ u.first_name }} {{ u.last_name }}">
-                                        Aktifkan
-                                    </button>
-                                {% endif %}
+                                {% if u.is_superuser %}<span class="um-badge um-badge--superuser" style="margin-left:6px;">Admin</span>{% endif %}
                             </div>
-                        {% endif %}
-
+                            <div class="um-user-sub">{{ u.username }}{% if u.email %} · {{ u.email }}{% endif %}</div>
+                        </div>
                     </div>
-                {% endfor %}
-            </div>
-
-            <!-- Pagination -->
-            {% if page_obj.has_other_pages %}
-                <div class="flex gap-1.5 justify-center mt-8">
-                    {% if page_obj.has_previous %}
-                        <a href="?page={{ page_obj.previous_page_number }}&search={{ request.GET.search }}&role={{ request.GET.role }}&is_active={{ request.GET.is_active }}"
-                           class="px-4 py-2 text-sm font-semibold bg-white border border-gray-200 rounded-lg text-gray-700 hover:bg-gray-800 hover:text-white transition">‹ Sebelumnya</a>
+                </td>
+                <td style="color:var(--neutral-600);font-size:.85rem;">
+                    {% if u.profile.nis %}{{ u.profile.nis }}{% else %}<span style="color:var(--neutral-300)">—</span>{% endif %}
+                    {% if u.profile.kelas %}<br><span style="font-size:.75rem;color:var(--neutral-400);">{{ u.profile.kelas }}</span>{% endif %}
+                </td>
+                <td>
+                    {% if u.is_superuser %}
+                    <span class="um-badge um-badge--superuser">Superuser</span>
+                    {% elif u.profile.role == 'student' %}
+                    <span class="um-badge um-badge--student">Siswa</span>
+                    {% elif u.profile.role == 'teacher' %}
+                    <span class="um-badge um-badge--teacher">Guru</span>
+                    {% elif u.profile.role == 'librarian' %}
+                    <span class="um-badge um-badge--librarian">Petugas</span>
                     {% endif %}
-                    {% for num in page_obj.paginator.page_range %}
-                        {% if page_obj.number == num %}
-                            <span class="px-4 py-2 text-sm font-semibold bg-gray-800 text-white rounded-lg">{{ num }}</span>
-                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
-                            <a href="?page={{ num }}&search={{ request.GET.search }}&role={{ request.GET.role }}&is_active={{ request.GET.is_active }}"
-                               class="px-4 py-2 text-sm font-semibold bg-white border border-gray-200 rounded-lg text-gray-700 hover:bg-gray-800 hover:text-white transition">{{ num }}</a>
+                </td>
+                <td>
+                    {% if u.is_active %}
+                    <span class="um-badge um-badge--aktif">Aktif</span>
+                    {% else %}
+                    <span class="um-badge um-badge--nonaktif">Nonaktif</span>
+                    {% endif %}
+                </td>
+                {% if is_librarian %}
+                <td>
+                    <div class="um-action-group">
+                        <a href="{% url 'user:user_update' u.pk %}" class="um-btn-edit">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                            Edit
+                        </a>
+                        {% if u.is_active and u != request.user and not u.is_superuser %}
+                        <button type="button" class="um-btn-deactivate deactivate-btn"
+                                data-url="{% url 'user:user_deactivate' u.pk %}"
+                                data-name="{{ u.first_name }} {{ u.last_name }}">
+                            Nonaktifkan
+                        </button>
                         {% endif %}
-                    {% endfor %}
-                    {% if page_obj.has_next %}
-                        <a href="?page={{ page_obj.next_page_number }}&search={{ request.GET.search }}&role={{ request.GET.role }}&is_active={{ request.GET.is_active }}"
-                           class="px-4 py-2 text-sm font-semibold bg-white border border-gray-200 rounded-lg text-gray-700 hover:bg-gray-800 hover:text-white transition">Selanjutnya ›</a>
+                        {% if not u.is_active and not u.is_superuser %}
+                        <button type="button" class="um-btn-activate activate-btn"
+                                data-url="{% url 'user:user_activate' u.pk %}"
+                                data-name="{{ u.first_name }} {{ u.last_name }}">
+                            Aktifkan
+                        </button>
+                        {% endif %}
+                    </div>
+                </td>
+                {% endif %}
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Mobile Cards -->
+    <div class="um-card-list">
+        {% for u in page_obj %}
+        <div class="um-card {% if not u.is_active %}um-card--inactive{% endif %}">
+            <div class="um-card-header">
+                <div class="um-card-no">{{ forloop.counter }}</div>
+                <div class="um-avatar">{{ u.first_name|make_list|first|upper }}</div>
+                <div class="um-card-identity">
+                    <div class="um-card-name">{{ u.first_name }} {{ u.last_name }}</div>
+                    <div class="um-card-email">{{ u.username }}{% if u.email %} · {{ u.email }}{% endif %}</div>
+                </div>
+                <div class="um-card-status-wrap">
+                    {% if u.is_active %}
+                    <span class="um-badge um-badge--aktif">Aktif</span>
+                    {% else %}
+                    <span class="um-badge um-badge--nonaktif">Nonaktif</span>
                     {% endif %}
                 </div>
-            {% endif %}
-
-        {% else %}
-            <div class="text-center py-24 text-gray-400">
-                <div class="text-5xl mb-4">👤</div>
-                <p class="text-base mb-5">Tidak ada pengguna ditemukan.</p>
-                <a href="{% url 'user:user_list' %}"
-                   class="inline-block border border-gray-200 text-gray-600 text-sm px-5 py-2.5 rounded-lg hover:bg-gray-100 transition">
-                    Tampilkan semua pengguna
+            </div>
+            <div class="um-card-body">
+                <div class="um-card-meta-item">
+                    <div class="um-card-meta-label">NIS</div>
+                    <div class="um-card-meta-value">{% if u.profile.nis %}{{ u.profile.nis }}{% else %}—{% endif %}</div>
+                </div>
+                <div class="um-card-meta-item">
+                    <div class="um-card-meta-label">Peran</div>
+                    <div class="um-card-meta-value">
+                        {% if u.is_superuser %}
+                        <span class="um-badge um-badge--superuser">Superuser</span>
+                        {% elif u.profile.role == 'student' %}
+                        <span class="um-badge um-badge--student">Siswa</span>
+                        {% elif u.profile.role == 'teacher' %}
+                        <span class="um-badge um-badge--teacher">Guru</span>
+                        {% elif u.profile.role == 'librarian' %}
+                        <span class="um-badge um-badge--librarian">Petugas</span>
+                        {% endif %}
+                    </div>
+                </div>
+                {% if u.profile.kelas %}
+                <div class="um-card-meta-item">
+                    <div class="um-card-meta-label">Kelas</div>
+                    <div class="um-card-meta-value">{{ u.profile.kelas }}</div>
+                </div>
+                {% endif %}
+            </div>
+            {% if is_librarian %}
+            <div class="um-card-footer">
+                <a href="{% url 'user:user_update' u.pk %}" class="um-btn-edit">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    Edit
                 </a>
+                {% if u.is_active and u != request.user and not u.is_superuser %}
+                <button type="button" class="um-btn-deactivate deactivate-btn"
+                        data-url="{% url 'user:user_deactivate' u.pk %}"
+                        data-name="{{ u.first_name }} {{ u.last_name }}">
+                    Nonaktifkan
+                </button>
+                {% endif %}
+                {% if not u.is_active and not u.is_superuser %}
+                <button type="button" class="um-btn-activate activate-btn"
+                        data-url="{% url 'user:user_activate' u.pk %}"
+                        data-name="{{ u.first_name }} {{ u.last_name }}">
+                    Aktifkan
+                </button>
+                {% endif %}
             </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if page_obj.has_other_pages %}
+    <div class="um-pagination">
+        {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}&search={{ request.GET.search }}&role={{ request.GET.role }}&is_active={{ request.GET.is_active }}"
+           class="um-page-btn">‹</a>
         {% endif %}
-
+        {% for num in page_obj.paginator.page_range %}
+        {% if page_obj.number == num %}
+        <span class="um-page-btn um-page-btn--active">{{ num }}</span>
+        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+        <a href="?page={{ num }}&search={{ request.GET.search }}&role={{ request.GET.role }}&is_active={{ request.GET.is_active }}"
+           class="um-page-btn">{{ num }}</a>
+        {% endif %}
+        {% endfor %}
+        {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}&search={{ request.GET.search }}&role={{ request.GET.role }}&is_active={{ request.GET.is_active }}"
+           class="um-page-btn">›</a>
+        {% endif %}
     </div>
+    {% endif %}
 
-    <!-- Modal Konfirmasi Nonaktifkan -->
-    <div id="deactivateModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40">
-        <div class="bg-white rounded-xl shadow-xl w-full max-w-md mx-4 p-6">
-            <div class="flex items-center gap-3 mb-3">
-                <div class="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center text-red-600 text-lg">⚠️</div>
-                <h2 class="text-lg font-bold text-gray-800">Nonaktifkan Pengguna</h2>
-            </div>
-            <p class="text-sm text-gray-500 mb-6">
-                Yakin ingin menonaktifkan <span id="deactivateNama" class="font-semibold text-gray-800"></span>?
-                Pengguna tidak akan bisa login setelah dinonaktifkan.
-            </p>
-            <div class="flex gap-3 justify-end">
-                <button onclick="closeDeactivate()"
-                        class="px-4 py-2 text-sm font-semibold border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50 transition">
-                    Batal
-                </button>
-                <form id="deactivateForm" method="post">
-                    {% csrf_token %}
-                    <button type="submit"
-                            class="px-4 py-2 text-sm font-semibold bg-red-600 hover:bg-red-700 text-white rounded-lg transition">
-                        Nonaktifkan
-                    </button>
-                </form>
-            </div>
+    {% else %}
+    <!-- Empty State -->
+    <div class="um-empty">
+        <div class="um-empty-icon">👤</div>
+        <h3>Tidak Ada Pengguna</h3>
+        <p>Tidak ada pengguna yang cocok dengan filter saat ini.</p>
+        <a href="{% url 'user:user_list' %}" class="btn btn-ghost btn-sm">Tampilkan semua pengguna</a>
+    </div>
+    {% endif %}
+
+</div>
+
+<!-- Modal Nonaktifkan -->
+<div id="deactivateModal" class="modal-overlay">
+    <div class="modal">
+        <div class="um-modal-icon um-modal-icon--danger">⚠️</div>
+        <h3 style="font-family:'Playfair Display',serif;font-size:1.2rem;margin-bottom:10px;color:var(--primary-900);">Nonaktifkan Pengguna</h3>
+        <p style="color:var(--neutral-500);font-size:.9rem;line-height:1.5;">
+            Yakin ingin menonaktifkan <strong id="deactivateNama" style="color:var(--primary-900);"></strong>?
+            Pengguna tidak akan bisa login setelah dinonaktifkan.
+        </p>
+        <div class="modal-actions">
+            <button onclick="closeDeactivate()" class="btn btn-ghost btn-sm">Batal</button>
+            <form id="deactivateForm" method="post" style="margin:0;">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger btn-sm">Nonaktifkan</button>
+            </form>
         </div>
     </div>
+</div>
 
-    <!-- Modal Konfirmasi Aktifkan Kembali -->
-    <div id="activateModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40">
-        <div class="bg-white rounded-xl shadow-xl w-full max-w-md mx-4 p-6">
-            <div class="flex items-center gap-3 mb-3">
-                <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600 text-lg">✅</div>
-                <h2 class="text-lg font-bold text-gray-800">Aktifkan Kembali Pengguna</h2>
-            </div>
-            <p class="text-sm text-gray-500 mb-6">
-                Yakin ingin mengaktifkan kembali <span id="activateNama" class="font-semibold text-gray-800"></span>?
-                Pengguna akan dapat login dan menggunakan layanan perpustakaan kembali.
-            </p>
-            <div class="flex gap-3 justify-end">
-                <button onclick="closeActivate()"
-                        class="px-4 py-2 text-sm font-semibold border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50 transition">
-                    Batal
-                </button>
-                <form id="activateForm" method="post">
-                    {% csrf_token %}
-                    <button type="submit"
-                            class="px-4 py-2 text-sm font-semibold bg-green-600 hover:bg-green-700 text-white rounded-lg transition">
-                        Aktifkan Kembali
-                    </button>
-                </form>
-            </div>
+<!-- Modal Aktifkan -->
+<div id="activateModal" class="modal-overlay">
+    <div class="modal">
+        <div class="um-modal-icon um-modal-icon--success">✅</div>
+        <h3 style="font-family:'Playfair Display',serif;font-size:1.2rem;margin-bottom:10px;color:var(--primary-900);">Aktifkan Kembali Pengguna</h3>
+        <p style="color:var(--neutral-500);font-size:.9rem;line-height:1.5;">
+            Yakin ingin mengaktifkan kembali <strong id="activateNama" style="color:var(--primary-900);"></strong>?
+            Pengguna akan dapat login dan menggunakan layanan perpustakaan kembali.
+        </p>
+        <div class="modal-actions">
+            <button onclick="closeActivate()" class="btn btn-ghost btn-sm">Batal</button>
+            <form id="activateForm" method="post" style="margin:0;">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-sm" style="background:var(--secondary-500);color:#fff;border-color:var(--secondary-500);">Aktifkan Kembali</button>
+            </form>
         </div>
     </div>
+</div>
 
-    <script>
-        // Deactivate modal
-        function openDeactivate(url, nama) {
-            document.getElementById('deactivateNama').textContent = nama;
-            document.getElementById('deactivateForm').action = url;
-            document.getElementById('deactivateModal').classList.remove('hidden');
-            document.getElementById('deactivateModal').classList.add('flex');
-        }
-        function closeDeactivate() {
-            document.getElementById('deactivateModal').classList.add('hidden');
-            document.getElementById('deactivateModal').classList.remove('flex');
-        }
-        document.getElementById('deactivateModal').addEventListener('click', function(e) {
-            if (e.target === this) closeDeactivate();
-        });
+<script>
+    function openDeactivate(url, nama) {
+        document.getElementById('deactivateNama').textContent = nama;
+        document.getElementById('deactivateForm').action = url;
+        document.getElementById('deactivateModal').classList.add('open');
+    }
+    function closeDeactivate() {
+        document.getElementById('deactivateModal').classList.remove('open');
+    }
+    document.getElementById('deactivateModal').addEventListener('click', function(e) {
+        if (e.target === this) closeDeactivate();
+    });
 
-        // Activate modal
-        function openActivate(url, nama) {
-            document.getElementById('activateNama').textContent = nama;
-            document.getElementById('activateForm').action = url;
-            document.getElementById('activateModal').classList.remove('hidden');
-            document.getElementById('activateModal').classList.add('flex');
-        }
-        function closeActivate() {
-            document.getElementById('activateModal').classList.add('hidden');
-            document.getElementById('activateModal').classList.remove('flex');
-        }
-        document.getElementById('activateModal').addEventListener('click', function(e) {
-            if (e.target === this) closeActivate();
-        });
+    function openActivate(url, nama) {
+        document.getElementById('activateNama').textContent = nama;
+        document.getElementById('activateForm').action = url;
+        document.getElementById('activateModal').classList.add('open');
+    }
+    function closeActivate() {
+        document.getElementById('activateModal').classList.remove('open');
+    }
+    document.getElementById('activateModal').addEventListener('click', function(e) {
+        if (e.target === this) closeActivate();
+    });
 
-        // Handle deactivate button clicks via data attributes
-        document.addEventListener('DOMContentLoaded', function() {
-            document.querySelectorAll('.deactivate-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    openDeactivate(this.dataset.url, this.dataset.name);
-                });
-            });
-
-            document.querySelectorAll('.activate-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    openActivate(this.dataset.url, this.dataset.name);
-                });
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.deactivate-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                openDeactivate(this.dataset.url, this.dataset.name);
             });
         });
-    </script>
+        document.querySelectorAll('.activate-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                openActivate(this.dataset.url, this.dataset.name);
+            });
+        });
+    });
+</script>
 {% endblock %}

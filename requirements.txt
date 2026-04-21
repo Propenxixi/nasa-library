@@ -8,4 +8,4 @@ openpyxl
 django-crontab
 python-dotenv
 dj-database-url
-
+reportlab

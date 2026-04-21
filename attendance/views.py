@@ -458,6 +458,19 @@ def api_checkout(request):
         check_in_local = timezone.localtime(active_attendance.check_in_time)
         check_out_local = timezone.localtime(active_attendance.check_out_time)
         
+        # Get activities
+        activities = []
+        for activity in active_attendance.activities.all():
+            activities.append({
+                'name': activity.name,
+                'emoji': activity.emoji
+            })
+        if active_attendance.custom_activity:
+            activities.append({
+                'name': active_attendance.custom_activity,
+                'emoji': '✍️'
+            })
+        
         return JsonResponse({
             'status': 'success',
             'message': f'Thank you for visiting! See you soon! 📚',
@@ -468,6 +481,7 @@ def api_checkout(request):
             'check_out_time_formatted': check_out_local.strftime('%H:%M'),
             'duration_minutes': active_attendance.duration_minutes,
             'duration_display': active_attendance.duration_display,
+            'activities': activities,
         }, status=200)
         
     except Exception as e:

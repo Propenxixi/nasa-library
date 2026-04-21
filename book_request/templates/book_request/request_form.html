@@ -3,116 +3,401 @@
 {% block title %}Ajukan Usulan Buku — NASA Library{% endblock %}
 
 {% block content %}
-<div class="min-h-screen bg-gradient-to-br from-white via-gray-50 to-white">
-  <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
 
-    <!-- Header -->
-    <div class="mb-10">
-      <a href="{% url 'book_request:request_list' %}"
-         class="inline-flex items-center gap-2 text-sm font-sans text-gray-500 hover:text-gray-900 transition-colors mb-4">
-        ← Kembali ke Riwayat Saya
-      </a>
-      <h1 class="font-display text-4xl md:text-5xl font-bold text-gray-900">📖 Ajukan Usulan Buku</h1>
-      <p class="font-sans text-gray-600 mt-2">Beritahu kami buku apa yang ingin Anda lihat di perpustakaan</p>
-    </div>
+<style>
+  :root {
+    --yellow:    #F8BE5C;
+    --green:     #0FA875;
+    --red:       #d93e3e;
+    --green-pop: #e7f8f2;
+    --red-pop:   #fdecec;
+    --table-bg:  #E9EBF3;
+    --gray-ui:   #595959;
+    --blue:      #1E3A8A;
+    --blue-mid:  #3B5FCC;
+    --blue-light:#EEF2FF;
+  }
 
-    <!-- Info Banner -->
-    <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-8 flex gap-3">
-      <span class="text-2xl flex-shrink-0">💡</span>
+  .rf-page {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #f0f4ff 0%, #ffffff 50%, #f0f4ff 100%);
+    font-family: 'Segoe UI', system-ui, sans-serif;
+  }
+
+  .rf-container {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 2.5rem 1.5rem;
+  }
+
+  /* ── Back link ── */
+  .rf-back {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    font-size: .85rem;
+    font-weight: 600;
+    color: var(--gray-ui);
+    text-decoration: none;
+    margin-bottom: 1rem;
+    transition: color .15s;
+  }
+  .rf-back:hover { color: var(--blue); }
+
+  /* ── Page title ── */
+  .rf-title {
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--blue);
+    letter-spacing: -.03em;
+    margin: 0 0 .3rem;
+    text-align: center;
+  }
+
+  .rf-subtitle {
+    font-size: .9rem;
+    color: var(--gray-ui);
+    margin: 0 0 1.5rem;
+    text-align: center;
+  }
+
+  /* ── Info banner ── */
+  .rf-banner {
+    background: #E7F8F2;
+    border: 1.5px solid #a3e9cf;
+    border-radius: .875rem;
+    padding: .9rem 1.1rem;
+    display: flex;
+    gap: .75rem;
+    margin-bottom: 1.75rem;
+  }
+
+  .rf-banner__icon { font-size: 1.4rem; flex-shrink: 0; }
+
+  .rf-banner__title {
+    font-size: .8rem;
+    font-weight: 700;
+    color: #0a7a55;
+    margin: 0 0 .2rem;
+  }
+
+  .rf-banner__text {
+    font-size: .82rem;
+    color: #0a6647;
+    margin: 0;
+    line-height: 1.55;
+  }
+
+  /* ── Form card ── */
+  .rf-card {
+    background: #fff;
+    border-radius: 1.25rem;
+    box-shadow: 0 4px 24px rgba(30,58,138,.09);
+    border: 1.5px solid var(--table-bg);
+    padding: 2rem;
+  }
+
+  /* ── Field ── */
+  .rf-field { margin-bottom: 1.4rem; }
+
+  .rf-label {
+    display: block;
+    font-size: .82rem;
+    font-weight: 700;
+    color: #111827;
+    margin-bottom: .45rem;
+  }
+
+  .rf-label .req { color: var(--red); }
+  .rf-label .opt { color: #9ca3af; font-weight: 400; }
+
+  .rf-input,
+  .rf-textarea {
+    width: 100%;
+    padding: .7rem 1rem;
+    border: 1.5px solid #d1d5db;
+    border-radius: .75rem;
+    font-size: .9rem;
+    font-family: inherit;
+    color: #111827;
+    background: #fff;
+    transition: border-color .15s, box-shadow .15s;
+    box-sizing: border-box;
+  }
+
+  .rf-input:focus,
+  .rf-textarea:focus {
+    outline: none;
+    border-color: var(--blue);
+    box-shadow: 0 0 0 3px rgba(30,58,138,.1);
+  }
+
+  .rf-input.error,
+  .rf-textarea.error {
+    border-color: var(--red);
+    background: #fff7f7;
+  }
+
+  .rf-textarea { resize: none; }
+
+  .rf-error { font-size: .78rem; color: var(--red); margin-top: .3rem; }
+
+  .rf-counter-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: .3rem;
+  }
+
+  .rf-hint { font-size: .75rem; color: #9ca3af; }
+
+  .rf-count { font-size: .75rem; color: var(--gray-ui); }
+  .rf-count span { font-weight: 700; }
+
+  /* ── Actions ── */
+  .rf-actions {
+    display: flex;
+    gap: .75rem;
+    margin-top: 1.75rem;
+  }
+
+  .rf-btn-submit {
+    flex: 1;
+    padding: .8rem 1.25rem;
+    background: var(--blue);
+    color: #fff;
+    font-weight: 700;
+    font-size: .9rem;
+    border: none;
+    border-radius: .875rem;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(30,58,138,.28);
+    transition: background .15s, transform .1s;
+  }
+  .rf-btn-submit:hover { background: #162f73; transform: translateY(-1px); }
+
+  .rf-btn-cancel {
+    flex: 1;
+    padding: .8rem 1.25rem;
+    background: var(--table-bg);
+    color: var(--gray-ui);
+    font-weight: 700;
+    font-size: .9rem;
+    border-radius: .875rem;
+    text-decoration: none;
+    text-align: center;
+    transition: background .15s;
+  }
+  .rf-btn-cancel:hover { background: #d1d5db; }
+
+  /* ══════════════════════════════════════
+     DUPLICATE MODAL
+  ══════════════════════════════════════ */
+  .dup-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+  }
+  .dup-overlay.active { display: flex; }
+
+  .dup-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,.45);
+    backdrop-filter: blur(4px);
+  }
+
+  .dup-card {
+    position: relative;
+    background: #fff;
+    border-radius: 1.25rem;
+    box-shadow: 0 20px 60px rgba(0,0,0,.22);
+    max-width: 360px;
+    width: 100%;
+    padding: 2rem 1.75rem;
+    text-align: center;
+    z-index: 10;
+    transform: scale(.95);
+    opacity: 0;
+    transition: transform .18s ease, opacity .18s ease;
+  }
+  .dup-card.show { transform: scale(1); opacity: 1; }
+
+  .dup-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 4.5rem;
+    height: 4.5rem;
+    border-radius: 50%;
+    font-size: 2rem;
+    margin-bottom: 1rem;
+  }
+
+  .dup-icon--red    { background: var(--red-pop); }
+  .dup-icon--yellow { background: #fff8e6; }
+  .dup-icon--blue   { background: var(--blue-light); }
+
+  .dup-card h3 {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: #111827;
+    margin: 0 0 .35rem;
+  }
+
+  .dup-book {
+    font-size: .85rem;
+    font-weight: 700;
+    color: var(--blue);
+    margin: 0 0 .6rem;
+  }
+
+  .dup-msg {
+    font-size: .83rem;
+    color: var(--gray-ui);
+    line-height: 1.6;
+    margin: 0 0 1.25rem;
+  }
+
+  .dup-actions { display: flex; gap: .6rem; }
+
+  .dup-btn {
+    flex: 1;
+    padding: .7rem;
+    font-weight: 700;
+    font-size: .85rem;
+    border: none;
+    border-radius: .75rem;
+    cursor: pointer;
+    transition: filter .15s;
+  }
+  .dup-btn:hover { filter: brightness(.9); }
+
+  .dup-btn--cancel  { background: var(--table-bg); color: var(--gray-ui); }
+  .dup-btn--blue    { background: var(--blue); color: #fff; }
+  .dup-btn--dark    { background: var(--gray-ui); color: #fff; }
+
+  /* ── Spinner ── */
+  #check-spinner {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0,0,0,.18);
+  }
+  #check-spinner.active { display: flex; }
+
+  .spinner-box {
+    background: #fff;
+    border-radius: 1rem;
+    padding: 1.25rem 2rem;
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    box-shadow: 0 8px 32px rgba(0,0,0,.14);
+  }
+
+  .spinner-svg {
+    width: 1.4rem;
+    height: 1.4rem;
+    animation: spin .7s linear infinite;
+    color: var(--blue);
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .spinner-text { font-size: .875rem; font-weight: 600; color: var(--gray-ui); }
+</style>
+
+<div class="rf-page">
+  <div class="rf-container">
+
+    <!-- Back -->
+    <a href="{% url 'book_request:request_list' %}" class="rf-back">← Kembali ke Riwayat Saya</a>
+
+    <!-- Title -->
+    <h1 class="rf-title">📖 Ajukan Usulan Buku</h1>
+    <p class="rf-subtitle">Beritahu kami buku apa yang ingin Anda lihat di perpustakaan</p>
+
+    <!-- Banner -->
+    <div class="rf-banner">
+      <span class="rf-banner__icon">💡</span>
       <div>
-        <p class="font-sans text-sm text-blue-900 font-semibold">Cara kerja</p>
-        <p class="font-sans text-sm text-blue-800">Isi detail di bawah ini. Petugas perpustakaan akan meninjau usulan Anda dan menyetujui atau menolaknya. Anda akan mendapat notifikasi hasilnya di halaman riwayat usulan.</p>
+        <p class="rf-banner__title">Cara kerja</p>
+        <p class="rf-banner__text">Isi detail di bawah ini. Petugas perpustakaan akan meninjau usulan Anda dan menyetujui atau menolaknya. Anda akan mendapat notifikasi hasilnya di halaman riwayat usulan.</p>
       </div>
     </div>
 
-    <!-- Form -->
-    <div class="bg-white border border-gray-200 rounded-2xl shadow-sm p-6 md:p-8">
-      <form method="POST" class="space-y-6">
+    <!-- Form card -->
+    <div class="rf-card">
+      <form method="POST" id="request-form">
         {% csrf_token %}
+        <input type="hidden" name="duplicate_confirmed" id="duplicate_confirmed" value="0">
 
         <!-- Judul -->
-        <div>
-          <label for="title" class="block font-sans font-semibold text-gray-900 mb-2 text-sm">
-            Judul Buku <span class="text-red-500">*</span>
-          </label>
+        <div class="rf-field">
+          <label for="title" class="rf-label">Judul Buku <span class="req">*</span></label>
           <input type="text" id="title" name="title"
                  value="{{ form_data.title|default:'' }}"
                  placeholder="cth. Laskar Pelangi"
-                 class="w-full px-4 py-3 border {% if errors.title %}border-red-400 bg-red-50{% else %}border-gray-300{% endif %} rounded-xl font-sans text-gray-900 focus:outline-none focus:border-gray-700 focus:ring-2 focus:ring-gray-100 transition-all">
-          {% if errors.title %}
-            <p class="text-red-600 text-sm mt-1">{{ errors.title }}</p>
-          {% endif %}
+                 class="rf-input {% if errors.title %}error{% endif %}">
+          {% if errors.title %}<p class="rf-error">{{ errors.title }}</p>{% endif %}
         </div>
 
         <!-- Penulis -->
-        <div>
-          <label for="author" class="block font-sans font-semibold text-gray-900 mb-2 text-sm">
-            Penulis <span class="text-red-500">*</span>
-          </label>
+        <div class="rf-field">
+          <label for="author" class="rf-label">Penulis <span class="req">*</span></label>
           <input type="text" id="author" name="author"
                  value="{{ form_data.author|default:'' }}"
                  placeholder="cth. Andrea Hirata"
-                 class="w-full px-4 py-3 border {% if errors.author %}border-red-400 bg-red-50{% else %}border-gray-300{% endif %} rounded-xl font-sans text-gray-900 focus:outline-none focus:border-gray-700 focus:ring-2 focus:ring-gray-100 transition-all">
-          {% if errors.author %}
-            <p class="text-red-600 text-sm mt-1">{{ errors.author }}</p>
-          {% endif %}
+                 class="rf-input {% if errors.author %}error{% endif %}">
+          {% if errors.author %}<p class="rf-error">{{ errors.author }}</p>{% endif %}
         </div>
 
         <!-- Penerbit -->
-        <div>
-          <label for="publisher" class="block font-sans font-semibold text-gray-900 mb-2 text-sm">
-            Penerbit <span class="text-gray-400 font-normal">(opsional)</span>
-          </label>
+        <div class="rf-field">
+          <label for="publisher" class="rf-label">Penerbit <span class="opt">(opsional)</span></label>
           <input type="text" id="publisher" name="publisher"
-                value="{{ form_data.publisher|default:'' }}"
-                placeholder="cth. Gramedia, Erlangga…"
-                class="w-full px-4 py-3 border border-gray-300 rounded-xl font-sans text-gray-900 focus:outline-none focus:border-gray-700 focus:ring-2 focus:ring-gray-100 transition-all">
+                 value="{{ form_data.publisher|default:'' }}"
+                 placeholder="cth. Gramedia, Erlangga…"
+                 class="rf-input">
         </div>
 
         <!-- Kategori -->
-        <div>
-          <label for="category" class="block font-sans font-semibold text-gray-900 mb-2 text-sm">
-            Kategori <span class="text-gray-400 font-normal">(opsional)</span>
-          </label>
+        <div class="rf-field">
+          <label for="category" class="rf-label">Kategori <span class="opt">(opsional)</span></label>
           <input type="text" id="category" name="category"
                  value="{{ form_data.category|default:'' }}"
                  placeholder="cth. Fiksi, Novel, Sains, Motivasi…"
-                 class="w-full px-4 py-3 border border-gray-300 rounded-xl font-sans text-gray-900 focus:outline-none focus:border-gray-700 focus:ring-2 focus:ring-gray-100 transition-all">
+                 class="rf-input">
         </div>
 
-        <!-- Alasan Pengajuan -->
-        <div>
-          <label for="reason" class="block font-sans font-semibold text-gray-900 mb-2 text-sm">
-            Alasan Pengajuan <span class="text-red-500">*</span>
-          </label>
-          <textarea id="reason" name="reason" rows="4"
-                    maxlength="500"
+        <!-- Alasan -->
+        <div class="rf-field">
+          <label for="reason" class="rf-label">Alasan Pengajuan <span class="req">*</span></label>
+          <textarea id="reason" name="reason" rows="4" maxlength="500"
                     placeholder="Mengapa buku ini perlu ditambahkan ke perpustakaan? Apa manfaatnya bagi siswa?"
-                    class="w-full px-4 py-3 border {% if errors.reason %}border-red-400 bg-red-50{% else %}border-gray-300{% endif %} rounded-xl font-sans text-gray-900 focus:outline-none focus:border-gray-700 focus:ring-2 focus:ring-gray-100 transition-all resize-none">{{ form_data.reason|default:'' }}</textarea>
-          <!-- Character counter -->
-          <div class="flex items-center justify-between mt-1">
+                    class="rf-textarea {% if errors.reason %}error{% endif %}">{{ form_data.reason|default:'' }}</textarea>
+          <div class="rf-counter-row">
             {% if errors.reason %}
-              <p class="text-red-600 text-sm">{{ errors.reason }}</p>
+              <p class="rf-error" style="margin:0;">{{ errors.reason }}</p>
             {% else %}
-              <p class="text-gray-400 text-xs">Jelaskan secara singkat dan jelas.</p>
+              <p class="rf-hint">Jelaskan secara singkat dan jelas.</p>
             {% endif %}
-            <p class="text-xs font-sans ml-auto pl-4">
-              <span id="reason-count" class="font-semibold text-gray-600">{{ form_data.reason|default:''|length }}</span>
-              <span class="text-gray-400">/500</span>
-            </p>
+            <p class="rf-count"><span id="reason-count">{{ form_data.reason|default:''|length }}</span>/500</p>
           </div>
         </div>
 
         <!-- Actions -->
-        <div class="flex gap-4 pt-2">
-          <button type="submit"
-                  class="flex-1 py-3 px-6 bg-gray-900 text-white font-sans font-semibold rounded-xl hover:bg-gray-800 transition-colors shadow-lg">
-            Ajukan Usulan
-          </button>
-          <a href="{% url 'book_request:request_list' %}"
-             class="flex-1 py-3 px-6 text-center bg-gray-100 text-gray-700 font-sans font-semibold rounded-xl hover:bg-gray-200 transition-colors">
-            Batal
-          </a>
+        <div class="rf-actions">
+          <button type="submit" id="submit-btn" class="rf-btn-submit">Ajukan Usulan</button>
+          <a href="{% url 'book_request:request_list' %}" class="rf-btn-cancel">Batal</a>
         </div>
       </form>
     </div>
@@ -120,29 +405,140 @@
   </div>
 </div>
 
+<!-- ══════════════════════════════════════
+     DUPLICATE MODAL
+══════════════════════════════════════ -->
+<div id="duplicate-modal" class="dup-overlay" role="dialog" aria-modal="true">
+  <div class="dup-backdrop" id="dup-backdrop"></div>
+  <div class="dup-card" id="dup-card">
+    <div class="dup-icon" id="dup-icon"></div>
+    <h3 id="dup-title"></h3>
+    <p class="dup-book" id="dup-book-name"></p>
+    <p class="dup-msg" id="dup-message"></p>
+    <div class="dup-actions">
+      <button type="button" id="dup-cancel-btn" class="dup-btn dup-btn--cancel">Batal</button>
+      <button type="button" id="dup-confirm-btn" class="dup-btn dup-btn--blue">Lanjutkan</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Spinner ── -->
+<div id="check-spinner">
+  <div class="spinner-box">
+    <svg class="spinner-svg" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+      <path opacity=".75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+    </svg>
+    <span class="spinner-text">Memeriksa buku…</span>
+  </div>
+</div>
+
 <script>
 (function () {
+  /* ── Counter ── */
   const textarea = document.getElementById('reason');
   const counter  = document.getElementById('reason-count');
-  if (!textarea || !counter) return;
-
-  function update() {
-    const len = textarea.value.length;
-    counter.textContent = len;
-    if (len >= 480) {
-      counter.classList.add('text-red-500');
-      counter.classList.remove('text-gray-600');
-    } else if (len >= 400) {
-      counter.classList.add('text-amber-500');
-      counter.classList.remove('text-gray-600', 'text-red-500');
-    } else {
-      counter.classList.add('text-gray-600');
-      counter.classList.remove('text-amber-500', 'text-red-500');
+  if (textarea && counter) {
+    function updateCount() {
+      const len = textarea.value.length;
+      counter.textContent = len;
+      counter.style.color = len >= 480 ? '#d93e3e' : len >= 400 ? '#F8BE5C' : '#595959';
     }
+    textarea.addEventListener('input', updateCount);
+    updateCount();
   }
 
-  textarea.addEventListener('input', update);
-  update();
+  /* ── Elements ── */
+  const modal      = document.getElementById('duplicate-modal');
+  const card       = document.getElementById('dup-card');
+  const spinner    = document.getElementById('check-spinner');
+  const form       = document.getElementById('request-form');
+  const dupConfirm = document.getElementById('duplicate_confirmed');
+  const dupIcon    = document.getElementById('dup-icon');
+  const dupTitle   = document.getElementById('dup-title');
+  const dupBook    = document.getElementById('dup-book-name');
+  const dupMsg     = document.getElementById('dup-message');
+  const dupConfBtn = document.getElementById('dup-confirm-btn');
+  const dupCancelBtn = document.getElementById('dup-cancel-btn');
+  const backdrop   = document.getElementById('dup-backdrop');
+
+  function getCsrf() {
+    for (const c of document.cookie.split(';')) {
+      const t = c.trim();
+      if (t.startsWith('csrftoken=')) return decodeURIComponent(t.slice('csrftoken='.length));
+    }
+    return '';
+  }
+
+  function showModal(type, title) {
+    if (type === 'stock') {
+      dupIcon.textContent = '📚';
+      dupIcon.className   = 'dup-icon dup-icon--blue';
+      dupTitle.textContent = 'Buku Sudah Ada di Koleksi';
+      dupMsg.textContent  = 'Buku ini sudah tersedia di koleksi perpustakaan. Apakah Anda tetap ingin melanjutkan pengajuan?';
+      dupConfBtn.className = 'dup-btn dup-btn--blue';
+      dupConfBtn.style.display = '';
+      dupCancelBtn.textContent = 'Batal';
+    } else if (type === 'own_request') {
+      dupIcon.textContent = '🚫';
+      dupIcon.className   = 'dup-icon dup-icon--red';
+      dupTitle.textContent = 'Buku Sudah Pernah Anda Ajukan';
+      dupMsg.textContent  = 'Anda sudah pernah mengajukan buku ini sebelumnya. Silahkan ajukan buku lain.';
+      dupConfBtn.style.display = 'none';
+      dupCancelBtn.textContent = 'Tutup';
+    } else {
+      dupIcon.textContent = '⚠️';
+      dupIcon.className   = 'dup-icon dup-icon--yellow';
+      dupTitle.textContent = 'Buku Sudah Pernah Diajukan';
+      dupMsg.textContent  = 'Buku ini sudah pernah diajukan sebelumnya dan sedang diproses atau sudah disetujui. Apakah Anda tetap ingin melanjutkan?';
+      dupConfBtn.className = 'dup-btn dup-btn--dark';
+      dupConfBtn.style.display = '';
+      dupCancelBtn.textContent = 'Batal';
+    }
+
+    dupBook.textContent = '"' + title + '"';
+    modal.classList.add('active');
+    requestAnimationFrame(() => requestAnimationFrame(() => card.classList.add('show')));
+  }
+
+  function hideModal() {
+    card.classList.remove('show');
+    setTimeout(() => modal.classList.remove('active'), 180);
+  }
+
+  dupCancelBtn.addEventListener('click', hideModal);
+  backdrop.addEventListener('click', hideModal);
+
+  dupConfBtn.addEventListener('click', function () {
+    dupConfirm.value = '1';
+    hideModal();
+    setTimeout(() => form.submit(), 180);
+  });
+
+  form.addEventListener('submit', function (e) {
+    if (dupConfirm.value === '1') return;
+    e.preventDefault();
+
+    const title = document.getElementById('title').value.trim();
+    if (!title) { dupConfirm.value = '1'; form.submit(); return; }
+
+    spinner.classList.add('active');
+
+    fetch("{% url 'book_request:check_duplicate' %}?title=" + encodeURIComponent(title), {
+      headers: { 'X-CSRFToken': getCsrf(), 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(r => r.json())
+    .then(data => {
+      spinner.classList.remove('active');
+      if (data.duplicate_type) { showModal(data.duplicate_type, title); }
+      else { dupConfirm.value = '1'; form.submit(); }
+    })
+    .catch(() => {
+      spinner.classList.remove('active');
+      dupConfirm.value = '1';
+      form.submit();
+    });
+  });
 })();
 </script>
 {% endblock %}

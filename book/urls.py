@@ -15,6 +15,8 @@ urlpatterns = [
     # REST API
     path('api/books/',         views.book_api_list_create, name='api_books'),
     path('api/books/<int:pk>/', views.book_api_detail,     name='api_book_detail'),
+    path('api/books/<int:book_id>/reviews/', views.api_book_reviews, name='api_book_reviews'),
+    path('api/books/<int:book_id>/reviews/<int:review_id>/', views.api_delete_review, name='api_delete_review'),
 
     # AJAX / API
     path('api/enrich/',       views.api_enrich_isbn,  name='api_enrich_isbn'),

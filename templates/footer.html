@@ -1,80 +1,99 @@
-<!-- Footer -->
-<footer class="bg-gradient-to-b from-gray-50 to-white border-t border-gray-100 mt-20">
+<!-- ─── Footer ─── -->
+{% load static %}
+<footer style="background: var(--primary-900); border-top: 1px solid rgba(255,255,255,0.08); margin-top: 64px;">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-8 py-12">
-            
-            <!-- About Section -->
-            <div class="space-y-4">
-                <div class="flex items-center space-x-2">
-                    <div class="flex items-center justify-center w-8 h-8 bg-gray-900 rounded-lg">
-                        <span class="text-white text-sm">📚</span>
-                    </div>
-                    <h3 class="font-display font-bold text-gray-900">SMAN 61 Library</h3>
+
+        <!-- Main grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 lg:gap-10 py-12">
+
+            <!-- About -->
+            <div class="space-y-4 sm:col-span-2 md:col-span-1">
+                <div class="flex items-center gap-2.5">
+                    <img src="{% static 'assets/NASALibraryLogo.png' %}" alt="NASA Library"
+                         class="w-9 h-9 rounded-full object-cover opacity-90">
+                    <span class="font-display font-bold text-white text-sm tracking-wide">NASA LIBRARY</span>
                 </div>
-                <p class="text-sm font-sans text-gray-600 leading-relaxed">
-                    Jakarta's premier school library providing access to knowledge and fostering a love of reading among students and staff.
+                <p class="text-sm text-white/50 leading-relaxed" style="font-family:'Work Sans',sans-serif; line-height:1.5;">
+                    Jakarta's premier school library — providing access to knowledge and fostering a love of reading.
                 </p>
+                <!-- Social icons -->
+                <div class="flex gap-2.5 pt-1">
+                    <a href="#" aria-label="Facebook"
+                       class="w-8 h-8 rounded-full flex items-center justify-center transition-colors"
+                       style="background: rgba(255,255,255,0.08);"
+                       onmouseover="this.style.background='rgba(255,255,255,0.16)'"
+                       onmouseout="this.style.background='rgba(255,255,255,0.08)'">
+                        <img src="{% static 'assets/Facebook.svg' %}" alt="Facebook" class="w-3.5 h-3.5 opacity-70">
+                    </a>
+                    <a href="#" aria-label="Twitter"
+                       class="w-8 h-8 rounded-full flex items-center justify-center transition-colors"
+                       style="background: rgba(255,255,255,0.08);"
+                       onmouseover="this.style.background='rgba(255,255,255,0.16)'"
+                       onmouseout="this.style.background='rgba(255,255,255,0.08)'">
+                        <img src="{% static 'assets/Twitter.svg' %}" alt="Twitter" class="w-3.5 h-3.5 opacity-70">
+                    </a>
+                    <a href="#" aria-label="Instagram"
+                       class="w-8 h-8 rounded-full flex items-center justify-center transition-colors"
+                       style="background: rgba(255,255,255,0.08);"
+                       onmouseover="this.style.background='rgba(255,255,255,0.16)'"
+                       onmouseout="this.style.background='rgba(255,255,255,0.08)'">
+                        <img src="{% static 'assets/Insta.svg' %}" alt="Instagram" class="w-3.5 h-3.5 opacity-70">
+                    </a>
+                </div>
             </div>
-            
+
             <!-- Quick Links -->
             <div>
-                <h4 class="font-display font-bold text-gray-900 mb-4">Quick Links</h4>
-                <ul class="space-y-2">
-                    <li><a href="#" class="text-sm font-sans text-gray-600 hover:text-gray-900 transition-colors">Explore Books</a></li>
-                    <li><a href="#" class="text-sm font-sans text-gray-600 hover:text-gray-900 transition-colors">Search Catalog</a></li>
-                    <li><a href="#" class="text-sm font-sans text-gray-600 hover:text-gray-900 transition-colors">My Borrowings</a></li>
-                    <li><a href="#" class="text-sm font-sans text-gray-600 hover:text-gray-900 transition-colors">Leaderboard</a></li>
+                <h4 class="font-display font-bold text-white text-sm mb-4" style="line-height:1.2;">Quick Links</h4>
+                <ul class="space-y-2.5" style="font-family:'Work Sans',sans-serif;">
+                    <li><a href="{% url 'book:dashboard' %}" class="text-sm text-white/50 hover:text-white/90 transition-colors">Explore Books</a></li>
+                    <li><a href="{% url 'book:dashboard' %}" class="text-sm text-white/50 hover:text-white/90 transition-colors">Search Catalog</a></li>
+                    <li><a href="{% url 'book_loan:loan_history' %}" class="text-sm text-white/50 hover:text-white/90 transition-colors">My Borrowings</a></li>
+                    <li><a href="{% url 'literacy:leaderboard' %}" class="text-sm text-white/50 hover:text-white/90 transition-colors">Leaderboard</a></li>
                 </ul>
             </div>
-            
+
             <!-- Features -->
             <div>
-                <h4 class="font-display font-bold text-gray-900 mb-4">Features</h4>
-                <ul class="space-y-2">
-                    <li><a href="#" class="text-sm font-sans text-gray-600 hover:text-gray-900 transition-colors">Book Reviews</a></li>
-                    <li><a href="#" class="text-sm font-sans text-gray-600 hover:text-gray-900 transition-colors">Literacy Program</a></li>
-                    <li><a href="#" class="text-sm font-sans text-gray-600 hover:text-gray-900 transition-colors">Check-in/Out</a></li>
-                    <li><a href="#" class="text-sm font-sans text-gray-600 hover:text-gray-900 transition-colors">Recommendations</a></li>
+                <h4 class="font-display font-bold text-white text-sm mb-4" style="line-height:1.2;">Features</h4>
+                <ul class="space-y-2.5" style="font-family:'Work Sans',sans-serif;">
+                    <li><a href="{% url 'literacy:forum' %}" class="text-sm text-white/50 hover:text-white/90 transition-colors">Book Reviews</a></li>
+                    <li><a href="{% url 'literacy:forum' %}" class="text-sm text-white/50 hover:text-white/90 transition-colors">Literacy Program</a></li>
+                    <li><a href="{% url 'attendance:check_in' %}" class="text-sm text-white/50 hover:text-white/90 transition-colors">Check-In / Out</a></li>
+                    <li><a href="#" class="text-sm text-white/50 hover:text-white/90 transition-colors">Recommendations</a></li>
                 </ul>
             </div>
-            
+
             <!-- Contact -->
             <div>
-                <h4 class="font-display font-bold text-gray-900 mb-4">Contact</h4>
-                <ul class="space-y-2">
-                    <li class="text-sm font-sans text-gray-600">
-                        <a href="tel:+62" class="hover:text-gray-900 transition-colors">(+62) 21 XX XXX XXXX</a>
-                    </li>
-                    <li class="text-sm font-sans text-gray-600">
-                        <a href="mailto:library@man61.id" class="hover:text-gray-900 transition-colors">library@man61.id</a>
-                    </li>
-                    <li class="text-sm font-sans text-gray-600">
-                        Jl. Raya Pasar Minggu, Jakarta 12520
-                    </li>
-                    <li class="flex space-x-4 mt-4">
-                        <a href="#" class="text-gray-600 hover:text-gray-900 transition-colors">
-                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"></path></svg>
+                <h4 class="font-display font-bold text-white text-sm mb-4" style="line-height:1.2;">Contact</h4>
+                <ul class="space-y-2.5" style="font-family:'Work Sans',sans-serif;">
+                    <li>
+                        <a href="tel:+62" class="text-sm text-white/50 hover:text-white/90 transition-colors">
+                            (+62) 21 XX XXX XXXX
                         </a>
-                        <a href="#" class="text-gray-600 hover:text-gray-900 transition-colors">
-                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M23 3a10.9 10.9 0 01-3.14 1.53 4.48 4.48 0 00-7.86 3v1A10.66 10.66 0 013 4s-4 9 5 13a11.64 11.64 0 01-7 2s9 5 20 5a9.5 9.5 0 00-9-5.5c4.75-2.63 7-5 7-5s-1.5 2-5 3.4"></path></svg>
+                    </li>
+                    <li>
+                        <a href="mailto:library@sman61.id" class="text-sm text-white/50 hover:text-white/90 transition-colors">
+                            library@sman61.id
                         </a>
-                        <a href="#" class="text-gray-600 hover:text-gray-900 transition-colors">
-                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1112.63 8" fill="white"></path></svg>
-                        </a>
+                    </li>
+                    <li class="text-sm text-white/50 leading-relaxed">
+                        Jl. Raya Pasar Minggu,<br>
+                        Jakarta 12520
                     </li>
                 </ul>
             </div>
         </div>
-        
-        <!-- Footer Bottom -->
-        <div class="border-t border-gray-100 py-8">
-            <div class="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
-                <p class="text-sm font-sans text-gray-600">© 2026 SMAN 61 Jakarta Library. All rights reserved.</p>
-                <div class="flex space-x-6">
-                    <a href="#" class="text-sm font-sans text-gray-600 hover:text-gray-900 transition-colors">Privacy Policy</a>
-                    <a href="#" class="text-sm font-sans text-gray-600 hover:text-gray-900 transition-colors">Terms of Service</a>
-                    <a href="#" class="text-sm font-sans text-gray-600 hover:text-gray-900 transition-colors">Cookie Policy</a>
-                </div>
+
+        <!-- Bottom bar -->
+        <div class="flex flex-col md:flex-row items-center justify-between gap-4 py-5"
+             style="border-top: 1px solid rgba(255,255,255,0.08); font-family:'Work Sans',sans-serif;">
+            <p class="text-xs text-white/30">© 2026 SMAN 61 Jakarta Library. All rights reserved.</p>
+            <div class="flex gap-5">
+                <a href="#" class="text-xs text-white/30 hover:text-white/60 transition-colors">Privacy Policy</a>
+                <a href="#" class="text-xs text-white/30 hover:text-white/60 transition-colors">Terms of Service</a>
+                <a href="#" class="text-xs text-white/30 hover:text-white/60 transition-colors">Cookie Policy</a>
             </div>
         </div>
     </div>

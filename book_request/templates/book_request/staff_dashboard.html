@@ -3,335 +3,500 @@
 {% block title %}Tinjau Usulan Buku — NASA Library{% endblock %}
 
 {% block content %}
-<div class="min-h-screen bg-gradient-to-br from-white via-gray-50 to-white">
-  <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
 
-    <!-- Header -->
-    <div class="mb-10">
-      <h1 class="font-display text-4xl md:text-5xl font-bold text-gray-900">📋 Tinjau Usulan Buku</h1>
-      <p class="font-sans text-gray-600 mt-2">Tinjau dan proses usulan buku dari siswa dan guru</p>
+<style>
+  :root {
+    --yellow:    #F8BE5C;
+    --green:     #0FA875;
+    --red:       #d93e3e;
+    --green-pop: #e7f8f2;
+    --red-pop:   #fdecec;
+    --table-bg:  #E9EBF3;
+    --gray-ui:   #595959;
+    --blue:      #1E3A8A;
+    --blue-mid:  #3B5FCC;
+  }
+
+  .sd-page {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #f0f4ff 0%, #ffffff 50%, #f0f4ff 100%);
+    font-family: 'Segoe UI', system-ui, sans-serif;
+  }
+
+  .sd-container { max-width: 1024px; margin: 0 auto; padding: 3rem 1.5rem; }
+
+  /* ── Header ── */
+  .sd-header { text-align: center; margin-bottom: 2rem; }
+  .sd-header h1 { font-size: 2.4rem; font-weight: 800; color: var(--blue); letter-spacing: -.03em; margin: 0 0 .3rem; }
+  .sd-header p  { font-size: .95rem; color: var(--gray-ui); margin: 0; }
+
+  /* ── Stats ── */
+  .sd-stats { display: grid; grid-template-columns: repeat(4,1fr); gap: 1rem; margin-bottom: 1.75rem; }
+  @media(max-width:640px){ .sd-stats{ grid-template-columns: repeat(2,1fr); } }
+
+  .sd-stat {
+    background: #fff; border-radius: 1rem; padding: 1.25rem 1rem;
+    text-align: center; box-shadow: 0 2px 12px rgba(30,58,138,.08);
+    border: 1.5px solid transparent; transition: transform .2s, box-shadow .2s;
+  }
+  .sd-stat:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(30,58,138,.13); }
+  .sd-stat__num   { font-size: 2rem; font-weight: 800; line-height: 1; display: block; }
+  .sd-stat__label { font-size: .7rem; text-transform: uppercase; letter-spacing: .08em; margin-top: .35rem; font-weight: 600; }
+
+  .sd-stat--total    { border-color: var(--blue); }
+  .sd-stat--total    .sd-stat__num, .sd-stat--total    .sd-stat__label { color: var(--blue); }
+  .sd-stat--pending  { background: #fffbf0; border-color: var(--yellow); }
+  .sd-stat--pending  .sd-stat__num, .sd-stat--pending  .sd-stat__label { color: #b07d10; }
+  .sd-stat--approved { background: #f0fdf8; border-color: var(--green); }
+  .sd-stat--approved .sd-stat__num, .sd-stat--approved .sd-stat__label { color: #0a7a55; }
+  .sd-stat--rejected { background: #fff4f4; border-color: var(--red); }
+  .sd-stat--rejected .sd-stat__num, .sd-stat--rejected .sd-stat__label { color: var(--red); }
+
+  /* ── CTA ── */
+  .sd-cta-btn {
+    display: inline-flex; align-items: center; gap: .5rem;
+    padding: .65rem 1.25rem; background: var(--blue); color: #fff;
+    font-weight: 700; font-size: .85rem; border-radius: .75rem;
+    text-decoration: none; box-shadow: 0 4px 14px rgba(30,58,138,.3);
+    transition: background .15s; margin-bottom: 1rem;
+  }
+  .sd-cta-btn:hover { background: #162f73; }
+
+  /* ── Filter tabs ── */
+  .sd-filters { display: flex; gap: .5rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+
+  .sd-filter-btn {
+    padding: .45rem 1.1rem; border-radius: .6rem; font-size: .8rem;
+    font-weight: 700; text-decoration: none; transition: background .15s, color .15s;
+  }
+
+  /* Inactive = abu */
+  .sd-filter-btn--inactive { background: var(--table-bg); color: var(--gray-ui); }
+  .sd-filter-btn--inactive:hover { background: #d4d8e8; }
+
+  /* Active states */
+  .sd-filter-btn--all      { background: var(--blue); color: #fff; }
+  .sd-filter-btn--pending  { background: var(--blue); color: #fff; }
+  .sd-filter-btn--approved { background: var(--blue); color: #fff; }
+  .sd-filter-btn--rejected { background: var(--blue); color: #fff; }
+
+  /* ── Section title ── */
+  .sd-section-title { font-size: 1.3rem; font-weight: 800; color: var(--blue); margin: 0 0 .2rem; }
+  .sd-section-sub   { font-size: .82rem; color: var(--gray-ui); margin: 0 0 1.1rem; }
+
+  /* ── Cards ── */
+  .sd-card {
+    background: #fff; border-radius: 1.1rem; border: 1.5px solid var(--table-bg);
+    box-shadow: 0 2px 12px rgba(30,58,138,.06); overflow: hidden; margin-bottom: 1rem;
+  }
+  .sd-card--pending  { border-left: 4px solid var(--yellow); }
+  .sd-card--approved { border-left: 4px solid var(--green); }
+  .sd-card--rejected { border-left: 4px solid var(--red); }
+
+  .sd-card__body { padding: 1.25rem 1.5rem; }
+  .sd-card__top  { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
+  .sd-card__info { flex: 1; min-width: 0; }
+
+  .sd-card__title-row { display: flex; align-items: center; gap: .6rem; flex-wrap: wrap; margin-bottom: .2rem; }
+  .sd-card__title     { font-size: 1rem; font-weight: 800; color: #111827; margin: 0; }
+
+  /* Badges */
+  .badge { display: inline-flex; align-items: center; gap: 3px; padding: .22rem .65rem; border-radius: 999px; font-size: .7rem; font-weight: 700; }
+  .badge--pending  { background: #fff8e6; color: #9a6700; border: 1px solid var(--yellow); }
+  .badge--approved { background: #e8faf4; color: #0a7a55; border: 1px solid var(--green); }
+  .badge--rejected { background: #fef0f0; color: var(--red); border: 1px solid var(--red); }
+
+  .sd-card__meta { font-size: .82rem; color: var(--gray-ui); margin: 0 0 .75rem; }
+  .sd-card__meta span { font-weight: 700; color: #374151; }
+
+  /* Requester */
+  .sd-requester { display: flex; align-items: center; gap: .6rem; margin-bottom: .75rem; }
+  .sd-avatar {
+    width: 2rem; height: 2rem; border-radius: 50%;
+    background: linear-gradient(135deg, var(--blue-mid), var(--blue));
+    color: #fff; font-size: .75rem; font-weight: 800;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .sd-requester__name { font-size: .85rem; font-weight: 700; color: #111827; margin: 0; }
+  .sd-requester__meta { font-size: .75rem; color: #9ca3af; margin: 0; }
+
+  /* Boxes */
+  .sd-box { border-radius: .6rem; padding: .6rem .9rem; margin-bottom: .6rem; }
+  .sd-box--reason   { background: var(--table-bg); border: 1px solid #d4d8e8; }
+  .sd-box--approved { background: var(--green-pop); border: 1.5px solid var(--green); }
+  .sd-box--rejected { background: var(--red-pop);   border: 1.5px solid var(--red); }
+
+  .sd-box__label { font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; margin: 0 0 .2rem; }
+  .sd-box--reason   .sd-box__label { color: var(--gray-ui); }
+  .sd-box--approved .sd-box__label { color: #0a7a55; }
+  .sd-box--rejected .sd-box__label { color: var(--red); }
+
+  .sd-box__text { font-size: .84rem; margin: 0; }
+  .sd-box--reason   .sd-box__text { color: #374151; }
+  .sd-box--approved .sd-box__text { color: #0a6647; }
+  .sd-box--rejected .sd-box__text { color: #b91c1c; }
+
+  .sd-reviewed-by { font-size: .75rem; color: #9ca3af; margin: .4rem 0 0; }
+
+  /* Action buttons */
+  .sd-card__actions { flex-shrink: 0; display: flex; flex-direction: column; gap: .5rem; }
+
+  .sd-btn-approve, .sd-btn-reject {
+    padding: .45rem 1.1rem; color: #fff; font-weight: 700; font-size: .8rem;
+    border: none; border-radius: .6rem; cursor: pointer; transition: filter .15s; white-space: nowrap;
+  }
+  .sd-btn-approve { background: var(--green); }
+  .sd-btn-reject  { background: var(--red); }
+  .sd-btn-approve:hover, .sd-btn-reject:hover { filter: brightness(.9); }
+
+  /* Inline form panels */
+  .sd-form-panel { display: none; margin-top: 1rem; padding-top: 1rem; border-top: 1.5px solid var(--table-bg); }
+  .sd-form-panel.open { display: block; }
+
+  .sd-form-label { font-size: .82rem; font-weight: 700; color: #111827; margin: 0 0 .5rem; display: block; }
+  .sd-form-label span { color: var(--gray-ui); font-weight: 400; }
+  .sd-form-label .req { color: var(--red); }
+
+  .sd-textarea {
+    width: 100%; padding: .65rem .9rem; border: 1.5px solid #d1d5db; border-radius: .75rem;
+    font-size: .875rem; font-family: inherit; color: #111827; resize: none;
+    box-sizing: border-box; transition: border-color .15s;
+  }
+  .sd-textarea:focus { outline: none; }
+  .sd-textarea--approve:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(15,168,117,.1); }
+  .sd-textarea--reject:focus  { border-color: var(--red);   box-shadow: 0 0 0 3px rgba(217,62,62,.1); }
+
+  .sd-form-btns { display: flex; gap: .6rem; margin-top: .75rem; }
+
+  .sd-btn-confirm-approve, .sd-btn-confirm-reject {
+    padding: .5rem 1.25rem; color: #fff; font-weight: 700; font-size: .82rem;
+    border: none; border-radius: .6rem; cursor: pointer; transition: filter .15s;
+  }
+  .sd-btn-confirm-approve { background: var(--green); }
+  .sd-btn-confirm-reject  { background: var(--red); }
+  .sd-btn-confirm-approve:hover, .sd-btn-confirm-reject:hover { filter: brightness(.9); }
+
+  .sd-btn-cancel {
+    padding: .5rem 1.25rem; background: var(--table-bg); color: var(--gray-ui);
+    font-weight: 700; font-size: .82rem; border: none; border-radius: .6rem;
+    cursor: pointer; transition: background .15s;
+  }
+  .sd-btn-cancel:hover { background: #d4d8e8; }
+
+  /* Empty */
+  .sd-empty { background: #fff; border: 1.5px solid var(--table-bg); border-radius: 1.25rem; padding: 4rem 1.5rem; text-align: center; }
+  .sd-empty p { color: var(--gray-ui); }
+
+  /* ══ CONFIRM DIALOG ══ */
+  .cd-overlay { display: none; position: fixed; inset: 0; z-index: 50; align-items: center; justify-content: center; padding: 1.5rem; }
+  .cd-overlay.active { display: flex; }
+  .cd-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,.45); backdrop-filter: blur(4px); }
+
+  .cd-card {
+    position: relative; background: #fff; border-radius: 1.25rem;
+    box-shadow: 0 20px 60px rgba(0,0,0,.22); max-width: 360px; width: 100%;
+    padding: 2rem 1.75rem; text-align: center; z-index: 10;
+    transform: scale(.95); opacity: 0; transition: transform .18s, opacity .18s;
+  }
+  .cd-card.show { transform: scale(1); opacity: 1; }
+
+  .cd-icon-ring {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 5rem; height: 5rem; border-radius: 50%; margin-bottom: 1rem;
+  }
+  .cd-icon-ring--approve { background: var(--green); }
+  .cd-icon-ring--reject  { background: var(--red); }
+
+  .cd-icon-inner {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 3.3rem; height: 3.3rem; border-radius: 50%; background: #fff;
+  }
+  .cd-icon-inner svg { width: 1.9rem; height: 1.9rem; }
+
+  .cd-card h3 { font-size: 1.25rem; font-weight: 800; color: #111827; margin: 0 0 .5rem; }
+  .cd-card p  { font-size: .85rem; color: var(--gray-ui); margin: 0 0 1.25rem; line-height: 1.6; }
+
+  .cd-actions { display: flex; gap: .6rem; }
+  .cd-btn { flex: 1; padding: .7rem; font-weight: 700; font-size: .85rem; border: none; border-radius: .75rem; cursor: pointer; transition: filter .15s; }
+  .cd-btn:hover { filter: brightness(.9); }
+  .cd-btn--cancel  { background: var(--table-bg); color: var(--gray-ui); }
+  .cd-btn--approve { background: var(--green); color: #fff; }
+  .cd-btn--reject  { background: var(--red);   color: #fff; }
+
+  /* Toast */
+  #sd-toast {
+    display: none; position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 60;
+    align-items: center; gap: .75rem; padding: .9rem 1.25rem; background: #111827;
+    color: #fff; border-radius: .875rem; box-shadow: 0 8px 32px rgba(0,0,0,.2);
+    font-size: .875rem; font-weight: 600; max-width: 340px;
+  }
+  #sd-toast.active { display: flex; }
+</style>
+
+<div class="sd-page">
+  <div class="sd-container">
+
+    <div class="sd-header">
+      <h1>📋 Tinjau Usulan Buku</h1>
+      <p>Tinjau dan proses usulan buku dari siswa dan guru</p>
     </div>
 
-    <!-- Ringkasan Statistik -->
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-      <div class="bg-white border border-gray-200 rounded-xl p-5 text-center shadow-sm">
-        <p class="font-display text-3xl font-bold text-gray-900">{{ counts.total }}</p>
-        <p class="font-sans text-xs text-gray-500 mt-1 uppercase tracking-wide">Total</p>
+    <div class="sd-stats">
+      <div class="sd-stat sd-stat--total">
+        <span class="sd-stat__num">{{ counts.total }}</span>
+        <span class="sd-stat__label">Total</span>
       </div>
-      <div class="bg-amber-50 border border-amber-200 rounded-xl p-5 text-center shadow-sm">
-        <p class="font-display text-3xl font-bold text-amber-800">{{ counts.pending }}</p>
-        <p class="font-sans text-xs text-amber-700 mt-1 uppercase tracking-wide">Menunggu</p>
+      <div class="sd-stat sd-stat--pending">
+        <span class="sd-stat__num">{{ counts.pending }}</span>
+        <span class="sd-stat__label">Menunggu</span>
       </div>
-      <div class="bg-green-50 border border-green-200 rounded-xl p-5 text-center shadow-sm">
-        <p class="font-display text-3xl font-bold text-green-800">{{ counts.approved }}</p>
-        <p class="font-sans text-xs text-green-700 mt-1 uppercase tracking-wide">Disetujui</p>
+      <div class="sd-stat sd-stat--approved">
+        <span class="sd-stat__num">{{ counts.approved }}</span>
+        <span class="sd-stat__label">Disetujui</span>
       </div>
-      <div class="bg-red-50 border border-red-200 rounded-xl p-5 text-center shadow-sm">
-        <p class="font-display text-3xl font-bold text-red-800">{{ counts.rejected }}</p>
-        <p class="font-sans text-xs text-red-700 mt-1 uppercase tracking-wide">Ditolak</p>
+      <div class="sd-stat sd-stat--rejected">
+        <span class="sd-stat__num">{{ counts.rejected }}</span>
+        <span class="sd-stat__label">Ditolak</span>
       </div>
     </div>
 
-    <!-- Filter Tab -->
-    <div class="flex gap-2 mb-6 flex-wrap">
+    <!-- Filter tabs -->
+    <div class="sd-filters">
       <a href="{% url 'book_request:staff_dashboard' %}"
-         class="px-4 py-2 rounded-lg font-sans text-sm font-semibold transition-colors
-                {% if not status_filter %}bg-gray-900 text-white{% else %}bg-white border border-gray-200 text-gray-700 hover:bg-gray-50{% endif %}">
+         class="sd-filter-btn {% if not status_filter %}sd-filter-btn--all{% else %}sd-filter-btn--inactive{% endif %}">
         Semua
       </a>
       <a href="?status=pending"
-         class="px-4 py-2 rounded-lg font-sans text-sm font-semibold transition-colors
-                {% if status_filter == 'pending' %}bg-amber-500 text-white{% else %}bg-white border border-gray-200 text-gray-700 hover:bg-gray-50{% endif %}">
-        ⏳ Menunggu
+         class="sd-filter-btn {% if status_filter == 'pending' %}sd-filter-btn--pending{% else %}sd-filter-btn--inactive{% endif %}">
+        Menunggu
       </a>
       <a href="?status=approved"
-         class="px-4 py-2 rounded-lg font-sans text-sm font-semibold transition-colors
-                {% if status_filter == 'approved' %}bg-green-600 text-white{% else %}bg-white border border-gray-200 text-gray-700 hover:bg-gray-50{% endif %}">
-        ✓ Disetujui
+         class="sd-filter-btn {% if status_filter == 'approved' %}sd-filter-btn--approved{% else %}sd-filter-btn--inactive{% endif %}">
+        Disetujui
       </a>
       <a href="?status=rejected"
-         class="px-4 py-2 rounded-lg font-sans text-sm font-semibold transition-colors
-                {% if status_filter == 'rejected' %}bg-red-600 text-white{% else %}bg-white border border-gray-200 text-gray-700 hover:bg-gray-50{% endif %}">
-        ✕ Ditolak
+         class="sd-filter-btn {% if status_filter == 'rejected' %}sd-filter-btn--rejected{% else %}sd-filter-btn--inactive{% endif %}">
+        Ditolak
       </a>
     </div>
 
-    <!-- Kartu Usulan -->
+    <p class="sd-section-title">Riwayat Usulan Saya</p>
+    <p class="sd-section-sub">Pantau status semua usulan yang telah kamu kirimkan</p>
+
     {% if requests %}
-      <div class="space-y-4">
-        {% for req in requests %}
-        <div class="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden
-                    {% if req.status == 'pending' %}border-l-4 border-l-amber-400{% elif req.status == 'approved' %}border-l-4 border-l-green-500{% else %}border-l-4 border-l-red-400{% endif %}">
-          <div class="p-6">
-            <div class="flex items-start justify-between gap-4">
-
-              <!-- Info Buku -->
-              <div class="flex-1 min-w-0">
-                <div class="flex items-center gap-3 mb-1 flex-wrap">
-                  <h3 class="font-display text-xl font-bold text-gray-900">{{ req.title }}</h3>
-                  {% if req.status == 'pending' %}
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800">⏳ Menunggu</span>
-                  {% elif req.status == 'approved' %}
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-800">✓ Disetujui</span>
-                  {% else %}
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-800">✕ Ditolak</span>
-                  {% endif %}
-                </div>
-                <p class="font-sans text-sm text-gray-600">oleh <span class="font-semibold">{{ req.author }}</span>
-                  {% if req.publisher %}· <span class="text-gray-500">{{ req.publisher }}</span>{% endif %}
-                  {% if req.category %}· <span class="text-gray-500">{{ req.category }}</span>{% endif %}
-                </p>
-
-                <!-- Info Pengaju -->
-                <div class="mt-3 flex items-center gap-2">
-                  <div class="w-7 h-7 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
-                    {{ req.requester.first_name|make_list|first|upper }}
-                  </div>
-                  <div>
-                    <p class="font-sans text-sm font-semibold text-gray-800">{{ req.requester.get_full_name|default:req.requester.username }}</p>
-                    <p class="font-sans text-xs text-gray-500">
-                      {% if req.requester.profile %}{{ req.requester.profile.kelas }} · {{ req.requester.profile.get_role_display }}{% endif %}
-                      · {{ req.created_at|date:"d M Y" }}
-                    </p>
-                  </div>
-                </div>
-
-                <!-- Alasan Pengajuan -->
-                <div class="mt-3 p-3 bg-gray-50 rounded-lg border border-gray-100">
-                  <p class="font-sans text-xs text-gray-500 uppercase tracking-wide font-semibold mb-1">Alasan Pengajuan</p>
-                  <p class="font-sans text-sm text-gray-700">{{ req.reason }}</p>
-                </div>
-
-                <!-- Catatan petugas jika sudah ditinjau -->
-                {% if req.catatan_petugas %}
-                <div class="mt-3 p-3 rounded-lg border {% if req.status == 'rejected' %}bg-red-50 border-red-200{% else %}bg-green-50 border-green-200{% endif %}">
-                  <p class="font-sans text-xs uppercase tracking-wide font-semibold mb-1 {% if req.status == 'rejected' %}text-red-700{% else %}text-green-700{% endif %}">Catatan Petugas</p>
-                  <p class="font-sans text-sm {% if req.status == 'rejected' %}text-red-800{% else %}text-green-800{% endif %}">{{ req.catatan_petugas }}</p>
-                </div>
-                {% endif %}
-
-                {% if req.reviewed_by %}
-                <p class="font-sans text-xs text-gray-400 mt-3">
-                  Ditinjau oleh {{ req.reviewed_by.get_full_name|default:req.reviewed_by.username }} pada {{ req.updated_at|date:"d M Y" }}
-                </p>
+      {% for req in requests %}
+      <div class="sd-card sd-card--{{ req.status }}">
+        <div class="sd-card__body">
+          <div class="sd-card__top">
+            <div class="sd-card__info">
+              <div class="sd-card__title-row">
+                <h3 class="sd-card__title">{{ req.title }}</h3>
+                {% if req.status == 'pending' %}
+                  <span class="badge badge--pending">⏳ Menunggu</span>
+                {% elif req.status == 'approved' %}
+                  <span class="badge badge--approved">✓ Disetujui</span>
+                {% else %}
+                  <span class="badge badge--rejected">✕ Ditolak</span>
                 {% endif %}
               </div>
 
-              <!-- Tombol Aksi (hanya untuk menunggu) -->
-              {% if req.status == 'pending' %}
-              <div class="flex-shrink-0 flex flex-col gap-2">
-                <!-- Setujui -->
-                <button type="button"
-                        class="approve-toggle-btn w-full px-4 py-2 bg-green-600 text-white font-sans font-semibold text-sm rounded-lg hover:bg-green-700 transition-colors"
-                        data-pk="{{ req.pk }}"
-                        data-title="{{ req.title }}">
-                  ✓ Setujui
-                </button>
-                <!-- Tolak -->
-                <button type="button"
-                        class="decline-toggle-btn w-full px-4 py-2 bg-red-600 text-white font-sans font-semibold text-sm rounded-lg hover:bg-red-700 transition-colors"
-                        data-pk="{{ req.pk }}"
-                        data-title="{{ req.title }}">
-                  ✕ Tolak
-                </button>
+              <p class="sd-card__meta">
+                Oleh <span>{{ req.author }}</span>
+                {% if req.publisher %} · {{ req.publisher }}{% endif %}
+                {% if req.category %} · {{ req.category }}{% endif %}
+              </p>
+
+              <div class="sd-requester">
+                <div class="sd-avatar">{{ req.requester.first_name|make_list|first|upper }}</div>
+                <div>
+                  <p class="sd-requester__name">{{ req.requester.get_full_name|default:req.requester.username }}</p>
+                  <p class="sd-requester__meta">
+                    {% if req.requester.profile %}{{ req.requester.profile.kelas }} · {{ req.requester.profile.get_role_display }} · {% endif %}{{ req.created_at|date:"d M Y" }}
+                  </p>
+                </div>
               </div>
+
+              <div class="sd-box sd-box--reason">
+                <p class="sd-box__label">Alasan Pengajuan</p>
+                <p class="sd-box__text">{{ req.reason }}</p>
+              </div>
+
+              {% if req.catatan_petugas %}
+              <div class="sd-box {% if req.status == 'rejected' %}sd-box--rejected{% else %}sd-box--approved{% endif %}">
+                <p class="sd-box__label">Catatan Petugas</p>
+                <p class="sd-box__text">{{ req.catatan_petugas }}</p>
+              </div>
+              {% endif %}
+
+              {% if req.reviewed_by %}
+              <p class="sd-reviewed-by">Ditinjau oleh {{ req.reviewed_by.get_full_name|default:req.reviewed_by.username }} pada {{ req.updated_at|date:"d M Y" }}</p>
               {% endif %}
             </div>
 
-            <!-- Form Setujui (tersembunyi) -->
             {% if req.status == 'pending' %}
-            <div id="approve-form-{{ req.pk }}" class="hidden mt-4 pt-4 border-t border-gray-200">
-              <form method="POST" action="{% url 'book_request:staff_review' req.pk %}"
-                    class="review-form" data-action="approve" data-title="{{ req.title }}">
-                {% csrf_token %}
-                <input type="hidden" name="action" value="approve">
-                <label class="block font-sans font-semibold text-sm text-gray-900 mb-2">
-                  Catatan <span class="text-gray-400 font-normal">(opsional – misal: "Akan diproses di pengadaan Q2")</span>
-                </label>
-                <textarea name="catatan_petugas" rows="2"
-                          placeholder="Tambahkan catatan untuk pengaju…"
-                          class="w-full px-4 py-3 border border-gray-300 rounded-xl font-sans text-sm text-gray-900 focus:outline-none focus:border-green-400 focus:ring-2 focus:ring-green-100 resize-none mb-3"></textarea>
-                <div class="flex gap-3">
-                  <button type="submit"
-                          class="px-5 py-2 bg-green-600 text-white font-sans font-semibold text-sm rounded-lg hover:bg-green-700 transition-colors">
-                    Konfirmasi Setujui
-                  </button>
-                  <button type="button"
-                          data-pk="{{ req.pk }}"
-                          class="approve-cancel-btn px-5 py-2 bg-gray-100 text-gray-700 font-sans font-semibold text-sm rounded-lg hover:bg-gray-200 transition-colors">
-                    Batal
-                  </button>
-                </div>
-              </form>
-            </div>
-
-            <!-- Form Tolak (tersembunyi) -->
-            <div id="decline-form-{{ req.pk }}" class="hidden mt-4 pt-4 border-t border-gray-200">
-              <form method="POST" action="{% url 'book_request:staff_review' req.pk %}"
-                    class="review-form" data-action="reject" data-title="{{ req.title }}">
-                {% csrf_token %}
-                <input type="hidden" name="action" value="reject">
-                <label class="block font-sans font-semibold text-sm text-gray-900 mb-2">
-                  Alasan Penolakan <span class="text-red-500">*</span>
-                </label>
-                <textarea name="catatan_petugas" rows="3" required
-                          placeholder="Jelaskan alasan penolakan usulan ini…"
-                          class="w-full px-4 py-3 border border-gray-300 rounded-xl font-sans text-sm text-gray-900 focus:outline-none focus:border-red-400 focus:ring-2 focus:ring-red-100 resize-none mb-3"></textarea>
-                <div class="flex gap-3">
-                  <button type="submit"
-                          class="px-5 py-2 bg-red-600 text-white font-sans font-semibold text-sm rounded-lg hover:bg-red-700 transition-colors">
-                    Konfirmasi Tolak
-                  </button>
-                  <button type="button"
-                          data-pk="{{ req.pk }}"
-                          class="decline-cancel-btn px-5 py-2 bg-gray-100 text-gray-700 font-sans font-semibold text-sm rounded-lg hover:bg-gray-200 transition-colors">
-                    Batal
-                  </button>
-                </div>
-              </form>
+            <div class="sd-card__actions">
+              <button type="button" class="sd-btn-approve approve-toggle-btn" data-pk="{{ req.pk }}" data-title="{{ req.title }}">✓ Setujui</button>
+              <button type="button" class="sd-btn-reject decline-toggle-btn"  data-pk="{{ req.pk }}" data-title="{{ req.title }}">✕ Tolak</button>
             </div>
             {% endif %}
-
           </div>
-        </div>
-        {% endfor %}
-      </div>
 
+          {% if req.status == 'pending' %}
+          <div id="approve-form-{{ req.pk }}" class="sd-form-panel">
+            <form method="POST" action="{% url 'book_request:staff_review' req.pk %}" class="review-form" data-action="approve" data-title="{{ req.title }}">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="approve">
+              <label class="sd-form-label">Catatan <span>(opsional)</span></label>
+              <textarea name="catatan_petugas" rows="2" placeholder="Tambahkan catatan untuk pengaju…" class="sd-textarea sd-textarea--approve"></textarea>
+              <div class="sd-form-btns">
+                <button type="submit" class="sd-btn-confirm-approve">Konfirmasi Setujui</button>
+                <button type="button" class="sd-btn-cancel approve-cancel-btn" data-pk="{{ req.pk }}">Batal</button>
+              </div>
+            </form>
+          </div>
+
+          <div id="decline-form-{{ req.pk }}" class="sd-form-panel">
+            <form method="POST" action="{% url 'book_request:staff_review' req.pk %}" class="review-form" data-action="reject" data-title="{{ req.title }}">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="reject">
+              <label class="sd-form-label">Alasan Penolakan <span class="req">*</span></label>
+              <textarea name="catatan_petugas" rows="3" required placeholder="Jelaskan alasan penolakan usulan ini…" class="sd-textarea sd-textarea--reject"></textarea>
+              <div class="sd-form-btns">
+                <button type="submit" class="sd-btn-confirm-reject">Konfirmasi Tolak</button>
+                <button type="button" class="sd-btn-cancel decline-cancel-btn" data-pk="{{ req.pk }}">Batal</button>
+              </div>
+            </form>
+          </div>
+          {% endif %}
+
+        </div>
+      </div>
+      {% endfor %}
     {% else %}
-      <div class="bg-white border border-gray-200 rounded-2xl p-16 text-center">
-        <div class="text-5xl mb-4">📭</div>
-        <p class="font-sans text-gray-600">
-          {% if status_filter %}Tidak ada usulan dengan status "{{ status_filter }}".{% else %}Belum ada usulan buku.{% endif %}
-        </p>
+      <div class="sd-empty">
+        <div style="font-size:3rem;margin-bottom:.75rem;">📭</div>
+        <p>{% if status_filter %}Tidak ada usulan dengan status "{{ status_filter }}".{% else %}Belum ada usulan buku.{% endif %}</p>
       </div>
     {% endif %}
 
   </div>
 </div>
 
-<!-- ── Toast Notification ───────────────────────────────────────────────── -->
-<div id="toast" class="hidden fixed bottom-6 right-6 z-50 flex items-center gap-3 px-5 py-4 bg-gray-900 text-white rounded-xl shadow-2xl font-sans text-sm font-semibold max-w-sm transition-all">
-  <span id="toast-icon" class="text-lg">✅</span>
-  <span id="toast-message">Usulan berhasil diproses.</span>
-</div>
-
-<!-- ── Dialog Konfirmasi ────────────────────────────────────────────────── -->
-<div id="confirm-dialog" class="hidden fixed inset-0 z-50 flex items-center justify-center p-6">
-  <div class="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
-  <div class="relative bg-white rounded-2xl shadow-2xl max-w-sm w-full p-8 text-center z-10">
-    <div id="confirm-icon" class="inline-flex items-center justify-center w-16 h-16 rounded-full mb-4 text-3xl">✅</div>
-    <h3 class="font-display text-xl font-bold text-gray-900 mb-2" id="confirm-title">Konfirmasi</h3>
-    <p class="font-sans text-sm text-gray-600 mb-6" id="confirm-message">Apakah Anda yakin?</p>
-    <div class="flex gap-3">
-      <button id="confirm-cancel"
-              class="flex-1 py-2.5 bg-gray-100 text-gray-700 font-sans font-semibold rounded-xl hover:bg-gray-200 transition-colors">
-        Batal
-      </button>
-      <button id="confirm-ok"
-              class="flex-1 py-2.5 text-white font-sans font-semibold rounded-xl transition-colors">
-        Ya, Lanjutkan
-      </button>
+<!-- Confirm Dialog -->
+<div id="confirm-dialog" class="cd-overlay">
+  <div class="cd-backdrop" id="cd-backdrop"></div>
+  <div class="cd-card" id="cd-card">
+    <div class="cd-icon-ring" id="cd-icon-ring">
+      <div class="cd-icon-inner" id="cd-icon-inner"></div>
+    </div>
+    <h3 id="cd-title">Konfirmasi</h3>
+    <p id="cd-message">Apakah Anda yakin?</p>
+    <div class="cd-actions">
+      <button class="cd-btn cd-btn--cancel" id="cd-cancel">Batal</button>
+      <button class="cd-btn" id="cd-ok">Ya, Lanjutkan</button>
     </div>
   </div>
 </div>
 
-<script id="django-messages" type="application/json">[{% for message in messages %}{"message": "{{ message|escapejs }}", "tags": "{{ message.tags }}"}{% if not forloop.last %},{% endif %}{% endfor %}]</script>
+<!-- Toast -->
+<div id="sd-toast">
+  <span id="sd-toast-icon"></span>
+  <span id="sd-toast-msg"></span>
+</div>
+
+<script id="django-messages" type="application/json">[{% for message in messages %}{"message":"{{ message|escapejs }}","tags":"{{ message.tags }}"}{% if not forloop.last %},{% endif %}{% endfor %}]</script>
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
 
-  /* ── Toggle form panels ── */
+  const SVG_CHECK = '<svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="#0FA875" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  const SVG_CROSS = '<svg viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="#d93e3e" stroke-width="3" stroke-linecap="round"/></svg>';
+
+  /* Toggle panels */
   document.addEventListener('click', function (e) {
-    // Setujui toggle
-    const approveBtn = e.target.closest('.approve-toggle-btn');
-    if (approveBtn) {
-      const pk = approveBtn.dataset.pk;
-      document.getElementById('approve-form-' + pk).classList.toggle('hidden');
-      document.getElementById('decline-form-' + pk).classList.add('hidden');
+    const ab = e.target.closest('.approve-toggle-btn');
+    if (ab) {
+      const pk = ab.dataset.pk;
+      document.getElementById('approve-form-' + pk).classList.toggle('open');
+      document.getElementById('decline-form-' + pk).classList.remove('open');
       return;
     }
-    // Tolak toggle
-    const declineBtn = e.target.closest('.decline-toggle-btn');
-    if (declineBtn) {
-      const pk = declineBtn.dataset.pk;
-      document.getElementById('decline-form-' + pk).classList.toggle('hidden');
-      document.getElementById('approve-form-' + pk).classList.add('hidden');
+    const db = e.target.closest('.decline-toggle-btn');
+    if (db) {
+      const pk = db.dataset.pk;
+      document.getElementById('decline-form-' + pk).classList.toggle('open');
+      document.getElementById('approve-form-' + pk).classList.remove('open');
       return;
     }
-    // Batal setujui
-    const approveCancel = e.target.closest('.approve-cancel-btn');
-    if (approveCancel) {
-      document.getElementById('approve-form-' + approveCancel.dataset.pk).classList.add('hidden');
-      return;
-    }
-    // Batal tolak
-    const declineCancel = e.target.closest('.decline-cancel-btn');
-    if (declineCancel) {
-      document.getElementById('decline-form-' + declineCancel.dataset.pk).classList.add('hidden');
-      return;
-    }
+    const ac = e.target.closest('.approve-cancel-btn');
+    if (ac) { document.getElementById('approve-form-' + ac.dataset.pk).classList.remove('open'); return; }
+    const dc = e.target.closest('.decline-cancel-btn');
+    if (dc) { document.getElementById('decline-form-' + dc.dataset.pk).classList.remove('open'); return; }
   });
 
-  /* ── Konfirmasi sebelum submit ── */
-  const confirmDialog  = document.getElementById('confirm-dialog');
-  const confirmTitle   = document.getElementById('confirm-title');
-  const confirmMessage = document.getElementById('confirm-message');
-  const confirmOk      = document.getElementById('confirm-ok');
-  const confirmCancel  = document.getElementById('confirm-cancel');
-  const confirmIcon    = document.getElementById('confirm-icon');
+  /* Confirm dialog */
+  const dialog  = document.getElementById('confirm-dialog');
+  const cdCard  = document.getElementById('cd-card');
+  const cdRing  = document.getElementById('cd-icon-ring');
+  const cdInner = document.getElementById('cd-icon-inner');
+  const cdTitle = document.getElementById('cd-title');
+  const cdMsg   = document.getElementById('cd-message');
+  const cdOk    = document.getElementById('cd-ok');
   let pendingForm = null;
 
   document.querySelectorAll('.review-form').forEach(form => {
     form.addEventListener('submit', function (e) {
       e.preventDefault();
       pendingForm = this;
-
       const action = this.dataset.action;
       const title  = this.dataset.title;
 
       if (action === 'approve') {
-        confirmIcon.textContent    = '✅';
-        confirmIcon.className      = 'inline-flex items-center justify-center w-16 h-16 rounded-full mb-4 text-3xl bg-green-100';
-        confirmTitle.textContent   = 'Setujui Usulan?';
-        confirmMessage.textContent = `Anda akan menyetujui usulan "${title}". Pengaju akan mendapat notifikasi.`;
-        confirmOk.className        = 'flex-1 py-2.5 bg-green-600 text-white font-sans font-semibold rounded-xl hover:bg-green-700 transition-colors';
+        cdRing.className      = 'cd-icon-ring cd-icon-ring--approve';
+        cdInner.innerHTML     = SVG_CHECK;
+        cdTitle.textContent   = 'Setujui Usulan';
+        cdMsg.textContent     = 'Anda akan menyetujui usulan "' + title + '". Pengaju akan mendapat notifikasi.';
+        cdOk.className        = 'cd-btn cd-btn--approve';
+        cdOk.textContent      = 'Ya, Lanjutkan';
       } else {
-        confirmIcon.textContent    = '✕';
-        confirmIcon.className      = 'inline-flex items-center justify-center w-16 h-16 rounded-full mb-4 text-3xl bg-red-100';
-        confirmTitle.textContent   = 'Tolak Usulan?';
-        confirmMessage.textContent = `Anda akan menolak usulan "${title}". Pengaju akan mendapat notifikasi.`;
-        confirmOk.className        = 'flex-1 py-2.5 bg-red-600 text-white font-sans font-semibold rounded-xl hover:bg-red-700 transition-colors';
+        cdRing.className      = 'cd-icon-ring cd-icon-ring--reject';
+        cdInner.innerHTML     = SVG_CROSS;
+        cdTitle.textContent   = 'Tolak Usulan?';
+        cdMsg.textContent     = 'Anda akan menolak usulan "' + title + '". Pengaju akan mendapat notifikasi.';
+        cdOk.className        = 'cd-btn cd-btn--reject';
+        cdOk.textContent      = 'Ya, Lanjutkan';
       }
 
-      confirmDialog.classList.remove('hidden');
+      dialog.classList.add('active');
+      requestAnimationFrame(() => requestAnimationFrame(() => cdCard.classList.add('show')));
     });
   });
 
-  confirmCancel.addEventListener('click', function () {
-    confirmDialog.classList.add('hidden');
+  function closeDialog() {
+    cdCard.classList.remove('show');
+    setTimeout(() => dialog.classList.remove('active'), 180);
     pendingForm = null;
-  });
+  }
 
-  confirmOk.addEventListener('click', function () {
-    confirmDialog.classList.add('hidden');
+  document.getElementById('cd-cancel').addEventListener('click', closeDialog);
+  document.getElementById('cd-backdrop').addEventListener('click', closeDialog);
+  cdOk.addEventListener('click', function () {
+    dialog.classList.remove('active');
     if (pendingForm) pendingForm.submit();
   });
 
-  /* ── Toast notification dari Django messages ── */
+  /* Toast */
   const toastData = JSON.parse(document.getElementById('django-messages').textContent || '[]');
-  toastData.forEach(function(m) { showToast(m.message, m.tags); });
+  toastData.forEach(m => showToast(m.message, m.tags));
 
   function showToast(msg, tags) {
-    const toast   = document.getElementById('toast');
-    const icon    = document.getElementById('toast-icon');
-    const msgEl   = document.getElementById('toast-message');
-
-    msgEl.textContent = msg;
-    icon.textContent  = tags && tags.includes('error') ? '❌' : '✅';
-    toast.classList.remove('hidden');
-
-    setTimeout(() => { toast.classList.add('hidden'); }, 3500);
+    const toast = document.getElementById('sd-toast');
+    document.getElementById('sd-toast-icon').textContent = tags && tags.includes('error') ? '✕' : '✓';
+    document.getElementById('sd-toast-msg').textContent  = msg;
+    toast.classList.add('active');
+    setTimeout(() => toast.classList.remove('active'), 3500);
   }
 });
 </script>
+
 {% endblock %}

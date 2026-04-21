@@ -78,12 +78,8 @@
                 Semua
             </a>
             
-            <a href="?status=menunggu_konfirmasi" class="flex-1 px-4 py-3 font-sans text-sm font-semibold border-b-2 {% if status_filter == 'menunggu_konfirmasi' %}border-gray-800 text-gray-800{% else %}border-transparent text-gray-600 hover:bg-gray-50{% endif %} transition-colors">
-                Menunggu
-            </a>
-            
-            <a href="?status=siap_diambil" class="flex-1 px-4 py-3 font-sans text-sm font-semibold border-b-2 {% if status_filter == 'siap_diambil' %}border-gray-800 text-gray-800{% else %}border-transparent text-gray-600 hover:bg-gray-50{% endif %} transition-colors">
-                Siap
+            <a href="?status=siap_diambil" class="flex-1 px-4 py-3 font-sans text-sm font-semibold border-b-2 {% if status_filter == 'siap_diambil' or status_filter == 'menunggu_konfirmasi' %}border-gray-800 text-gray-800{% else %}border-transparent text-gray-600 hover:bg-gray-50{% endif %} transition-colors">
+                Siap Diambil
             </a>
             
             <a href="?status=sedang_dipinjam" class="flex-1 px-4 py-3 font-sans text-sm font-semibold border-b-2 {% if status_filter == 'sedang_dipinjam' %}border-gray-800 text-gray-800{% else %}border-transparent text-gray-600 hover:bg-gray-50{% endif %} transition-colors">
@@ -92,10 +88,6 @@
             
             <a href="?status=menunggu_persetujuan_perpanjangan" class="flex-1 px-4 py-3 font-sans text-sm font-semibold border-b-2 {% if status_filter == 'menunggu_persetujuan_perpanjangan' %}border-gray-800 text-gray-800{% else %}border-transparent text-gray-600 hover:bg-gray-50{% endif %} transition-colors">
                 Perpanjangan
-            </a>
-            
-            <a href="?status=terlambat" class="flex-1 px-4 py-3 font-sans text-sm font-semibold border-b-2 {% if status_filter == 'terlambat' %}border-gray-800 text-gray-800{% else %}border-transparent text-gray-600 hover:bg-gray-50{% endif %} transition-colors">
-                Terlambat
             </a>
             
             <a href="?status=dikembalikan" class="flex-1 px-4 py-3 font-sans text-sm font-semibold border-b-2 {% if status_filter == 'dikembalikan' %}border-gray-800 text-gray-800{% else %}border-transparent text-gray-600 hover:bg-gray-50{% endif %} transition-colors">
@@ -243,8 +235,8 @@
             {% csrf_token %}
             <div class="mb-6">
                 <label class="block text-sm font-semibold text-gray-700 mb-2">Durasi Perpanjangan:</label>
-                <input type="number" name="duration_days" id="extendDays" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-gray-400" value="7" min="1" max="30" required>
-                <p class="text-xs text-gray-500 mt-1">Minimum 1 hari, maksimal 30 hari</p>
+                <input type="number" name="duration_days" id="extendDays" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-gray-400" value="7" min="1" max="7" required>
+                <p class="text-xs text-gray-500 mt-1">Minimum 1 hari, maksimal 7 hari</p>
             </div>
 
             <div class="flex gap-2">
@@ -256,6 +248,23 @@
                 </button>
             </div>
         </form>
+    </div>
+</div>
+
+<!-- Extend Error Modal -->
+<div id="extendErrorModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-lg p-6 max-w-md w-full shadow-lg">
+        <h3 class="font-semibold text-red-600 mb-2" style="font-family:'Playfair Display',serif">✗ Perpanjangan Gagal</h3>
+        <p class="text-sm text-gray-600 mb-6" id="extendErrorMessage">Durasi perpanjangan harus antara 1-7 hari</p>
+        
+        <div class="flex gap-2">
+            <button type="button" onclick="document.getElementById('extendErrorModal').classList.add('hidden')" class="flex-1 px-4 py-2 bg-gray-100 text-gray-700 text-sm font-semibold rounded-lg hover:bg-gray-200 transition-colors">
+                Batal
+            </button>
+            <button type="button" onclick="document.getElementById('extendErrorModal').classList.add('hidden'); document.getElementById('extendModal').classList.remove('hidden');" class="flex-1 px-4 py-2 bg-violet-100 text-violet-700 text-sm font-semibold rounded-lg hover:bg-violet-200 transition-colors">
+                Coba Lagi
+            </button>
+        </div>
     </div>
 </div>
 
@@ -280,7 +289,8 @@ function checkWaitlistAndRequestExtend(loanId, bookId) {
         .then(data => {
             if (data.has_waiting_list) {
                 // Active waiting list exists
-                alert('Perpanjangan tidak dapat dilakukan karena ada waiting list untuk buku ini.');
+                document.getElementById('extendErrorMessage').textContent = 'Perpanjangan tidak dapat dilakukan karena ada waiting list untuk buku ini.';
+                document.getElementById('extendErrorModal').classList.remove('hidden');
             } else {
                 // No waiting list, show extend modal
                 currentExtendLoanId = loanId;
@@ -289,7 +299,8 @@ function checkWaitlistAndRequestExtend(loanId, bookId) {
         })
         .catch(e => {
             console.error('Error:', e);
-            alert('Terjadi kesalahan saat memeriksa waiting list');
+            document.getElementById('extendErrorMessage').textContent = 'Terjadi kesalahan saat memeriksa waiting list';
+            document.getElementById('extendErrorModal').classList.remove('hidden');
         });
 }
 
@@ -298,8 +309,9 @@ document.getElementById('extendForm')?.addEventListener('submit', function(e) {
     if (!currentExtendLoanId) return;
     
     const days = document.getElementById('extendDays').value;
-    if (!days || days < 1 || days > 30) {
-        alert('Durasi harus antara 1-30 hari');
+    if (!days || days < 1 || days > 7) {
+        document.getElementById('extendErrorMessage').textContent = 'Durasi perpanjangan harus antara 1-7 hari';
+        document.getElementById('extendErrorModal').classList.remove('hidden');
         return;
     }
     
@@ -321,12 +333,16 @@ document.getElementById('extendForm')?.addEventListener('submit', function(e) {
             document.getElementById('extendModal').classList.add('hidden');
             location.reload();
         } else {
-            alert(data.message || 'Terjadi kesalahan saat mengajukan perpanjangan');
+            document.getElementById('extendErrorMessage').textContent = data.message || 'Terjadi kesalahan saat mengajukan perpanjangan';
+            document.getElementById('extendErrorModal').classList.remove('hidden');
+            document.getElementById('extendModal').classList.add('hidden');
         }
     })
     .catch(e => {
         console.error('Error:', e);
-        alert('Terjadi kesalahan saat mengajukan perpanjangan');
+        document.getElementById('extendErrorMessage').textContent = 'Terjadi kesalahan saat mengajukan perpanjangan';
+        document.getElementById('extendErrorModal').classList.remove('hidden');
+        document.getElementById('extendModal').classList.add('hidden');
     });
 });
 

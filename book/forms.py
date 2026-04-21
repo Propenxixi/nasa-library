@@ -29,6 +29,9 @@ class BookForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        # Set damaged and lost copies as optional (defaults to 0 in model)
+        self.fields['damaged_copies'].required = False
+        self.fields['lost_copies'].required = False
         # Set initial status for new books
         if not self.instance.pk:
             self.instance.status = 'tersedia'
@@ -49,5 +52,5 @@ class ReviewForm(forms.ModelForm):
         fields = ['rating', 'comment']
         widgets = {
             'rating':  forms.Select(choices=[(i, f'{i} ⭐') for i in range(1, 6)]),
-            'comment': forms.Textarea(attrs={'rows': 3, 'placeholder': 'Tulis ulasan...'}),
+            'comment': forms.Textarea(attrs={'rows': 3, 'placeholder': 'Tulis ulasan...', 'maxlength': '500'}),
         }

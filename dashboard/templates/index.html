@@ -1,0 +1,479 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Dashboard — NASA Library{% endblock %}
+
+{% block extra_css %}
+<style>
+  :root {
+    --navy:   #0D183A;
+    --blue:   #1E3A8A;
+    --green:  #10B981;
+    --amber:  #F59E0B;
+    --red:    #EF4444;
+    --gray50: #F9FAFB;
+    --gray100:#F3F4F6;
+    --gray200:#E5E7EB;
+    --gray500:#6B7280;
+    --gray700:#374151;
+    --gray900:#111827;
+    --white:  #FFFFFF;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.04);
+    --shadow-md: 0 4px 12px rgba(0,0,0,.10);
+  }
+
+  .dash-wrap { max-width:1280px; margin:0 auto; padding:2rem 1.5rem 4rem; }
+
+  /* ── Header ── */
+  .dash-header {
+    display:flex; justify-content:space-between; align-items:center;
+    margin-bottom:1.75rem; flex-wrap:wrap; gap:1rem;
+  }
+  .dash-header h1 {
+    font-family:'Playfair Display',serif; font-size:1.75rem; font-weight:700;
+    color:var(--gray900); margin:0;
+  }
+  .dash-header p { font-size:.875rem; color:var(--gray500); margin:.25rem 0 0; }
+
+  /* ── Dropdown Filter ── */
+  .period-select-wrap { display:flex; align-items:center; gap:.75rem; flex-wrap:wrap; }
+  .period-select-wrap label { font-size:.8125rem; font-weight:600; color:var(--gray700); }
+  .period-select {
+    padding:.45rem 2.25rem .45rem .875rem;
+    border:1.5px solid var(--gray200); border-radius:10px;
+    font-size:.8125rem; font-weight:500; color:var(--gray700);
+    background:var(--white) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236B7280' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right .75rem center;
+    appearance:none; cursor:pointer; transition:border-color .15s;
+  }
+  .period-select:focus { outline:none; border-color:var(--blue); }
+  .custom-dates { display:none; align-items:center; gap:.5rem; flex-wrap:wrap; }
+  .custom-dates.visible { display:flex; }
+  .custom-dates input {
+    padding:.4rem .75rem; border:1.5px solid var(--gray200); border-radius:8px;
+    font-size:.8125rem; color:var(--gray700);
+  }
+  .btn-apply {
+    padding:.4rem .9rem; background:var(--blue); color:var(--white);
+    border-radius:8px; font-size:.8125rem; font-weight:600; border:none; cursor:pointer;
+  }
+  .btn-apply:hover { background:var(--navy); }
+
+  /* ── Stat Cards ── */
+  .stat-grid {
+    display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr));
+    gap:1rem; margin-bottom:1.5rem;
+  }
+  .stat-card {
+    background:var(--white); border-radius:12px; padding:1.25rem 1.5rem;
+    box-shadow:var(--shadow-sm); border:1px solid var(--gray100);
+    display:flex; align-items:center; gap:1rem;
+    position:relative; overflow:hidden; transition:box-shadow .2s,transform .2s;
+  }
+  .stat-card:hover { box-shadow:var(--shadow-md); transform:translateY(-2px); }
+  .stat-card::after {
+    content:''; position:absolute; left:0; top:0; bottom:0; width:4px; border-radius:12px 0 0 12px;
+  }
+  .stat-card.visitors::after { background:var(--blue); }
+  .stat-card.loans::after    { background:var(--amber); }
+  .stat-card.returned::after { background:var(--green); }
+  .stat-card.overdue::after  { background:var(--red); }
+
+  .stat-icon {
+    width:44px; height:44px; border-radius:10px; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center; font-size:1.25rem;
+  }
+  .stat-card.visitors .stat-icon { background:#DBEAFE; }
+  .stat-card.loans    .stat-icon { background:#FEF3C7; }
+  .stat-card.returned .stat-icon { background:#D1FAE5; }
+  .stat-card.overdue  .stat-icon { background:#FEE2E2; }
+
+  .stat-info { flex:1; min-width:0; }
+  .stat-label { font-size:.7rem; font-weight:600; color:var(--gray500); text-transform:uppercase; letter-spacing:.05em; }
+  .stat-value { font-size:1.875rem; font-weight:700; color:var(--gray900); line-height:1.1; font-family:'Playfair Display',serif; }
+  .stat-sub   { font-size:.7rem; color:var(--gray500); margin-top:.1rem; }
+
+  /* ── Middle grid: chart + categories ── */
+  .mid-grid {
+    display:grid; grid-template-columns:1fr; gap:1.5rem; margin-bottom:1.5rem;
+  }
+  @media(min-width:768px) {
+    .mid-grid { grid-template-columns:3fr 2fr; }
+  }
+
+  /* ── Section Card ── */
+  .section-card {
+    background:var(--white); border-radius:12px; padding:1.5rem;
+    box-shadow:var(--shadow-sm); border:1px solid var(--gray100);
+  }
+  .section-title {
+    font-size:1rem; font-weight:700; color:var(--gray900);
+    margin:0 0 1rem; display:flex; align-items:center; gap:.5rem;
+  }
+
+  /* ── Chart ── */
+  .chart-legend { display:flex; gap:1rem; margin-bottom:.75rem; }
+  .legend-dot   { width:9px; height:9px; border-radius:50%; display:inline-block; margin-right:.35rem; }
+  .legend-item  { font-size:.8rem; color:var(--gray500); display:flex; align-items:center; }
+  .chart-wrap   { position:relative; height:240px; }
+  .chart-totals { display:flex; gap:1.5rem; margin-top:.875rem; }
+  .chart-total-item span:first-child { font-size:.7rem; color:var(--gray500); display:block; }
+  .chart-total-item span:last-child  { font-size:.9375rem; font-weight:700; }
+
+  /* ── Category list ── */
+  .cat-item { display:flex; align-items:center; gap:.75rem; margin-bottom:.875rem; }
+  .cat-item:last-child { margin-bottom:0; }
+  .cat-rank  { font-size:.7rem; font-weight:700; color:var(--gray500); width:16px; flex-shrink:0; text-align:center; }
+  .cat-name  { font-size:.8125rem; font-weight:500; color:var(--gray700); min-width:100px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; flex-shrink:0; }
+  .cat-bar-wrap { flex:1; height:7px; background:var(--gray100); border-radius:999px; overflow:hidden; }
+  .cat-bar-fill { height:7px; border-radius:999px; background:linear-gradient(90deg,var(--blue),#3B82F6); transition:width .6s ease; }
+  .cat-count { font-size:.8rem; font-weight:600; color:var(--gray700); min-width:2.25rem; text-align:right; flex-shrink:0; }
+  .cat-loans-label { font-size:.65rem; color:var(--gray500); }
+
+  /* ── Activity table (bottom full width) ── */
+  .activity-table { width:100%; border-collapse:collapse; }
+  .activity-table th {
+    font-size:.7rem; font-weight:600; color:var(--gray500); text-transform:uppercase;
+    letter-spacing:.05em; padding:.5rem .75rem; text-align:left;
+    border-bottom:1.5px solid var(--gray100);
+  }
+  .activity-table td {
+    padding:.75rem; font-size:.8125rem; color:var(--gray700);
+    border-bottom:1px solid var(--gray100); vertical-align:middle;
+  }
+  .activity-table tr:last-child td { border-bottom:none; }
+  .activity-table tr:hover td { background:var(--gray50); }
+  .act-badge-sm {
+    width:30px; height:30px; border-radius:8px;
+    display:inline-flex; align-items:center; justify-content:center; font-size:.875rem;
+  }
+  .act-badge-sm.borrowed { background:#DBEAFE; }
+  .act-badge-sm.returned { background:#D1FAE5; }
+  .act-badge-sm.overdue  { background:#FEE2E2; }
+  .act-pill {
+    font-size:.65rem; font-weight:600; padding:.2rem .6rem; border-radius:999px; white-space:nowrap;
+  }
+  .act-pill.borrowed { background:#DBEAFE; color:#1D4ED8; }
+  .act-pill.returned { background:#D1FAE5; color:#065F46; }
+  .act-pill.overdue  { background:#FEE2E2; color:#991B1B; }
+
+  /* ── No data ── */
+  .no-data-msg { text-align:center; color:var(--gray500); font-size:.875rem; padding:2.5rem 0; }
+
+  /* ── Skeleton ── */
+  @keyframes shimmer { 0%{background-position:-400px 0} 100%{background-position:400px 0} }
+  .skeleton {
+    background:linear-gradient(90deg,#f0f0f0 25%,#e8e8e8 50%,#f0f0f0 75%);
+    background-size:800px 100%; animation:shimmer 1.5s infinite; border-radius:6px;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dash-wrap">
+  <span id="librarian-flag" data-value="{% if is_librarian %}true{% else %}false{% endif %}" style="display:none;"></span>
+
+  <!-- Header + Filter -->
+  <div class="dash-header">
+    <div>
+      <h1>Dashboard</h1>
+      <p>Monitoring perpustakaan secara real-time — hanya untuk Guru &amp; Petugas</p>
+    </div>
+    <div class="period-select-wrap">
+      <label for="periodSelect">Periode:</label>
+      <select class="period-select" id="periodSelect" onchange="onSelectChange(this)">
+        <option value="today">Hari Ini</option>
+        <option value="this_week">Minggu Ini</option>
+        <option value="this_month">Bulan Ini</option>
+        <option value="custom">Kustom...</option>
+      </select>
+      <div class="custom-dates" id="customDateRow">
+        <input type="date" id="startDate" />
+        <span style="font-size:.8125rem;color:var(--gray500);">s/d</span>
+        <input type="date" id="endDate" />
+        <button class="btn-apply" onclick="applyCustom()">Terapkan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stat Cards -->
+  <div class="stat-grid" id="statCards">
+    {% for i in "1234" %}
+    <div class="stat-card {% if forloop.counter == 1 %}visitors{% elif forloop.counter == 2 %}loans{% elif forloop.counter == 3 %}returned{% else %}overdue{% endif %}">
+      <div class="stat-icon skeleton" style="width:44px;height:44px;"></div>
+      <div class="stat-info">
+        <div class="skeleton" style="height:10px;width:60%;margin-bottom:.5rem;"></div>
+        <div class="skeleton" style="height:28px;width:45%;"></div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Middle: Chart + Categories -->
+  <div class="mid-grid">
+
+    <!-- Chart -->
+    <div class="section-card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.25rem;">
+        <h2 class="section-title">📈 Statistik Peminjaman</h2>
+        <span id="chartPeriodLabel" style="font-size:.75rem;color:var(--gray500);"></span>
+      </div>
+      <div class="chart-legend">
+        <span class="legend-item"><span class="legend-dot" style="background:#1E3A8A;"></span>Dipinjam</span>
+        <span class="legend-item"><span class="legend-dot" style="background:#10B981;"></span>Dikembalikan</span>
+      </div>
+      <div class="chart-wrap">
+        <div class="no-data-msg" id="chartNoData" style="display:none;">Data tidak tersedia</div>
+        <canvas id="loanChart"></canvas>
+      </div>
+      <div class="chart-totals">
+        <div class="chart-total-item">
+          <span>Total Dipinjam</span>
+          <span id="totalBorrowed" style="color:#1E3A8A;">—</span>
+        </div>
+        <div class="chart-total-item">
+          <span>Total Dikembalikan</span>
+          <span id="totalReturned" style="color:#10B981;">—</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Categories -->
+    <div class="section-card">
+      <h2 class="section-title">🏷️ Kategori Terpopuler</h2>
+      <div id="dashCategoryList">
+        {% for i in "12345" %}
+        <div class="cat-item">
+          <div class="skeleton" style="width:16px;height:14px;border-radius:4px;"></div>
+          <div class="skeleton" style="width:90px;height:12px;border-radius:4px;"></div>
+          <div class="cat-bar-wrap"><div class="skeleton" style="height:7px;width:100%;border-radius:999px;"></div></div>
+          <div class="skeleton" style="width:24px;height:12px;border-radius:4px;"></div>
+        </div>
+        {% endfor %}
+      </div>
+      <div id="dashCategoryNoData" class="no-data-msg" style="display:none;">Data tidak tersedia</div>
+    </div>
+
+  </div><!-- /mid-grid -->
+
+  {% if is_librarian %}
+  <!-- Activity (full width, table style) -->
+  <div class="section-card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+      <h2 class="section-title" style="margin:0;">🔔 Aktivitas Terbaru</h2>
+      <a href="{% url 'book_loan:loan_management' %}" style="font-size:.8125rem;font-weight:600;color:var(--blue);">Lihat semua →</a>
+    </div>
+    <div id="activityWrap">
+      <table class="activity-table">
+        <thead>
+          <tr>
+            <th style="width:40px;"></th>
+            <th>Anggota</th>
+            <th>Buku</th>
+            <th>Status</th>
+            <th>Waktu</th>
+          </tr>
+        </thead>
+        <tbody id="activityFeed">
+          {% for i in "12345678" %}
+          <tr>
+            <td><div class="skeleton" style="width:30px;height:30px;border-radius:8px;"></div></td>
+            <td><div class="skeleton" style="height:12px;width:120px;"></div></td>
+            <td><div class="skeleton" style="height:12px;width:180px;"></div></td>
+            <td><div class="skeleton" style="height:18px;width:70px;border-radius:999px;"></div></td>
+            <td><div class="skeleton" style="height:12px;width:70px;"></div></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div id="activityNoData" class="no-data-msg" style="display:none;">Data tidak tersedia</div>
+  </div>
+  {% endif %}
+
+
+</div><!-- /dash-wrap -->
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+let currentPeriod = 'today';
+let loanChart     = null;
+
+/* ── Filter ── */
+function onSelectChange(sel) {
+  currentPeriod = sel.value;
+  const row = document.getElementById('customDateRow');
+  if (currentPeriod === 'custom') { row.classList.add('visible'); return; }
+  row.classList.remove('visible');
+  loadAll();
+}
+
+function applyCustom() {
+  const s = document.getElementById('startDate').value;
+  const e = document.getElementById('endDate').value;
+  if (!s || !e) { alert('Pilih tanggal mulai dan akhir.'); return; }
+  if (s > e)    { alert('Tanggal mulai tidak boleh setelah tanggal akhir.'); return; }
+  loadAll();
+}
+
+function buildParams() {
+  const p = new URLSearchParams({ period: currentPeriod });
+  if (currentPeriod === 'custom') {
+    p.set('start', document.getElementById('startDate').value);
+    p.set('end',   document.getElementById('endDate').value);
+  }
+  return p.toString();
+}
+
+/* ── Fetch ── */
+async function fetchJSON(url) {
+  const r = await fetch(url, { headers:{ 'X-CSRFToken': getCookie('csrftoken') } });
+  if (!r.ok) throw new Error(`HTTP ${r.status}`);
+  return r.json();
+}
+
+/* ── Stat Cards ── */
+async function loadSummary() {
+  const container = document.getElementById('statCards');
+  try {
+    const data = await fetchJSON(`/api/dashboard/?${buildParams()}`);
+    if (data.status !== 'success') return;
+    const s = data.stats;
+    container.innerHTML = `
+      ${card('visitors','🏛️','Total Pengunjung', s.total_visitors, 'Kunjungan dalam periode ini')}
+      ${card('loans',   '📚','Peminjaman Aktif', s.active_loans,   'Sedang dipinjam saat ini')}
+      ${card('returned','✅','Dikembalikan',     s.returned,       'Dikembalikan dalam periode ini')}
+      ${card('overdue', '⚠️','Terlambat',        s.overdue_loans,  'Melewati batas pengembalian')}`;
+  } catch(e) {
+    container.innerHTML = '<p style="color:#EF4444;font-size:.875rem;padding:1rem;">Gagal memuat statistik.</p>';
+  }
+}
+
+function card(type, icon, label, value, sub) {
+  return `
+    <div class="stat-card ${type}">
+      <div class="stat-icon">${icon}</div>
+      <div class="stat-info">
+        <div class="stat-label">${label}</div>
+        <div class="stat-value">${value.toLocaleString('id-ID')}</div>
+        <div class="stat-sub">${sub}</div>
+      </div>
+    </div>`;
+}
+
+/* ── Chart ── */
+async function loadChart() {
+  const canvas   = document.getElementById('loanChart');
+  const noData   = document.getElementById('chartNoData');
+  const periodLbl = document.getElementById('chartPeriodLabel');
+  try {
+    const data = await fetchJSON(`/api/dashboard/loan-chart/?${buildParams()}`);
+    if (data.status !== 'success') return;
+    document.getElementById('totalBorrowed').textContent = data.summary.total_borrowed;
+    document.getElementById('totalReturned').textContent = data.summary.total_returned;
+    const labels = { today:'Hari Ini', this_week:'Minggu Ini', this_month:'Bulan Ini',
+      custom: `${document.getElementById('startDate').value} s/d ${document.getElementById('endDate').value}` };
+    periodLbl.textContent = labels[data.period] || data.period;
+
+    const rows = data.data;
+    if (!rows?.length || (!data.summary.total_borrowed && !data.summary.total_returned)) {
+      canvas.style.display='none'; noData.style.display='block'; return;
+    }
+    canvas.style.display=''; noData.style.display='none';
+    if (loanChart) loanChart.destroy();
+    loanChart = new Chart(canvas, {
+      type:'bar',
+      data:{ labels: rows.map(r=>formatDateLabel(r.date)),
+        datasets:[
+          { label:'Dipinjam',     data:rows.map(r=>r.borrowed), backgroundColor:'#1E3A8A', borderRadius:4 },
+          { label:'Dikembalikan', data:rows.map(r=>r.returned), backgroundColor:'#10B981', borderRadius:4 },
+        ]},
+      options:{ responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{ display:false }},
+        scales:{
+          x:{ grid:{ display:false }, ticks:{ font:{ size:11 }}},
+          y:{ beginAtZero:true, grid:{ color:'#F3F4F6' }, ticks:{ font:{ size:11 }, precision:0 }},
+        }},
+    });
+  } catch(e) { canvas.style.display='none'; noData.style.display='block'; }
+}
+
+/* ── Categories ── */
+async function loadCategories() {
+  const list   = document.getElementById('dashCategoryList');
+  const noData = document.getElementById('dashCategoryNoData');
+  noData.style.display = 'none';
+  try {
+    const data = await fetchJSON(`/api/dashboard/popular-categories/?${buildParams()}`);
+    list.innerHTML = '';
+    if (!data?.categories?.length) { noData.style.display='block'; return; }
+    data.categories.forEach((c, i) => {
+      list.innerHTML += `
+        <div class="cat-item">
+          <span class="cat-rank">${i+1}</span>
+          <span class="cat-name">${escHtml(c.name)}</span>
+          <div class="cat-bar-wrap"><div class="cat-bar-fill" style="width:${c.percentage}%"></div></div>
+          <span class="cat-count">${c.count} <span class="cat-loans-label">pinjam</span></span>
+        </div>`;
+    });
+  } catch(e) { list.innerHTML=''; noData.style.display='block'; }
+}
+
+/* ── Activity ── */
+async function loadActivity() {
+  const tbody  = document.getElementById('activityFeed');
+  const noData = document.getElementById('activityNoData');
+  const wrap   = document.getElementById('activityWrap');
+  try {
+    const data = await fetchJSON(`/api/dashboard/recent-activity/`);
+    if (data.status !== 'success') return;
+    const acts = data.activities;
+    if (!acts?.length) { wrap.style.display='none'; noData.style.display='block'; return; }
+    noData.style.display='none'; wrap.style.display='';
+    tbody.innerHTML = acts.map(a => {
+      const cls   = a.type.toLowerCase();
+      const emoji = cls==='borrowed'?'📤': cls==='returned'?'📥':'🚨';
+      const label = cls==='borrowed'?'Dipinjam': cls==='returned'?'Dikembalikan':'Terlambat';
+      return `<tr>
+        <td><div class="act-badge-sm ${cls}">${emoji}</div></td>
+        <td style="font-weight:600;color:var(--gray900);">${escHtml(a.member_name)}</td>
+        <td style="color:var(--gray500);max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(a.book_title)}</td>
+        <td><span class="act-pill ${cls}">${label}</span></td>
+        <td style="color:var(--gray500);white-space:nowrap;">${formatTimestamp(a.timestamp)}</td>
+      </tr>`;
+    }).join('');
+  } catch(e) { wrap.style.display='none'; noData.style.display='block'; }
+}
+
+const IS_LIBRARIAN = document.getElementById('librarian-flag').dataset.value === 'true';
+
+function loadAll() {
+  loadSummary();
+  loadChart();
+  loadCategories();
+  if (IS_LIBRARIAN) loadActivity();
+}
+
+/* ── Utils ── */
+function getCookie(name) {
+  for (const c of document.cookie.split(';')) {
+    const t = c.trim();
+    if (t.startsWith(name+'=')) return decodeURIComponent(t.slice(name.length+1));
+  }
+  return '';
+}
+function escHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function formatDateLabel(iso) {
+  return new Date(iso+'T00:00:00').toLocaleDateString('id-ID',{day:'numeric',month:'short'});
+}
+function formatTimestamp(ts) {
+  if (!ts) return '—';
+  const d = new Date(ts);
+  return isNaN(d) ? ts : d.toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'2-digit'});
+}
+
+document.addEventListener('DOMContentLoaded', loadAll);
+setInterval(() => { if (currentPeriod !== 'custom') loadAll(); }, 60000);
+</script>
+{% endblock %}

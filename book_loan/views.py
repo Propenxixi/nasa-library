@@ -85,7 +85,11 @@ def loan_history(request):
     
     # Apply status filter
     if status_filter:
-        loans = loans.filter(status=status_filter)
+        if status_filter == 'siap_diambil':
+            # Menampilkan keduanya: menunggu_konfirmasi dan siap_diambil
+            loans = loans.filter(status__in=['menunggu_konfirmasi', 'siap_diambil'])
+        else:
+            loans = loans.filter(status=status_filter)
     
     # Determine if filters are active
     is_filtered = bool(search or tanggal_pinjam or jatuh_tempo or sisa_hari or status_filter)
@@ -165,10 +169,19 @@ def loan_management(request):
             pass
     
     # Split by status
+    today = timezone.now().date()
+    
     pending_approvals = all_loans.filter(status='menunggu_konfirmasi')
     ready_for_pickup = all_loans.filter(status='siap_diambil')
-    borrowed = all_loans.filter(status='sedang_dipinjam')
-    overdue = all_loans.filter(status='terlambat')
+    
+    # Borrowed loans that are NOT overdue yet (due_date >= today)
+    borrowed = all_loans.filter(status='sedang_dipinjam', due_date__gte=today)
+    
+    # Overdue loans: status='terlambat' OR (sedang_dipinjam AND due_date < today)
+    overdue = all_loans.filter(
+        Q(status='terlambat') | Q(status='sedang_dipinjam', due_date__lt=today)
+    )
+    
     pending_extensions = all_loans.filter(status='menunggu_persetujuan_perpanjangan')
     
     # Transform extensions data for template
@@ -355,6 +368,13 @@ def api_create_loan(request):
         
         if not book_id:
             return JsonResponse({'status': 'error', 'message': 'book_id diperlukan'}, status=400)
+        
+        # Validasi durasi maksimal 7 hari
+        if not isinstance(duration_days, int) or duration_days < 1 or duration_days > 7:
+            return JsonResponse({
+                'status': 'error', 
+                'message': 'Durasi peminjaman harus antara 1-7 hari'
+            }, status=400)
         
         book = get_object_or_404(Book, id=book_id)
         
@@ -634,6 +654,13 @@ def api_request_extension(request, loan_id):
     try:
         data = json.loads(request.body)
         duration_days = data.get('duration_days', 7)
+        
+        # Validasi durasi maksimal 7 hari
+        if not isinstance(duration_days, int) or duration_days < 1 or duration_days > 7:
+            return JsonResponse({
+                'status': 'error', 
+                'message': 'Durasi perpanjangan harus antara 1-7 hari'
+            }, status=400)
         
         loan = get_object_or_404(Loan, id=loan_id)
         
