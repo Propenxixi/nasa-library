@@ -16,12 +16,12 @@ class Book(models.Model):
     # Data dari CSV / input manual
     title           = models.CharField(max_length=500)
     author          = models.CharField(max_length=500)
-    isbn            = models.CharField(max_length=20, unique=True)
+    isbn            = models.CharField(max_length=20, unique=True, blank=True, null=True)  # Opsional, tapi unik jika diisi
     pages           = models.PositiveIntegerField(null=True, blank=True)
     language        = models.CharField(max_length=100, blank=True, default='Indonesian')
     total_copies    = models.PositiveIntegerField(default=1)
-    damaged_copies  = models.PositiveIntegerField(default=0)  # Track damaged copies
-    lost_copies     = models.PositiveIntegerField(default=0)  # Track lost copies
+    damaged_copies  = models.PositiveIntegerField(default=0)
+    lost_copies     = models.PositiveIntegerField(default=0)
     shelf_location  = models.CharField(max_length=100, blank=True)
     status          = models.CharField(max_length=20, choices=STATUS_CHOICES, default='tersedia')
 
@@ -44,13 +44,23 @@ class Book(models.Model):
         ordering = ['title']
 
     def __str__(self):
-        return f"{self.title} ({self.isbn})"
+        return f"{self.title} ({self.isbn or 'Tanpa ISBN'})"
+
+    def save(self, *args, **kwargs):
+        # Normalisasi: ISBN kosong atau '0' disimpan sebagai None agar unique constraint tetap bekerja
+        # (database membolehkan banyak NULL, tapi tidak boleh ada dua nilai string yang sama)
+        if not self.isbn or self.isbn.strip() == '0':
+            self.isbn = None
+        else:
+            self.isbn = self.isbn.strip()
+        super().save(*args, **kwargs)
 
     @property
     def available_copies(self):
-        """Calculate available copies: total - borrowed - damaged - lost"""
+        """Calculate available copies: total - borrowed - damaged - lost
+        Counts both 'sedang_dipinjam' and 'siap_diambil' as reserved/borrowed"""
         try:
-            borrowed = self.loans.filter(status='sedang_dipinjam').count()
+            borrowed = self.loans.filter(status__in=['sedang_dipinjam', 'siap_diambil']).count()
         except AttributeError:
             borrowed = 0
         good_copies = self.total_copies - self.damaged_copies - self.lost_copies
@@ -94,16 +104,12 @@ class Book(models.Model):
         from book_loan.models import WaitingList, Notification
         
         try:
-            # Get first person in waiting list (not already marked as ready/cancelled)
             waiting = self.waiting_lists.filter(
                 status='menunggu'
             ).order_by('position').first()
             
             if waiting:
-                # Mark as ready to claim
                 waiting.mark_ready()
-                
-                # Create notification for the user
                 Notification.objects.create(
                     user=waiting.user,
                     notification_type='waitlist_ready',

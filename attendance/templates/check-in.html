@@ -61,10 +61,10 @@
             <!-- Check-In Form Card -->
             <div class="w-full bg-white rounded-2xl shadow-[0px_4px_24px_0px_rgba(30,58,138,0.08)] border border-slate-200 overflow-hidden mb-8 p-px">
                 <div class="h-1 bg-gradient-to-r from-blue-900 to-slate-500"></div>
-                
+
                 <form id="checkin-form" class="p-6">
                     {% csrf_token %}
-                    
+
                     <!-- Activities Section -->
                     <div class="mb-8">
                         <div class="flex justify-start items-center gap-3 mb-6">
@@ -76,13 +76,13 @@
                                 <div class="text-zinc-600 text-sm font-normal font-['Work_Sans'] leading-5">Select all activities that apply</div>
                             </div>
                         </div>
-                        
+
                         <!-- Activity Checkboxes Grid -->
                         <div class="grid grid-cols-2 gap-4">
                             {% for activity in activities %}
-                                <label class="w-full h-16 pl-3.5 bg-white rounded-2xl border border-slate-200 flex justify-start items-center gap-3 cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-all group has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50">
-                                    <input type="checkbox" name="activities" value="{{ activity.id }}" class="w-5 h-5 appearance-none border-2 border-gray-300 rounded checkbox-input">
-                                    <span class="text-gray-700 text-sm font-medium font-['Work_Sans'] leading-6 group-has-[:checked]:text-blue-700 group-has-[:checked]:font-semibold flex items-center gap-2">
+                            <label class="w-full h-16 pl-3.5 bg-white rounded-2xl border border-slate-200 flex justify-start items-center gap-3 cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-all group has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50">
+                                <input type="checkbox" name="activities" value="{{ activity.id }}" class="w-5 h-5 appearance-none border-2 border-gray-300 rounded checkbox-input">
+                                <span class="text-gray-700 text-sm font-medium font-['Work_Sans'] leading-6 group-has-[:checked]:text-blue-700 group-has-[:checked]:font-semibold flex items-center gap-2">
                                         {% if 'Reading Books' in activity.name %}
                                             <img src="{% static 'assets/Book.svg' %}" alt="Books" class="w-4 h-4">
                                         {% elif 'Homework' in activity.name or 'Doing' in activity.name %}
@@ -104,9 +104,9 @@
                                         {% endif %}
                                         {{ activity.name }}
                                     </span>
-                                </label>
+                            </label>
                             {% empty %}
-                                <p class="text-gray-500 text-sm col-span-2">No activities available. Please contact the librarian.</p>
+                            <p class="text-gray-500 text-sm col-span-2">No activities available. Please contact the librarian.</p>
                             {% endfor %}
                         </div>
 
@@ -116,7 +116,7 @@
                             <img src="{% static 'assets/Pen.svg' %}" alt="Custom" class="absolute right-4 top-3 pointer-events-none w-5 h-5">
                         </div>
                         {% if form.custom_activity.errors %}
-                            <p class="text-red-600 font-sans text-sm mt-2">{{ form.custom_activity.errors }}</p>
+                        <p class="text-red-600 font-sans text-sm mt-2">{{ form.custom_activity.errors }}</p>
                         {% endif %}
                     </div>
 
@@ -143,7 +143,7 @@
 
                     <!-- Alternative Actions -->
                     <p class="text-center text-zinc-600 text-sm font-normal font-['Work_Sans'] leading-5 mt-6">
-                        Already checked in? 
+                        Already checked in?
                         <span class="text-gray-300">·</span>
                         <a href="{% url 'attendance:history' %}" class="text-slate-500 font-semibold underline hover:text-slate-600">View history</a>
                     </p>
@@ -182,271 +182,271 @@
 
 
 
-<!-- Loading Modal -->
-<div id="loading-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50 transition-opacity duration-300">
-    <div class="bg-white rounded-2xl p-8 text-center shadow-2xl">
-        <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full mb-4 animate-pulse">
-            <img src="{% static 'assets/OpenBook.svg' %}" alt="Processing" class="w-8 h-8">
-        </div>
-        <p class="font-sans font-semibold text-gray-900 text-lg mb-2">Processing Check-In</p>
-        <p class="font-sans text-gray-600 text-sm">Please wait...</p>
-        <div class="mt-4 flex justify-center">
-            <div class="flex space-x-2">
-                <div class="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style="animation-delay: 0s;"></div>
-                <div class="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style="animation-delay: 0.1s;"></div>
-                <div class="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style="animation-delay: 0.2s;"></div>
+    <!-- Loading Modal -->
+    <div id="loading-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50 transition-opacity duration-300">
+        <div class="bg-white rounded-2xl p-8 text-center shadow-2xl">
+            <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full mb-4 animate-pulse">
+                <img src="{% static 'assets/OpenBook.svg' %}" alt="Processing" class="w-8 h-8">
+            </div>
+            <p class="font-sans font-semibold text-gray-900 text-lg mb-2">Processing Check-In</p>
+            <p class="font-sans text-gray-600 text-sm">Please wait...</p>
+            <div class="mt-4 flex justify-center">
+                <div class="flex space-x-2">
+                    <div class="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style="animation-delay: 0s;"></div>
+                    <div class="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style="animation-delay: 0.1s;"></div>
+                    <div class="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style="animation-delay: 0.2s;"></div>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-<!-- Success Modal -->
-<div id="success-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50 transition-opacity duration-300">
-    <div class="w-96 bg-white rounded-3xl shadow-2xl overflow-hidden">
-        <!-- Header with Icon -->
-        <div class="px-8 pt-8 pb-4 flex justify-center">
-            <img src="{% static 'assets/ChecklistModal.svg' %}" alt="Success" class="w-14 h-14">
+    <!-- Success Modal -->
+    <div id="success-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50 transition-opacity duration-300">
+        <div class="w-96 bg-white rounded-3xl shadow-2xl overflow-hidden">
+            <!-- Header with Icon -->
+            <div class="px-8 pt-8 pb-4 flex justify-center">
+                <img src="{% static 'assets/ChecklistModal.svg' %}" alt="Success" class="w-14 h-14">
+            </div>
+
+            <!-- Title -->
+            <div class="px-8 pb-6 text-center">
+                <h3 class="text-slate-900 text-3xl font-bold font-['Playfair_Display']">Check-In Success!</h3>
+            </div>
+
+            <!-- Message with Time -->
+            <div class="px-8 pb-8 text-center">
+                <p class="text-zinc-600 text-base font-normal font-['Work_Sans'] leading-6">
+                    Welcome! You checked in at
+                    <span id="success-time" class="text-blue-900 font-bold">--:--</span>
+                </p>
+            </div>
+
+            <!-- Continue Button -->
+            <div class="px-8 pb-4">
+                <button id="success-btn" class="w-full h-14 rounded-2xl shadow-[0px_4px_20px_0px_rgba(30,58,138,0.30)] inline-flex justify-center items-center gap-2 hover:opacity-90 transition-all" style="background-color: #1E3A8A;">
+                    <span class="text-center text-white text-base font-bold font-['Work_Sans'] tracking-tight">Continue</span>
+                    <img src="{% static 'assets/ArrowModal.svg' %}" alt="Arrow" class="w-4 h-4">
+                </button>
+            </div>
+
+            <!-- Footer Links -->
+            <div class="border-t border-slate-200 px-8 py-4 text-center text-sm">
+                <span class="text-zinc-600 font-normal font-['Work_Sans']">Already checked in? </span>
+                <span class="text-gray-300 font-normal font-['Work_Sans']"> · </span>
+                <a href="{% url 'attendance:history' %}" class="text-blue-900 font-semibold font-['Work_Sans'] hover:underline">View history</a>
+            </div>
         </div>
+    </div>
 
-        <!-- Title -->
-        <div class="px-8 pb-6 text-center">
-            <h3 class="text-slate-900 text-3xl font-bold font-['Playfair_Display']">Check-In Success!</h3>
-        </div>
-
-        <!-- Message with Time -->
-        <div class="px-8 pb-8 text-center">
-            <p class="text-zinc-600 text-base font-normal font-['Work_Sans'] leading-6">
-                Welcome! You checked in at 
-                <span id="success-time" class="text-blue-900 font-bold">--:--</span>
-            </p>
-        </div>
-
-        <!-- Continue Button -->
-        <div class="px-8 pb-4">
-            <button id="success-btn" class="w-full h-14 rounded-2xl shadow-[0px_4px_20px_0px_rgba(30,58,138,0.30)] inline-flex justify-center items-center gap-2 hover:opacity-90 transition-all" style="background-color: #1E3A8A;">
-                <span class="text-center text-white text-base font-bold font-['Work_Sans'] tracking-tight">Continue</span>
-                <img src="{% static 'assets/ArrowModal.svg' %}" alt="Arrow" class="w-4 h-4">
+    <!-- Error Modal -->
+    <div id="error-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50 transition-opacity duration-300">
+        <div class="bg-white rounded-2xl p-8 text-center shadow-2xl max-w-md">
+            <div class="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-red-400 to-red-500 rounded-full mb-4">
+                <span class="text-4xl">✕</span>
+            </div>
+            <h3 class="font-display text-2xl font-bold text-gray-900 mb-2">Check-In Failed</h3>
+            <p id="error-message" class="font-sans text-gray-600 mb-6 text-center"></p>
+            <button id="error-btn" class="w-full py-3 px-6 bg-gradient-to-r from-red-600 to-red-700 text-white font-sans font-semibold rounded-xl hover:from-red-700 hover:to-red-800 transition-all">
+                Try Again
             </button>
         </div>
-
-        <!-- Footer Links -->
-        <div class="border-t border-slate-200 px-8 py-4 text-center text-sm">
-            <span class="text-zinc-600 font-normal font-['Work_Sans']">Already checked in? </span>
-            <span class="text-gray-300 font-normal font-['Work_Sans']"> · </span>
-            <a href="{% url 'attendance:history' %}" class="text-blue-900 font-semibold font-['Work_Sans'] hover:underline">View history</a>
-        </div>
     </div>
-</div>
 
-<!-- Error Modal -->
-<div id="error-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50 transition-opacity duration-300">
-    <div class="bg-white rounded-2xl p-8 text-center shadow-2xl max-w-md">
-        <div class="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-red-400 to-red-500 rounded-full mb-4">
-            <span class="text-4xl">✕</span>
-        </div>
-        <h3 class="font-display text-2xl font-bold text-gray-900 mb-2">Check-In Failed</h3>
-        <p id="error-message" class="font-sans text-gray-600 mb-6 text-center"></p>
-        <button id="error-btn" class="w-full py-3 px-6 bg-gradient-to-r from-red-600 to-red-700 text-white font-sans font-semibold rounded-xl hover:from-red-700 hover:to-red-800 transition-all">
-            Try Again
-        </button>
-    </div>
-</div>
+    <script>
+        // Update current time
+        function updateTime() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+            document.getElementById('current-time').textContent = timeString;
+            document.getElementById('checkin-time').textContent = timeString;
+            document.getElementById('hero-time').textContent = timeString;
+        }
 
-<script>
-    // Update current time
-    function updateTime() {
-        const now = new Date();
-        const timeString = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
-        document.getElementById('current-time').textContent = timeString;
-        document.getElementById('checkin-time').textContent = timeString;
-        document.getElementById('hero-time').textContent = timeString;
-    }
-    
-    updateTime();
-    setInterval(updateTime, 1000);
+        updateTime();
+        setInterval(updateTime, 1000);
 
-    // Modal functions
-    function showModal(modalId) {
-        document.getElementById(modalId).classList.remove('hidden');
-    }
+        // Modal functions
+        function showModal(modalId) {
+            document.getElementById(modalId).classList.remove('hidden');
+        }
 
-    function hideModal(modalId) {
-        document.getElementById(modalId).classList.add('hidden');
-    }
+        function hideModal(modalId) {
+            document.getElementById(modalId).classList.add('hidden');
+        }
 
-    // Form submission with AJAX
-    const form = document.getElementById('checkin-form');
-    const submitBtn = document.getElementById('submit-btn');
-    
-    form.addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        // Show loading indicator
-        showModal('loading-modal');
-        submitBtn.disabled = true;
+        // Form submission with AJAX
+        const form = document.getElementById('checkin-form');
+        const submitBtn = document.getElementById('submit-btn');
 
-        // Get form data
-        const formData = new FormData(form);
-        const activities = Array.from(document.querySelectorAll('input[name="activities"]:checked')).map(cb => cb.value);
-        const customActivityField = document.querySelector('textarea[name="custom_activity"]');
-        const customActivity = customActivityField ? customActivityField.value : '';
-        
-        // Prepare JSON data
-        const data = {
-            activities: activities,
-            custom_activity: customActivity
-        };
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
 
-        console.log('📤 Sending check-in request:', data);
+            // Show loading indicator
+            showModal('loading-modal');
+            submitBtn.disabled = true;
 
-        // Send AJAX request
-        fetch('{% url "attendance:api_checkin" %}', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': document.querySelector('[name="csrfmiddlewaretoken"]').value
-            },
-            body: JSON.stringify(data)
-        })
-        .then(response => {
-            console.log('📥 Response status:', response.status);
-            return response.json().then(data => ({ status: response.status, data }));
-        })
-        .then(({ status, data }) => {
-            console.log('📦 Response data:', data);
-            hideModal('loading-modal');
-            
-            if (status === 201 || data.status === 'success') {
-                // Update success time display
-                const now = new Date();
-                const timeString = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
-                document.getElementById('success-time').textContent = timeString;
-                showModal('success-modal');
-                
-                // Redirect on button click
-                document.getElementById('success-btn').addEventListener('click', function() {
-                    window.location.href = '{% url "attendance:active_attendance" %}';
-                });
-            } else {
-                // Show error modal
-                console.error('❌ Check-in failed:', data);
-                document.getElementById('error-message').textContent = data.message || 'An error occurred';
+            // Get form data
+            const formData = new FormData(form);
+            const activities = Array.from(document.querySelectorAll('input[name="activities"]:checked')).map(cb => cb.value);
+            const customActivityField = document.querySelector('textarea[name="custom_activity"]');
+            const customActivity = customActivityField ? customActivityField.value : '';
+
+            // Prepare JSON data
+            const data = {
+                activities: activities,
+                custom_activity: customActivity
+            };
+
+            console.log('📤 Sending check-in request:', data);
+
+            // Send AJAX request
+            fetch('{% url "attendance:api_checkin" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('[name="csrfmiddlewaretoken"]').value
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => {
+                console.log('📥 Response status:', response.status);
+                return response.json().then(data => ({ status: response.status, data }));
+            })
+            .then(({ status, data }) => {
+                console.log('📦 Response data:', data);
+                hideModal('loading-modal');
+
+                if (status === 201 || data.status === 'success') {
+                    // Update success time display
+                    const now = new Date();
+                    const timeString = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+                    document.getElementById('success-time').textContent = timeString;
+                    showModal('success-modal');
+
+                    // Redirect on button click
+                    document.getElementById('success-btn').addEventListener('click', function() {
+                        window.location.href = '{% url "attendance:active_attendance" %}';
+                    });
+                } else {
+                    // Show error modal
+                    console.error('❌ Check-in failed:', data);
+                    document.getElementById('error-message').textContent = data.message || 'An error occurred';
+                    showModal('error-modal');
+
+                    // Allow retry
+                    document.getElementById('error-btn').addEventListener('click', function() {
+                        hideModal('error-modal');
+                        submitBtn.disabled = false;
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('❌ Error:', error);
+                hideModal('loading-modal');
+                document.getElementById('error-message').textContent = 'A network error occurred. Please check your connection and try again.';
                 showModal('error-modal');
-                
-                // Allow retry
+                submitBtn.disabled = false;
+
                 document.getElementById('error-btn').addEventListener('click', function() {
                     hideModal('error-modal');
-                    submitBtn.disabled = false;
                 });
-            }
-        })
-        .catch(error => {
-            console.error('❌ Error:', error);
-            hideModal('loading-modal');
-            document.getElementById('error-message').textContent = 'A network error occurred. Please check your connection and try again.';
-            showModal('error-modal');
-            submitBtn.disabled = false;
-            
-            document.getElementById('error-btn').addEventListener('click', function() {
-                hideModal('error-modal');
             });
         });
-    });
 
-    // Close modals when clicking outside
-    document.addEventListener('click', function(e) {
-        if (e.target.id === 'loading-modal') return; // Don't close loading modal
-        if (e.target.id === 'success-modal' || e.target.id === 'error-modal') {
-            hideModal(e.target.id);
-        }
-    });
-
-    // Smooth scrolling for links
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-        anchor.addEventListener('click', function (e) {
-            e.preventDefault();
-            const target = document.querySelector(this.getAttribute('href'));
-            if (target) target.scrollIntoView({ behavior: 'smooth' });
+        // Close modals when clicking outside
+        document.addEventListener('click', function(e) {
+            if (e.target.id === 'loading-modal') return; // Don't close loading modal
+            if (e.target.id === 'success-modal' || e.target.id === 'error-modal') {
+                hideModal(e.target.id);
+            }
         });
-    });
-</script>
 
-<style>
-    /* Custom checkbox styling */
-    .checkbox-input {
-        appearance: none;
-        -webkit-appearance: none;
-        width: 20px;
-        height: 20px;
-        border: 2px solid #d1d5db;
-        border-radius: 0.375rem;
-        cursor: pointer;
-        background-color: white;
-        transition: all 0.3s ease;
-    }
+        // Smooth scrolling for links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) target.scrollIntoView({ behavior: 'smooth' });
+            });
+        });
+    </script>
 
-    .checkbox-input:checked {
-        background-color: #3b82f6;
-        border-color: #3b82f6;
-        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3E%3Cpath d='M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z'/%3E%3C/svg%3E");
-        background-size: contain;
-        background-position: center;
-        background-repeat: no-repeat;
-    }
+    <style>
+        /* Custom checkbox styling */
+        .checkbox-input {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #d1d5db;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            background-color: white;
+            transition: all 0.3s ease;
+        }
 
-    .checkbox-input:hover {
-        border-color: #93c5fd;
-    }
+        .checkbox-input:checked {
+            background-color: #3b82f6;
+            border-color: #3b82f6;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3E%3Cpath d='M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z'/%3E%3C/svg%3E");
+            background-size: contain;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
 
-    .checkbox-input:focus {
-        outline: none;
-        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-    }
+        .checkbox-input:hover {
+            border-color: #93c5fd;
+        }
 
-    /* Textarea styling */
-    textarea {
-        font-family: inherit;
-        padding: 0.75rem 1rem;
-        padding-right: 45px;
-        border: 1px solid #d1d5db;
-        border-radius: 1rem;
-        font-size: 0.875rem;
-        color: #6b7280;
-        background-color: #f3f4f6;
-        width: 100%;
-    }
+        .checkbox-input:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
 
-    textarea::placeholder {
-        color: #9ca3af;
-    }
+        /* Textarea styling */
+        textarea {
+            font-family: inherit;
+            padding: 0.75rem 1rem;
+            padding-right: 45px;
+            border: 1px solid #d1d5db;
+            border-radius: 1rem;
+            font-size: 0.875rem;
+            color: #6b7280;
+            background-color: #f3f4f6;
+            width: 100%;
+        }
 
-    /* Loading animation */
-    @keyframes bounce {
-        0%, 100% { transform: translateY(0); }
-        50% { transform: translateY(-8px); }
-    }
+        textarea::placeholder {
+            color: #9ca3af;
+        }
 
-    .animate-bounce {
-        animation: bounce 1s infinite;
-    }
+        /* Loading animation */
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
 
-    @keyframes spin {
-        from { transform: rotate(0deg); }
-        to { transform: rotate(360deg); }
-    }
+        .animate-bounce {
+            animation: bounce 1s infinite;
+        }
 
-    .animate-spin {
-        animation: spin 1s linear infinite;
-    }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
 
-    .animate-pulse {
-        animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-    }
+        .animate-spin {
+            animation: spin 1s linear infinite;
+        }
 
-    @keyframes pulse {
-        0%, 100% { opacity: 1; }
-        50% { opacity: 0.5; }
-    }
-</style>
+        .animate-pulse {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
 
-{% endblock %}
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+    </style>
+
+    {% endblock %}

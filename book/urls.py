@@ -11,10 +11,13 @@ urlpatterns = [
     path('catalog/add/',       views.book_add,     name='book_add'),
     path('catalog/<int:pk>/edit/',   views.book_edit,   name='book_edit'),
     path('catalog/<int:pk>/delete/', views.book_delete, name='book_delete'),
+    path('catalog/<int:pk>/reactivate/', views.book_reactivate, name='book_reactivate'),
+    path('catalog/bulk-upload/', views.book_bulk_upload, name='book_bulk_upload'),
 
     # REST API
     path('api/books/',         views.book_api_list_create, name='api_books'),
     path('api/books/<int:pk>/', views.book_api_detail,     name='api_book_detail'),
+    path('api/books/bulk',     views.api_bulk_upload_books, name='api_bulk_upload_books'),
     path('api/books/<int:book_id>/reviews/', views.api_book_reviews, name='api_book_reviews'),
     path('api/books/<int:book_id>/reviews/<int:review_id>/', views.api_delete_review, name='api_delete_review'),
 

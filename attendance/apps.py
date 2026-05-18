@@ -7,7 +7,7 @@ class AttendanceConfig(AppConfig):
     def ready(self):
         """Initialize attendance activities on app ready."""
         from attendance.models import AttendanceActivity
-        
+
         activities_data = [
             {'name': 'Reading Books', 'emoji': '📚', 'description': 'Reading books in the library'},
             {'name': 'Doing Homework', 'emoji': '📝', 'description': 'Studying or completing school assignments'},

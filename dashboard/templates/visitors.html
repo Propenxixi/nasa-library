@@ -1,0 +1,722 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Dashboard Kunjungan — NASA Library{% endblock %}
+
+{% block extra_css %}
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Josefin+Sans:wght@400;600&family=Work+Sans:wght@400;600&display=swap" rel="stylesheet"/>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --yellow:     #FAD28F;
+    --green:      #40C79A;
+    --red:        #F26969;
+    --blue:       #1E3A8A;
+    --black:      #000000;
+    --gray-table: #E9EBF3;
+    --gray-cat:   #BFBFBF;
+    --white:      #FFFFFF;
+    --bg:         #F5F6FA;
+    --radius:     16px;
+    --shadow:     0 2px 16px rgba(30,58,138,.07);
+  }
+
+  body {
+    background: var(--bg);
+    font-family: 'Work Sans', sans-serif;
+    color: var(--black);
+  }
+
+  .dash-wrap { max-width: 1280px; margin: 0 auto; padding: 2.5rem 2rem 4rem; }
+
+  /* ── HEADER ── */
+  .dash-header { margin-bottom: 2rem; text-align: center; }
+  .dash-header h1 {
+    font-family: 'Playfair Display', serif;
+    font-weight: 600;
+    font-size: 2.1rem;
+    color: var(--black);
+    line-height: 1.15;
+    margin-bottom: .3rem;
+  }
+  .dash-header .subtitle {
+    font-family: 'Work Sans', sans-serif;
+    font-weight: 600;
+    font-size: .9rem;
+    color: #6b7280;
+    margin-bottom: 1rem;
+  }
+
+  /* ── FILTER ── */
+  .period-select-wrap { display: flex; align-items: center; gap: .75rem; flex-wrap: wrap; justify-content: center; }
+  .period-select-wrap label {
+    font-family: 'Work Sans', sans-serif;
+    font-size: .82rem;
+    font-weight: 600;
+    color: #6b7280;
+  }
+  .period-select {
+    padding: .45rem 2.2rem .45rem .9rem;
+    border: 1.5px solid #d1d5db;
+    border-radius: 10px;
+    font-family: 'Work Sans', sans-serif;
+    font-size: .82rem;
+    font-weight: 600;
+    color: var(--black);
+    background: var(--white) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236B7280' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right .75rem center;
+    appearance: none;
+    cursor: pointer;
+    transition: border-color .15s;
+  }
+  .period-select:focus { outline: none; border-color: var(--blue); }
+  .custom-dates { display: none; align-items: center; gap: .5rem; flex-wrap: wrap; }
+  .custom-dates.visible { display: flex; }
+  .custom-dates input {
+    padding: .4rem .75rem;
+    border: 1.5px solid #d1d5db;
+    border-radius: 8px;
+    font-family: 'Work Sans', sans-serif;
+    font-size: .82rem;
+    color: var(--black);
+  }
+  .btn-apply {
+    padding: .4rem .9rem;
+    background: var(--blue);
+    color: var(--white);
+    border-radius: 8px;
+    font-family: 'Work Sans', sans-serif;
+    font-size: .82rem;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: background .15s;
+  }
+  .btn-apply:hover { background: #162d6e; }
+
+  /* ── STAT CARDS ── */
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.1rem;
+    margin-bottom: 1.75rem;
+  }
+  @media (max-width: 520px) { .stat-grid { grid-template-columns: 1fr; } }
+
+  .stat-card {
+    border-radius: var(--radius);
+    padding: 1.5rem 1.2rem 1.35rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    min-height: 145px;
+    position: relative;
+    overflow: hidden;
+    transition: transform .2s, box-shadow .2s;
+    box-shadow: 0 4px 18px rgba(0,0,0,.10);
+  }
+  .stat-card:hover { transform: translateY(-3px); box-shadow: 0 8px 28px rgba(0,0,0,.15); }
+
+  .stat-card.active   { background: var(--green); }
+  .stat-card.left     { background: var(--blue); }
+
+  .stat-label {
+    font-family: 'Playfair Display', serif;
+    font-weight: 700;
+    font-size: .82rem;
+    color: var(--white);
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    margin-bottom: .45rem;
+  }
+  .stat-value {
+    font-family: 'Playfair Display', serif;
+    font-weight: 700;
+    font-size: 3.4rem;
+    line-height: 1;
+    color: var(--white);
+  }
+  .stat-card .sk-label { width: 80px; height: 12px; border-radius: 6px; margin-bottom: .5rem; }
+  .stat-card .sk-value { width: 60px; height: 40px; border-radius: 8px; }
+
+  /* ── MID GRID ── */
+  .mid-grid {
+    display: grid;
+    grid-template-columns: 3fr 2fr;
+    gap: 1.25rem;
+    margin-bottom: 1.5rem;
+  }
+  @media (max-width: 800px) { .mid-grid { grid-template-columns: 1fr; } }
+
+  /* ── SECTION CARD ── */
+  .section-card {
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 1.6rem 1.75rem;
+    box-shadow: var(--shadow);
+  }
+  .section-title {
+    font-family: 'Playfair Display', serif;
+    font-weight: 600;
+    font-size: 1.2rem;
+    color: var(--black);
+    margin-bottom: 1rem;
+  }
+
+  /* ── CHART ── */
+  .chart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: .25rem; }
+  .chart-legend { display: flex; gap: 1.25rem; margin-bottom: .75rem; }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+    font-family: 'Josefin Sans', sans-serif;
+    font-size: .82rem;
+    color: #4b5563;
+  }
+  .legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .chart-wrap { position: relative; height: 220px; }
+  .chart-totals { display: flex; gap: 2rem; margin-top: 1rem; padding-top: .75rem; border-top: 1px solid var(--gray-table); }
+  .chart-total-item .ct-label {
+    font-family: 'Josefin Sans', sans-serif;
+    font-size: .75rem;
+    color: #6b7280;
+    display: block;
+    margin-bottom: .2rem;
+  }
+  .chart-total-item .ct-value {
+    font-family: 'Josefin Sans', sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+  }
+
+  /* ── CATEGORY LIST ── */
+  .cat-list { display: flex; flex-direction: column; gap: .95rem; }
+  .cat-item-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: .3rem;
+  }
+  .cat-name-wrap { display: flex; align-items: center; gap: .5rem; }
+  .cat-rank {
+    font-family: 'Josefin Sans', sans-serif;
+    font-size: .72rem;
+    font-weight: 600;
+    color: #9ca3af;
+    width: 16px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+  .cat-name {
+    font-family: 'Josefin Sans', sans-serif;
+    font-size: .85rem;
+    font-weight: 400;
+    color: var(--black);
+  }
+  .cat-count {
+    font-family: 'Josefin Sans', sans-serif;
+    font-size: .8rem;
+    font-weight: 600;
+    color: #4b5563;
+    white-space: nowrap;
+  }
+  .cat-loans-label { font-size: .65rem; color: #9ca3af; font-weight: 400; }
+  .cat-bar-wrap {
+    height: 7px;
+    background: var(--gray-cat);
+    border-radius: 999px;
+    overflow: hidden;
+  }
+  .cat-bar-fill {
+    height: 7px;
+    border-radius: 999px;
+    background: var(--green);
+    transition: width .7s cubic-bezier(.4,0,.2,1);
+  }
+
+  /* ── ACTIVITY TABLE ── */
+  .activity-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+  }
+  .tbl-wrap { overflow-x: auto; }
+  .activity-table { width: 100%; border-collapse: collapse; }
+  .activity-table thead tr { background: var(--gray-table); }
+  .activity-table th {
+    font-family: 'Work Sans', sans-serif;
+    font-weight: 600;
+    font-size: .78rem;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    padding: .75rem 1rem;
+    text-align: center;
+  }
+  .activity-table th:first-child { border-radius: 10px 0 0 10px; }
+  .activity-table th:last-child  { border-radius: 0 10px 10px 0; }
+  .activity-table td {
+    font-family: 'Work Sans', sans-serif;
+    font-weight: 600;
+    font-size: .82rem;
+    color: var(--black);
+    padding: .85rem 1rem;
+    border-bottom: 1px solid var(--gray-table);
+    vertical-align: middle;
+    text-align: center;
+  }
+  .activity-table tr:last-child td { border-bottom: none; }
+  .activity-table tr:hover td { background: #fafbfd; }
+  .td-muted { color: #6b7280 !important; font-weight: 400 !important; }
+  .td-no    { color: #9ca3af !important; }
+
+  .act-pill {
+    display: inline-block;
+    font-family: 'Work Sans', sans-serif;
+    font-weight: 600;
+    font-size: .68rem;
+    padding: .28rem .85rem;
+    border-radius: 999px;
+    text-align: center;
+    min-width: 80px;
+    white-space: nowrap;
+  }
+  .act-pill.masuk  { background: #D1FAE5; color: #065f46; }
+  .act-pill.keluar { background: #E0E7FF; color: #3730a3; }
+
+  .act-date-pill {
+    display: inline-block;
+    font-family: 'Work Sans', sans-serif;
+    font-size: .72rem;
+    font-weight: 600;
+    background: var(--blue);
+    color: var(--white);
+    border-radius: 6px;
+    padding: .25rem .65rem;
+    white-space: nowrap;
+  }
+
+  /* ── NO DATA ── */
+  .no-data-msg {
+    text-align: center;
+    color: #9ca3af;
+    font-family: 'Work Sans', sans-serif;
+    font-size: .875rem;
+    padding: 2.5rem 0;
+  }
+
+  /* ── SKELETON ── */
+  @keyframes shimmer { 0%{background-position:-400px 0} 100%{background-position:400px 0} }
+  .skeleton {
+    background: linear-gradient(90deg,#f0f0f0 25%,#e8e8e8 50%,#f0f0f0 75%);
+    background-size: 800px 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: 6px;
+  }
+  .stat-card .skeleton {
+    background: linear-gradient(90deg, rgba(255,255,255,.25) 25%, rgba(255,255,255,.45) 50%, rgba(255,255,255,.25) 75%);
+    background-size: 800px 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: 6px;
+  }
+
+  /* ── NAV TABS ── */
+  .dash-tabs {
+    display: flex;
+    gap: .5rem;
+    margin-bottom: 1.75rem;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .dash-tab {
+    padding: .45rem 1.1rem;
+    border-radius: 10px;
+    font-family: 'Work Sans', sans-serif;
+    font-size: .82rem;
+    font-weight: 600;
+    text-decoration: none;
+    border: 1.5px solid #d1d5db;
+    color: #6b7280;
+    background: var(--white);
+    transition: all .15s;
+  }
+  .dash-tab:hover { border-color: var(--blue); color: var(--blue); }
+  .dash-tab.active { background: var(--blue); color: var(--white); border-color: var(--blue); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dash-wrap">
+  <span id="librarian-flag" data-value="{% if is_librarian %}true{% else %}false{% endif %}" style="display:none;"></span>
+
+  <!-- Header -->
+  <div class="dash-header">
+    <h1>Dashboard Monitoring Kunjungan</h1>
+    <p class="subtitle">Pantau aktivitas kunjungan perpustakaan secara real-time — hanya untuk Guru &amp; Petugas</p>
+
+    <!-- Tab navigasi antar dashboard -->
+    <div class="dash-tabs">
+      <a href="{% url 'dashboard:index' %}" class="dash-tab">📚 Dashboard Peminjaman</a>
+      <a href="{% url 'dashboard:visitors' %}" class="dash-tab active">👥 Dashboard Kunjungan</a>
+    </div>
+
+    <!-- Filter Periode -->
+    <div class="period-select-wrap">
+      <label for="periodSelect">Periode:</label>
+      <select class="period-select" id="periodSelect" onchange="onSelectChange(this)">
+        <option value="today">Hari Ini</option>
+        <option value="this_week">Minggu Ini</option>
+        <option value="this_month">Bulan Ini</option>
+        <option value="custom">Kustom...</option>
+      </select>
+      <div class="custom-dates" id="customDateRow">
+        <input type="date" id="startDate" />
+        <span style="font-size:.8rem;color:#6b7280;">s/d</span>
+        <input type="date" id="endDate" />
+        <button class="btn-apply" onclick="applyCustom()">Terapkan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PBI-50: KPI Cards — Active & Left Visitors -->
+  <div class="stat-grid" id="visitorStatCards">
+    <div class="stat-card active">
+      <div class="skeleton sk-label"></div>
+      <div class="skeleton sk-value"></div>
+    </div>
+    <div class="stat-card left">
+      <div class="skeleton sk-label"></div>
+      <div class="skeleton sk-value"></div>
+    </div>
+  </div>
+
+  <!-- PBI-51 Trend Chart + PBI-53 Popular Activities -->
+  <div class="mid-grid">
+
+    <!-- Trend Line Chart -->
+    <div class="section-card">
+      <div class="chart-header">
+        <h2 class="section-title" style="margin:0;">Tren Pengunjung</h2>
+        <span id="chartPeriodLabel" style="font-size:.75rem;color:#6b7280;font-family:'Work Sans',sans-serif;"></span>
+      </div>
+      <div class="chart-legend">
+        <span class="legend-item">
+          <span class="legend-dot" style="background:#1E3A8A;"></span>Pengunjung
+        </span>
+      </div>
+      <div class="chart-wrap">
+        <div class="no-data-msg" id="chartNoData" style="display:none;">Data tidak tersedia</div>
+        <canvas id="visitorTrendChart"></canvas>
+      </div>
+      <div class="chart-totals">
+        <div class="chart-total-item">
+          <span class="ct-label">Total Pengunjung</span>
+          <span class="ct-value" id="totalVisitors" style="color:#1E3A8A;">—</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- PBI-53: Popular Activities -->
+    <div class="section-card">
+      <h2 class="section-title">Aktivitas Terpopuler</h2>
+      <div class="cat-list" id="popularActivityList">
+        {% for i in "12345" %}
+        <div>
+          <div class="cat-item-top">
+            <div class="cat-name-wrap">
+              <div class="skeleton" style="width:14px;height:12px;border-radius:4px;"></div>
+              <div class="skeleton" style="width:110px;height:12px;border-radius:4px;"></div>
+            </div>
+            <div class="skeleton" style="width:50px;height:12px;border-radius:4px;"></div>
+          </div>
+          <div class="cat-bar-wrap" style="margin-top:.3rem;">
+            <div class="skeleton" style="height:7px;width:100%;border-radius:999px;"></div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      <div id="popularActivityNoData" class="no-data-msg" style="display:none;">Data tidak tersedia</div>
+    </div>
+
+  </div><!-- /mid-grid -->
+
+  <!-- PBI-52: Activity Log — hanya Petugas/Librarian -->
+  {% if is_librarian %}
+  <div class="section-card">
+    <div class="activity-header">
+      <h2 class="section-title" style="margin:0;">Log Aktivitas Pengunjung</h2>
+    </div>
+    <div class="tbl-wrap" id="activityLogWrap">
+      <table class="activity-table">
+        <thead>
+          <tr>
+            <th style="width:48px;">No</th>
+            <th>Pengunjung</th>
+            <th>Status</th>
+            <th>Waktu</th>
+          </tr>
+        </thead>
+        <tbody id="activityLogFeed">
+          {% for i in "12345" %}
+          <tr>
+            <td><div class="skeleton" style="width:20px;height:12px;"></div></td>
+            <td><div class="skeleton" style="height:12px;width:150px;"></div></td>
+            <td><div class="skeleton" style="height:22px;width:80px;border-radius:999px;"></div></td>
+            <td><div class="skeleton" style="height:22px;width:100px;border-radius:6px;"></div></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div id="activityLogNoData" class="no-data-msg" style="display:none;">Data tidak tersedia</div>
+  </div>
+  {% endif %}
+
+</div><!-- /dash-wrap -->
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+let currentPeriod = 'today';
+let visitorChart  = null;
+
+const IS_LIBRARIAN = document.getElementById('librarian-flag').dataset.value === 'true';
+
+/* ── Filter ── */
+function onSelectChange(sel) {
+  currentPeriod = sel.value;
+  const row = document.getElementById('customDateRow');
+  if (currentPeriod === 'custom') { row.classList.add('visible'); return; }
+  row.classList.remove('visible');
+  loadAll();
+}
+
+function applyCustom() {
+  const s = document.getElementById('startDate').value;
+  const e = document.getElementById('endDate').value;
+  if (!s || !e) { alert('Pilih tanggal mulai dan akhir.'); return; }
+  if (s > e)    { alert('Tanggal mulai tidak boleh setelah tanggal akhir.'); return; }
+  loadAll();
+}
+
+function buildParams() {
+  const p = new URLSearchParams({ period: currentPeriod });
+  if (currentPeriod === 'custom') {
+    p.set('start', document.getElementById('startDate').value);
+    p.set('end',   document.getElementById('endDate').value);
+  }
+  return p.toString();
+}
+
+/* ── Fetch ── */
+async function fetchJSON(url) {
+  const r = await fetch(url, { headers: { 'X-CSRFToken': getCookie('csrftoken') } });
+  if (!r.ok) throw new Error(`HTTP ${r.status}`);
+  return r.json();
+}
+
+/* ── PBI-50: KPI Cards ── */
+async function loadSummary() {
+  const container = document.getElementById('visitorStatCards');
+  try {
+    const data = await fetchJSON(`/api/dashboard/visitors/summary/?${buildParams()}`);
+    if (data.status !== 'success') return;
+    const s = data.stats;
+    container.innerHTML =
+      statCard('active', 'Pengunjung Aktif',  s.active_visitors) +
+      statCard('left',   'Sudah Keluar',      s.left_visitors);
+  } catch(e) {
+    container.innerHTML = '<p style="color:#F26969;font-size:.875rem;padding:1rem;grid-column:1/-1;">Gagal memuat statistik.</p>';
+  }
+}
+
+function statCard(type, label, value) {
+  return `
+    <div class="stat-card ${type}">
+      <div class="stat-label">${label}</div>
+      <div class="stat-value">${Number(value).toLocaleString('id-ID')}</div>
+    </div>`;
+}
+
+/* ── PBI-51: Trend Chart ── */
+async function loadTrend() {
+  const canvas    = document.getElementById('visitorTrendChart');
+  const noData    = document.getElementById('chartNoData');
+  const periodLbl = document.getElementById('chartPeriodLabel');
+  try {
+    const data = await fetchJSON(`/api/dashboard/visitors/trend/?${buildParams()}`);
+    if (data.status !== 'success') return;
+
+    document.getElementById('totalVisitors').textContent = data.summary.total_visitors;
+
+    const periodLabels = {
+      today:      'Hari Ini',
+      this_week:  'Minggu Ini',
+      this_month: 'Bulan Ini',
+      custom: `${document.getElementById('startDate').value} s/d ${document.getElementById('endDate').value}`,
+    };
+    periodLbl.textContent = periodLabels[data.period] || data.period;
+
+    if (!data.data?.length || !data.summary.total_visitors) {
+      canvas.style.display = 'none'; noData.style.display = 'block'; return;
+    }
+    canvas.style.display = ''; noData.style.display = 'none';
+    if (visitorChart) visitorChart.destroy();
+
+    const ctx = canvas.getContext('2d');
+    const grad = ctx.createLinearGradient(0, 0, 0, 220);
+    grad.addColorStop(0, 'rgba(30,58,138,.18)');
+    grad.addColorStop(1, 'rgba(30,58,138,0)');
+
+    visitorChart = new Chart(canvas, {
+      type: 'line',
+      data: {
+        labels: data.data.map(r => formatDateLabel(r.date)),
+        datasets: [{
+          label: 'Pengunjung',
+          data: data.data.map(r => r.visitors),
+          borderColor: '#1E3A8A',
+          backgroundColor: grad,
+          borderWidth: 2.5,
+          pointRadius: 5,
+          pointBackgroundColor: '#1E3A8A',
+          pointBorderColor: '#fff',
+          pointBorderWidth: 2,
+          tension: 0.45,
+          fill: true,
+        }],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: '#fff',
+            titleColor: '#111',
+            bodyColor: '#6b7280',
+            borderColor: '#e5e7eb',
+            borderWidth: 1,
+            padding: 10,
+            cornerRadius: 8,
+          },
+        },
+        scales: {
+          x: {
+            grid: { display: false },
+            ticks: { font: { family: 'Josefin Sans', size: 11 }, color: '#6b7280' },
+          },
+          y: {
+            beginAtZero: true,
+            grid: { color: '#F3F4F6' },
+            ticks: { font: { family: 'Josefin Sans', size: 11 }, color: '#6b7280', precision: 0 },
+          },
+        },
+      },
+    });
+  } catch(e) {
+    canvas.style.display = 'none'; noData.style.display = 'block';
+  }
+}
+
+/* ── PBI-53: Popular Activities ── */
+async function loadPopularActivities() {
+  const list   = document.getElementById('popularActivityList');
+  const noData = document.getElementById('popularActivityNoData');
+  noData.style.display = 'none';
+  try {
+    const data = await fetchJSON(`/api/dashboard/visitors/popular-activities/?${buildParams()}`);
+    list.innerHTML = '';
+    if (!data?.activities?.length) { noData.style.display = 'block'; return; }
+    data.activities.forEach((a, i) => {
+      list.innerHTML += `
+        <div>
+          <div class="cat-item-top">
+            <div class="cat-name-wrap">
+              <span class="cat-rank">${i + 1}</span>
+              <span class="cat-name">${escHtml(a.emoji)} ${escHtml(a.name)}</span>
+            </div>
+            <span class="cat-count">${a.count} <span class="cat-loans-label">kunjungan</span></span>
+          </div>
+          <div class="cat-bar-wrap">
+            <div class="cat-bar-fill" style="width:0%" data-width="${a.percentage}%"></div>
+          </div>
+        </div>`;
+    });
+    setTimeout(() => {
+      list.querySelectorAll('.cat-bar-fill').forEach(el => {
+        el.style.width = el.dataset.width;
+      });
+    }, 80);
+  } catch(e) {
+    list.innerHTML = ''; noData.style.display = 'block';
+  }
+}
+
+/* ── PBI-52: Activity Log ── */
+async function loadActivityLog() {
+  const tbody  = document.getElementById('activityLogFeed');
+  const noData = document.getElementById('activityLogNoData');
+  const wrap   = document.getElementById('activityLogWrap');
+  if (!tbody) return;
+  try {
+    const data = await fetchJSON(`/api/dashboard/visitors/activity/?${buildParams()}`);
+    if (data.status !== 'success') return;
+    const acts = data.activities;
+    if (!acts?.length) {
+      wrap.style.display = 'none'; noData.style.display = 'block'; return;
+    }
+    noData.style.display = 'none'; wrap.style.display = '';
+    tbody.innerHTML = acts.map((a, idx) => {
+      const isMasuk  = a.action === 'Masuk';
+      const pillCls  = isMasuk ? 'masuk' : 'keluar';
+      return `<tr>
+        <td class="td-no">${idx + 1}</td>
+        <td>${escHtml(a.visitor_name)}</td>
+        <td><span class="act-pill ${pillCls}">${escHtml(a.action)}</span></td>
+        <td><span class="act-date-pill">${formatTimestamp(a.timestamp)}</span></td>
+      </tr>`;
+    }).join('');
+  } catch(e) {
+    if (wrap)   wrap.style.display = 'none';
+    if (noData) noData.style.display = 'block';
+  }
+}
+
+function loadAll() {
+  loadSummary();
+  loadTrend();
+  loadPopularActivities();
+  if (IS_LIBRARIAN) loadActivityLog();
+}
+
+/* ── Utils ── */
+function getCookie(name) {
+  for (const c of document.cookie.split(';')) {
+    const t = c.trim();
+    if (t.startsWith(name + '=')) return decodeURIComponent(t.slice(name.length + 1));
+  }
+  return '';
+}
+function escHtml(str) {
+  return String(str)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function formatDateLabel(iso) {
+  return new Date(iso + 'T00:00:00').toLocaleDateString('id-ID', { day:'numeric', month:'short' });
+}
+function formatTimestamp(ts) {
+  if (!ts) return '—';
+  const d = new Date(ts);
+  return isNaN(d) ? ts : d.toLocaleDateString('id-ID', { day:'numeric', month:'short', year:'2-digit' });
+}
+
+document.addEventListener('DOMContentLoaded', loadAll);
+setInterval(() => { if (currentPeriod !== 'custom') loadAll(); }, 60000);
+</script>
+{% endblock %}

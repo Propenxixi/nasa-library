@@ -1,110 +1,545 @@
 {% extends 'base.html' %}
 
-{% block title %}Create Literacy Post - NASA Library{% endblock %}
+{% block title %}Tulis Kegiatan Literasi - NASA Library{% endblock %}
 
 {% block content %}
-<div class="min-h-screen bg-gradient-to-br from-white via-gray-50 to-white">
-    <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        
-        <!-- Page Header -->
-        <div class="mb-12">
-            <h1 class="font-display text-4xl md:text-5xl font-bold text-gray-900">✍️ New Post</h1>
-            <p class="font-sans text-gray-600 mt-2">Share your reading insights and connect with the community</p>
+<style>
+    /* Anti-FOUC: sembunyikan sebelum CSS utama selesai diparse */
+    .main-content { visibility: hidden; }
+</style>
+
+<div class="main-content">
+
+    <!-- Back Nav -->
+    <div class="back-nav">
+        <a href="{% url 'literacy:forum' %}" class="back-link">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+            Kembali ke Forum
+        </a>
+    </div>
+
+    <!-- Page Header -->
+    <div class="page-header">
+        <div class="page-header-left">
+            <h1 class="page-title">Tulis Kegiatan Literasimu</h1>
+            <p class="page-subtitle">Bagikan kegiatan literasimu — bisa berupa review buku atau lesson learned</p>
+        </div>
+    </div>
+
+    <!-- Motivational Banner -->
+    <div class="motivation-banner">
+        <span class="motivation-icon">📚</span>
+        <div>
+            <div class="motivation-title">Sudah baca buku hari ini?</div>
+            <div class="motivation-desc">Luangkan sebentar untuk berbagi pikiranmu. Ulasanmu dapat menginspirasi siswa lain dan berkontribusi pada budaya membaca di sekolah kita!</div>
+        </div>
+    </div>
+
+    <!-- Form Card -->
+    <div class="form-card">
+        <div class="form-card-header">
+            <h2 class="form-card-title" id="form-title">Detail Literasi</h2>
         </div>
 
-        <!-- Form -->
-        <div class="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
-            <div class="sticky top-0 bg-gradient-to-r from-gray-50 to-white border-b border-gray-200 p-6">
-                <h2 class="font-display text-2xl font-bold text-gray-900 flex items-center gap-2">
-                    <span class="text-2xl">📝</span> Post Content
-                </h2>
+        <form method="POST" class="form-body" id="literacy-form" novalidate>
+            {% csrf_token %}
+            {% if active_session %}
+            <input type="hidden" name="session" value="{{ active_session.pk }}">
+            {% endif %}
+
+            <!-- Sesi Literasi (otomatis terdeteksi) -->
+            <div class="field-group" id="field-sesi">
+                <label class="field-label">Sesi Literasi</label>
+                {% if active_session %}
+                <div class="session-detected">
+                    <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    {{ active_session.title }}
+                </div>
+                {% else %}
+                <div class="input-wrap">
+                    {{ form.title }}
+                    <span class="input-icon">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    </span>
+                </div>
+                <div class="field-error" id="error-title">{% if form.title.errors %}{{ form.title.errors.0 }}{% endif %}</div>
+                {% endif %}
             </div>
 
-            <form method="POST" class="p-6 md:p-8 space-y-6">
-                {% csrf_token %}
-                
-                <!-- Title Field -->
-                <div>
-                    <label class="block font-sans font-semibold text-gray-900 mb-2">{{ form.title.label }}</label>
-                    {{ form.title }}
-                    {% if form.title.errors %}
-                        <div class="text-red-600 text-sm mt-2">{{ form.title.errors }}</div>
-                    {% endif %}
+            <!-- Judul Buku -->
+            <div class="field-group" id="field-judul-buku">
+                <label class="field-label" for="id_book_title">
+                    Judul Buku <span class="optional">(opsional)</span>
+                </label>
+                <div class="input-wrap">
+                    <input type="text" name="book_title" id="id_book_title"
+                           class="field-input" placeholder="Masukkan judul buku"
+                           value="{{ form.book_title.value|default:'' }}" maxlength="255">
+                    <span class="input-icon">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+                    </span>
                 </div>
+                <div class="field-error" id="error-book_title"></div>
+            </div>
 
-                <!-- Content Field -->
-                <div>
-                    <label class="block font-sans font-semibold text-gray-900 mb-2">{{ form.content.label }}</label>
-                    <p class="font-sans text-xs text-gray-600 mb-2">Share your thoughts and reading experiences</p>
-                    {{ form.content }}
-                    {% if form.content.errors %}
-                        <div class="text-red-600 text-sm mt-2">{{ form.content.errors }}</div>
-                    {% endif %}
+            <!-- Nama Pengarang -->
+            <div class="field-group" id="field-pengarang">
+                <label class="field-label" for="id_author">
+                    Nama Pengarang <span class="optional">(opsional)</span>
+                </label>
+                <div class="input-wrap">
+                    <input type="text" name="author" id="id_author"
+                           class="field-input" placeholder="Masukkan nama pengarang"
+                           value="{{ form.author.value|default:'' }}" maxlength="255">
+                    <span class="input-icon">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+                    </span>
                 </div>
+            </div>
 
-                <!-- Related Book Review (Optional) -->
-                <div>
-                    <label class="block font-sans font-semibold text-gray-900 mb-2">{{ form.book_review.label }}</label>
-                    <p class="font-sans text-xs text-gray-600 mb-2">Link to one of your verified reviews (optional)</p>
-                    {{ form.book_review }}
-                    {% if form.book_review.errors %}
-                        <div class="text-red-600 text-sm mt-2">{{ form.book_review.errors }}</div>
-                    {% endif %}
+            <!-- Penerbit -->
+            <div class="field-group" id="field-penerbit">
+                <label class="field-label" for="id_publisher">
+                    Penerbit <span class="optional">(opsional)</span>
+                </label>
+                <div class="input-wrap">
+                    <input type="text" name="publisher" id="id_publisher"
+                           class="field-input" placeholder="Masukkan nama penerbit"
+                           value="{{ form.publisher.value|default:'' }}" maxlength="255">
+                    <span class="input-icon">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+                    </span>
                 </div>
+            </div>
 
-                <!-- Submit Buttons -->
-                <div class="flex gap-4 pt-4">
-                    <button type="submit" class="flex-1 py-3 px-6 bg-blue-100 text-blue-700 font-sans font-semibold rounded-lg hover:bg-blue-200 transition-colors">
-                        ✨ Publish
-                    </button>
-                    <a href="{% url 'literacy:forum' %}" class="flex-1 py-3 px-6 bg-gray-100 text-gray-700 font-sans font-semibold rounded-lg hover:bg-gray-200 transition-colors text-center">
-                        Cancel
-                    </a>
+            <!-- Rangkuman & Lesson Learned -->
+            <div class="field-group">
+                <label class="field-label" for="id_content">
+                    <span id="label-rangkuman">Rangkuman &amp; Pelajaran</span> <span class="required">*</span>
+                </label>
+                <p class="field-hint" id="hint-rangkuman">Ceritakan isi buku, pelajaran yang kamu ambil, dan bagaimana kamu akan menerapkannya dalam kehidupan sehari-hari</p>
+                <div class="textarea-wrap">
+                    <textarea name="content" id="id_content"
+                              class="field-textarea" rows="8"
+                              placeholder="Ceritakan isi buku, pelajaran yang kamu ambil, dan bagaimana kamu akan menerapkannya dalam kehidupan sehari-hari"
+                              maxlength="1500">{{ form.content.value|default:'' }}</textarea>
                 </div>
-            </form>
+                <div class="field-footer">
+                    <div class="field-error" id="error-content">{% if form.content.errors %}{{ form.content.errors.0 }}{% endif %}</div>
+                    <div class="char-counter">
+                        <span id="char-count">0</span>/1500
+                    </div>
+                </div>
+                <div class="char-progress-wrap">
+                    <div class="char-progress-bar" id="char-progress"></div>
+                </div>
+                <div class="min-char-hint" id="min-char-hint">Minimal 100 karakter (<span id="chars-remaining">kurang 100</span>)</div>
+            </div>
+
+            <!-- Submit -->
+            <div class="form-actions">
+                <button type="submit" class="btn-submit" id="btn-submit">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 2L11 13"/><path d="M22 2L15 22 11 13 2 9l20-7z"/></svg>
+                    Kirim Postingan
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Tips -->
+    <div class="tips-grid">
+        <div class="tips-card tips-card--blue">
+            <div class="tips-card-header">
+                <span class="tips-icon">✏️</span>
+                <h3 class="tips-title">Tips Menulis Entri</h3>
+            </div>
+            <ul class="tips-list">
+                <li>Tulis reaksi jujurmu terhadap buku</li>
+                <li>Ajukan pertanyaan dan diskusikan temanya</li>
+                <li>Rekomendasikan buku kepada teman sekelas</li>
+                <li>Hubungkan isi buku dengan kehidupan nyata</li>
+            </ul>
         </div>
-
-        <!-- Tips -->
-        <div class="mt-8 bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
-            <h3 class="font-display text-lg font-bold text-gray-900 flex items-center gap-2 mb-4">
-                <span class="text-2xl">💡</span> Tips
-            </h3>
-            <ul class="font-sans text-sm text-gray-600 space-y-2">
-                <li>✓ Use an engaging title that captures attention</li>
-                <li>✓ Share your authentic reactions and feelings</li>
-                <li>✓ Ask questions to spark discussions</li>
-                <li>✓ Include book recommendations with reasons</li>
-                <li>✓ Avoid major spoilers or mark them clearly</li>
+        <div class="tips-card tips-card--red">
+            <div class="tips-card-header">
+                <span class="tips-icon">📋</span>
+                <h3 class="tips-title">Aturan Komunitas</h3>
+            </div>
+            <ul class="tips-list">
+                <li>Hormati semua siswa di forum</li>
+                <li>Jangan spoiler tanpa peringatan</li>
+                <li>Jaga diskusi tetap relevan dengan topik</li>
+                <li>Berikan masukan yang membangun</li>
             </ul>
         </div>
     </div>
+
 </div>
 
+<!-- Toast Notification -->
+<div class="toast" id="toast">
+    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+    <span id="toast-msg">Postingan berhasil disubmit dan menunggu verifikasi guru.</span>
+</div>
+
+{% if messages %}
+<script>
+    window.__djangoMessages = [
+        {% for msg in messages %}{ "text": "{{ msg|escapejs }}", "tags": "{{ msg.tags }}" },{% endfor %}
+    ];
+</script>
+{% endif %}
+
+<script>
+    // ── Anti-FOUC: reveal setelah semua CSS selesai diparse ──
+    document.querySelector('.main-content').classList.add('ready');
+
+    // ── Character Counter ─────────────────────────────────
+    const textarea = document.getElementById('id_content');
+    const charCount = document.getElementById('char-count');
+    const charProgress = document.getElementById('char-progress');
+    const charsRemaining = document.getElementById('chars-remaining');
+    const minHint = document.getElementById('min-char-hint');
+    const MAX = 1500;
+    const MIN = 100;
+
+    function updateCounter() {
+        const len = textarea.value.length;
+        charCount.textContent = len;
+
+        // Progress bar
+        const pct = Math.min(len / MAX * 100, 100);
+        charProgress.style.width = pct + '%';
+        charProgress.className = 'char-progress-bar' +
+            (len >= MAX ? ' danger' : len >= MAX * 0.85 ? ' warn' : len >= MIN ? ' ok' : '');
+
+        // Min hint
+        if (len < MIN) {
+            const rem = MIN - len;
+            charsRemaining.textContent = `kurang ${rem}`;
+            minHint.classList.remove('met');
+        } else {
+            charsRemaining.textContent = 'terpenuhi ✓';
+            minHint.classList.add('met');
+        }
+    }
+
+    textarea.addEventListener('input', updateCounter);
+    updateCounter();
+
+    // ── Real-time Validation ──────────────────────────────
+    function validateField(input, errorId, customMsg) {
+        const err = document.getElementById(errorId);
+        if (!err) return true;
+        if (!input.value.trim() && input.required) {
+            err.textContent = customMsg || 'Field ini wajib diisi.';
+            input.closest('.input-wrap, .textarea-wrap')?.classList.add('has-error');
+            return false;
+        }
+        err.textContent = '';
+        input.closest('.input-wrap, .textarea-wrap')?.classList.remove('has-error');
+        return true;
+    }
+
+    const titleEl = document.getElementById('id_title');
+    if (titleEl) {
+        titleEl.addEventListener('blur', function() {
+            validateField(this, 'error-title', 'Judul sesi tidak boleh kosong.');
+        });
+    }
+
+    textarea.addEventListener('blur', function() {
+        if (!this.value.trim()) {
+            document.getElementById('error-content').textContent = 'Rangkuman / lesson learned wajib diisi.';
+        } else if (this.value.trim().length < MIN) {
+            document.getElementById('error-content').textContent = `Minimal ${MIN} karakter. Saat ini ${this.value.trim().length} karakter.`;
+        } else {
+            document.getElementById('error-content').textContent = '';
+        }
+    });
+
+    // ── Form Submit Validation ────────────────────────────
+    document.getElementById('literacy-form').addEventListener('submit', function(e) {
+        let valid = true;
+
+        const title = document.getElementById('id_title');
+        if (title && !title.value.trim()) {
+            document.getElementById('error-title').textContent = 'Judul sesi tidak boleh kosong.';
+            valid = false;
+        }
+
+
+        const content = textarea.value.trim();
+        if (!content) {
+            document.getElementById('error-content').textContent = 'Rangkuman / lesson learned wajib diisi.';
+            valid = false;
+        } else if (content.length < MIN) {
+            document.getElementById('error-content').textContent = `Minimal ${MIN} karakter. Saat ini ${content.length} karakter.`;
+            valid = false;
+        }
+
+        if (!valid) {
+            e.preventDefault();
+            document.querySelector('.has-error, .field-error:not(:empty)')
+                ?.closest('.field-group')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    });
+
+    // ── Toast ─────────────────────────────────────────────
+    function showToast(msg, isError) {
+        const toast = document.getElementById('toast');
+        document.getElementById('toast-msg').textContent = msg;
+        toast.classList.toggle('toast--error', !!isError);
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 4500);
+    }
+
+    // Show Django messages as toast
+    if (window.__djangoMessages) {
+        window.__djangoMessages.forEach(m => {
+            setTimeout(() => showToast(m.text, m.tags.includes('error')), 300);
+        });
+    }
+</script>
+
 <style>
-    input[type="text"],
-    textarea,
-    select {
-        width: 100%;
-        padding: 0.75rem;
-        border: 1px solid #d1d5db;
-        border-radius: 0.5rem;
-        font-family: inherit;
-        font-size: 0.95rem;
-        color: #111827;
-        transition: all 0.2s;
-    }
+    /* ── Anti-FOUC ────────────────────────────────────────── */
+    .main-content.ready { visibility: visible; }
 
-    input[type="text"]:focus,
-    textarea:focus,
-    select:focus {
+    /* ── Back Nav ─────────────────────────────────────────── */
+    .back-nav { margin-bottom: 20px; }
+    .back-link {
+        display: inline-flex; align-items: center; gap: 7px;
+        font-family: 'Work Sans', sans-serif;
+        font-size: .85rem; font-weight: 600;
+        color: var(--primary-700);
+        text-decoration: none;
+        transition: gap .2s;
+    }
+    .back-link:hover { gap: 10px; }
+
+    /* ── Page Header ──────────────────────────────────────── */
+    .page-header {
+        margin-bottom: 24px;
+        animation: fadeSlideDown .45s ease both;
+    }
+    .page-title {
+        font-family: 'Playfair Display', serif;
+        font-size: 2rem; font-weight: 700;
+        color: var(--primary-900); line-height: 1.2;
+    }
+    .page-subtitle { font-size: .9rem; color: var(--neutral-500); margin-top: 6px; }
+
+    /* ── Stats Row ────────────────────────────────────────── */
+    .stats-row {
+        display: grid; grid-template-columns: repeat(3, 1fr);
+        gap: 14px; margin-bottom: 20px;
+        animation: fadeSlideUp .45s .05s ease both;
+    }
+    .stat-card {
+        background: var(--neutral-50);
+        border: 1.5px solid #1e3a8a;
+        border-radius: var(--radius-md);
+        padding: 18px 20px;
+        box-shadow: var(--shadow-sm);
+        transition: transform .2s, box-shadow .2s;
+    }
+    .stat-card:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(30,58,138,.1); }
+    .stat-card--challenge { border-color: var(--accent-700, #d97706); background: var(--accent-50, #fffbeb); }
+    .stat-label { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--neutral-500); margin-bottom: 4px; }
+    .stat-value { font-family: 'Playfair Display', serif; font-size: 2rem; font-weight: 700; color: var(--primary-900); line-height: 1.1; }
+    .stat-value--green { color: #059669; }
+    .stat-desc { font-size: .75rem; color: var(--neutral-500); margin-top: 4px; }
+    .stat-challenge-icon { font-size: 1.6rem; margin: 4px 0; }
+
+    /* ── Motivation Banner ────────────────────────────────── */
+    .motivation-banner {
+        display: flex; align-items: flex-start; gap: 14px;
+        background: var(--primary-50);
+        border: 1.5px solid #1e3a8a;
+        border-radius: var(--radius-md);
+        padding: 18px 22px;
+        margin-bottom: 24px;
+        animation: fadeSlideUp .45s .1s ease both;
+    }
+    .motivation-icon { font-size: 1.5rem; flex-shrink: 0; margin-top: 1px; }
+    .motivation-title { font-family: 'Playfair Display', serif; font-size: .95rem; font-weight: 700; color: var(--primary-700); margin-bottom: 4px; }
+    .motivation-desc { font-size: .85rem; color: var(--neutral-600); line-height: 1.5; }
+
+    /* ── Session Detected Badge ───────────────────────────── */
+    .session-detected {
+        display: inline-flex; align-items: center; gap: 7px;
+        padding: 10px 16px;
+        background: var(--primary-50);
+        border: 1.5px solid #1e3a8a;
+        border-radius: var(--radius-sm);
+        font-family: 'Work Sans', sans-serif;
+        font-size: .9rem; font-weight: 600;
+        color: var(--primary-700);
+    }
+    .session-detected svg { color: #059669; flex-shrink: 0; }
+
+    /* ── Type Selector (kept for legacy, hidden) ──────────── */
+    .type-btn--active {
+        background: var(--primary-900);
+        color: #fff;
+        border-color: var(--primary-900);
+    }
+    .type-btn--active:hover { background: var(--primary-700); }
+
+    /* ── Form Card ────────────────────────────────────────── */
+    .form-card {
+        border: 1.5px solid #1e3a8a;
+        border-radius: var(--radius-md);
+        overflow: hidden;
+        margin-bottom: 24px;
+        box-shadow: var(--shadow-sm);
+        animation: fadeSlideUp .45s .2s ease both;
+    }
+    .form-card-header {
+        background: var(--primary-900);
+        padding: 18px 24px;
+    }
+    .form-card-title {
+        font-family: 'Playfair Display', serif;
+        font-size: 1.15rem; font-weight: 700;
+        color: #fff;
+    }
+    .form-body { padding: 28px 24px; display: flex; flex-direction: column; gap: 22px; background: var(--neutral-50); }
+
+    /* ── Fields ───────────────────────────────────────────── */
+    .field-group { display: flex; flex-direction: column; gap: 6px; }
+    .field-label {
+        font-family: 'Work Sans', sans-serif;
+        font-size: .88rem; font-weight: 700;
+        color: var(--primary-900);
+        display: flex; align-items: center; gap: 5px;
+    }
+    .required { color: #dc2626; font-weight: 700; }
+    .optional { font-size: .78rem; font-weight: 500; color: var(--neutral-400); }
+    .field-hint { font-size: .78rem; color: var(--neutral-500); line-height: 1.4; }
+    .field-error { font-size: .78rem; color: #dc2626; min-height: 16px; font-weight: 500; }
+
+    .input-wrap { position: relative; }
+    .field-input, .field-textarea {
+        width: 100%; box-sizing: border-box;
+        padding: 11px 40px 11px 14px;
+        border: 1.5px solid #1e3a8a;
+        border-radius: var(--radius-sm);
+        font-family: 'Work Sans', sans-serif;
+        font-size: .9rem;
+        color: var(--primary-900);
+        background: #fff;
         outline: none;
-        border-color: #3b82f6;
-        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        transition: box-shadow .2s, border-color .2s;
+    }
+    .field-input:focus, .field-textarea:focus {
+        border-color: var(--primary-700);
+        box-shadow: 0 0 0 3px rgba(30,58,138,.1);
+    }
+    .field-input::placeholder, .field-textarea::placeholder { color: var(--neutral-400); }
+    .has-error .field-input, .has-error .field-textarea {
+        border-color: #dc2626;
+        box-shadow: 0 0 0 3px rgba(220,38,38,.08);
     }
 
-    textarea {
-        resize: vertical;
-        min-height: 150px;
+    .input-icon {
+        position: absolute; right: 13px; top: 50%;
+        transform: translateY(-50%);
+        color: var(--neutral-400); pointer-events: none;
+        transition: color .2s;
+    }
+    .input-wrap:focus-within .input-icon { color: var(--primary-700); }
+
+    .textarea-wrap { position: relative; }
+    .field-textarea { padding: 13px 14px; resize: vertical; min-height: 160px; line-height: 1.6; }
+
+    /* ── Char Counter ─────────────────────────────────────── */
+    .field-footer { display: flex; justify-content: space-between; align-items: center; }
+    .char-counter { font-size: .75rem; color: var(--neutral-400); font-weight: 600; font-family: 'Work Sans', sans-serif; }
+    .char-progress-wrap {
+        height: 3px; background: var(--neutral-200);
+        border-radius: 2px; overflow: hidden; margin-top: 2px;
+    }
+    .char-progress-bar {
+        height: 100%; width: 0; border-radius: 2px;
+        background: var(--neutral-300);
+        transition: width .2s, background .3s;
+    }
+    .char-progress-bar.ok   { background: #10b981; }
+    .char-progress-bar.warn { background: #f59e0b; }
+    .char-progress-bar.danger { background: #dc2626; }
+    .min-char-hint { font-size: .75rem; color: var(--neutral-400); margin-top: 4px; }
+    .min-char-hint.met { color: #059669; font-weight: 600; }
+
+    /* ── Submit Button ────────────────────────────────────── */
+    .form-actions { padding-top: 6px; }
+    .btn-submit {
+        width: 100%;
+        display: flex; align-items: center; justify-content: center; gap: 9px;
+        padding: 14px 24px;
+        background: var(--primary-900);
+        color: #fff;
+        font-family: 'Work Sans', sans-serif;
+        font-size: .95rem; font-weight: 700;
+        border: none; border-radius: var(--radius-sm);
+        cursor: pointer;
+        transition: background .2s, transform .15s, box-shadow .2s;
+    }
+    .btn-submit:hover { background: var(--primary-700); transform: translateY(-2px); box-shadow: 0 6px 18px rgba(30,58,138,.2); }
+    .btn-submit:active { transform: translateY(0); }
+
+    /* ── Tips ─────────────────────────────────────────────── */
+    .tips-grid {
+        display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+        animation: fadeSlideUp .45s .35s ease both;
+    }
+    .tips-card { border-radius: var(--radius-md); padding: 22px; border: 1.5px solid; transition: transform .2s, box-shadow .2s; }
+    .tips-card:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(30,58,138,.08); }
+    .tips-card--blue { background: var(--primary-50); border-color: #1e3a8a; }
+    .tips-card--red  { background: var(--error-50, #fef2f2); border-color: var(--error-400, #f87171); }
+    .tips-card-header { display: flex; align-items: center; gap: 9px; margin-bottom: 12px; }
+    .tips-icon { font-size: 1rem; }
+    .tips-title { font-family: 'Playfair Display', serif; font-size: .9rem; font-weight: 700; color: var(--primary-900); margin: 0; }
+    .tips-list { list-style: none; display: flex; flex-direction: column; gap: 7px; }
+    .tips-list li { font-size: .83rem; color: var(--neutral-600); padding-left: 18px; position: relative; line-height: 1.4; transition: color .15s, padding-left .15s; }
+    .tips-list li:hover { color: var(--primary-900); padding-left: 22px; }
+    .tips-list li::before {
+        content: ""; position: absolute; left: 0; top: 5px;
+        width: 10px; height: 10px;
+        background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' stroke='%2310b981' stroke-width='3' viewBox='0 0 24 24'%3E%3Cpath d='M20 6L9 17l-5-5'/%3E%3C/svg%3E") center/contain no-repeat;
+    }
+
+    /* ── Toast ────────────────────────────────────────────── */
+    .toast {
+        position: fixed; bottom: 28px; right: 28px; z-index: 9999;
+        display: flex; align-items: center; gap: 10px;
+        background: var(--primary-900); color: #fff;
+        border-radius: var(--radius-sm);
+        padding: 14px 20px;
+        font-family: 'Work Sans', sans-serif;
+        font-size: .88rem; font-weight: 600;
+        box-shadow: 0 8px 28px rgba(0,0,0,.18);
+        transform: translateY(20px); opacity: 0;
+        transition: transform .35s ease, opacity .35s ease;
+        pointer-events: none; max-width: 360px;
+    }
+    .toast.show { transform: translateY(0); opacity: 1; pointer-events: auto; }
+    .toast--error { background: #dc2626; }
+
+    /* ── Keyframes ────────────────────────────────────────── */
+    @keyframes fadeSlideDown { from { opacity:0; transform:translateY(-12px); } to { opacity:1; transform:translateY(0); } }
+    @keyframes fadeSlideUp   { from { opacity:0; transform:translateY(12px);  } to { opacity:1; transform:translateY(0); } }
+
+    /* ── Responsive ───────────────────────────────────────── */
+    @media (max-width: 768px) {
+        .stats-row { grid-template-columns: 1fr; }
+        .tips-grid  { grid-template-columns: 1fr; }
+        .form-body { padding: 20px 16px; }
     }
 </style>
+<script>
+    document.querySelector('.main-content').classList.add('ready');
+</script>
+
 {% endblock %}

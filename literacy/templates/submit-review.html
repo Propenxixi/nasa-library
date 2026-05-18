@@ -1,200 +1,442 @@
 {% extends 'base.html' %}
 
-{% block title %}Submit Book Review - NASA Library Literacy Program{% endblock %}
+{% block title %}Kirim Review Buku - NASA Library{% endblock %}
 
 {% block content %}
-<div class="min-h-screen bg-gradient-to-br from-white via-gray-50 to-white">
-    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        
-        <!-- Page Header -->
-        <div class="mb-12">
-            <div class="flex items-center justify-between mb-4">
-                <div>
-                    <h1 class="font-display text-4xl md:text-5xl font-bold text-gray-900">✍️ Write Your Review</h1>
-                    <p class="font-sans text-gray-600 mt-2">Share your thoughts about the book you've read</p>
-                </div>
-            </div>
-        </div>
+<style>.main-content { visibility: hidden; }</style>
+<div class="main-content">
 
-        <!-- Stats Cards -->
-        <div class="grid grid-cols-3 gap-2 md:gap-6 mb-8">
-            <!-- Total Reviews Card -->
-            <div class="bg-gradient-to-br from-blue-50 to-cyan-50 border-2 border-blue-300 rounded-2xl p-3 md:p-6 shadow-sm hover:shadow-md transition-shadow">
-                <div class="flex items-start justify-between mb-4">
-                    <div>
-                        <p class="font-sans text-xs md:text-sm text-blue-700 uppercase tracking-wide mb-1 md:mb-2">Total Reviews</p>
-                        <p class="font-display text-2xl md:text-5xl font-bold text-blue-900">{{ stats.reviews_count }}</p>
-                    </div>
-                    <div class="w-8 h-8 md:w-12 md:h-12 bg-blue-200 rounded-full flex items-center justify-center text-lg md:text-2xl">
-                        📚
-                    </div>
-                </div>
-                <p class="font-sans text-xs text-blue-700">Reviews you've submitted</p>
-            </div>
+    <!-- Breadcrumb -->
+    <div class="breadcrumb">
+        <a href="{% url 'literacy:history' %}" class="breadcrumb-link">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M19 12H5M12 5l-7 7 7 7"/>
+            </svg>
+            Kembali ke Riwayat
+        </a>
+    </div>
 
-            <!-- Verified Reviews Card -->
-            <div class="bg-gradient-to-br from-emerald-50 to-teal-50 border-2 border-emerald-300 rounded-2xl p-3 md:p-6 shadow-sm hover:shadow-md transition-shadow">
-                <div class="flex items-start justify-between mb-4">
-                    <div>
-                        <p class="font-sans text-xs md:text-sm text-emerald-700 uppercase tracking-wide mb-1 md:mb-2">Verified</p>
-                        <p class="font-display text-2xl md:text-5xl font-bold text-emerald-900">{{ stats.verified_count }}</p>
-                    </div>
-                    <div class="w-8 h-8 md:w-12 md:h-12 bg-emerald-200 rounded-full flex items-center justify-center text-lg md:text-2xl">
-                        ✓
-                    </div>
-                </div>
-                <p class="font-sans text-xs text-emerald-700">Approved by teacher</p>
-            </div>
-
-            <!-- Reading Challenge Card -->
-            <div class="bg-gradient-to-br from-purple-50 to-pink-50 border-2 border-purple-300 rounded-2xl p-3 md:p-6 shadow-sm hover:shadow-md transition-shadow">
-                <div class="flex items-start justify-between mb-4">
-                    <div>
-                        <p class="font-sans text-sm text-purple-700 uppercase tracking-wide mb-2\">Challenge</p>
-                        <p class="font-display text-2xl md:text-5xl font-bold text-purple-900">🎯</p>
-                    </div>
-                    <div class="w-8 h-8 md:w-12 md:h-12 bg-purple-200 rounded-full flex items-center justify-center text-lg md:text-2xl">
-                        🌟
-                    </div>
-                </div>
-                <p class="font-sans text-xs text-purple-700">Keep reading more</p>
-            </div>
-        </div>
-
-        <!-- Daily Prompt Card -->
-        <div class="bg-white border border-gray-200 rounded-2xl p-6 md:p-8 shadow-sm mb-8">
-            <div class="flex items-start gap-4">
-                <div class="text-4xl flex-shrink-0">📖</div>
-                <div>
-                    <h2 class="font-display text-lg font-bold text-gray-900 mb-2">Have you read anything today?</h2>
-                    <p class="font-sans text-sm text-gray-600">Take a moment to share your thoughts. Your review helps inspire other students and contributes to our school's reading culture!</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Main Form Section -->
-        <div class="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
-            <div class="sticky top-0 bg-gradient-to-r from-gray-50 to-white border-b border-gray-200 p-6">
-                <h2 class="font-display text-2xl font-bold text-gray-900 flex items-center gap-2">
-                    <span class="text-2xl">📝</span> Review Details
-                </h2>
-                <p class="font-sans text-sm text-gray-600 mt-1">Fill in the information about the book you've read</p>
-            </div>
-
-            <form method="POST" class="p-6 md:p-8 space-y-6">
-                {% csrf_token %}
-                
-                <!-- Title Field -->
-                <div>
-                    <label class="block font-sans font-semibold text-gray-900 mb-2">{{ form.title.label }}</label>
-                    {{ form.title }}
-                    {% if form.title.errors %}
-                        <div class="mt-2 text-sm text-red-600">{{ form.title.errors }}</div>
-                    {% endif %}
-                </div>
-
-                <!-- Author Field -->
-                <div>
-                    <label class="block font-sans font-semibold text-gray-900 mb-2">{{ form.author.label }}</label>
-                    {{ form.author }}
-                    {% if form.author.errors %}
-                        <div class="mt-2 text-sm text-red-600">{{ form.author.errors }}</div>
-                    {% endif %}
-                </div>
-
-                <!-- Two-column layout for publisher and year -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <!-- Publisher Field -->
-                    <div>
-                        <label class="block font-sans font-semibold text-gray-900 mb-2">{{ form.publisher.label }}</label>
-                        {{ form.publisher }}
-                        {% if form.publisher.errors %}
-                            <div class="mt-2 text-sm text-red-600">{{ form.publisher.errors }}</div>
-                        {% endif %}
-                    </div>
-
-                    <!-- Year Published Field -->
-                    <div>
-                        <label class="block font-sans font-semibold text-gray-900 mb-2">{{ form.publication_year.label }}</label>
-                        {{ form.publication_year }}
-                        {% if form.publication_year.errors %}
-                            <div class="mt-2 text-sm text-red-600">{{ form.publication_year.errors }}</div>
-                        {% endif %}
-                    </div>
-                </div>
-
-                <!-- Summary/Review Field -->
-                <div>
-                    <label class="block font-sans font-semibold text-gray-900 mb-2">{{ form.summary.label }}</label>
-                    <p class="font-sans text-xs text-gray-600 mb-2">Write a thoughtful review (min 50 characters)</p>
-                    {{ form.summary }}
-                    {% if form.summary.errors %}
-                        <div class="mt-2 text-sm text-red-600">{{ form.summary.errors }}</div>
-                    {% endif %}
-                </div>
-
-                <!-- Submit Buttons -->
-                <div class="flex gap-4 pt-4">
-                    <button type="submit" class="flex-1 px-6 py-3 bg-blue-100 text-blue-700 font-sans font-semibold rounded-lg hover:bg-blue-200 transition-colors">
-                        📤 Submit Review
-                    </button>
-                    <a href="{% url 'literacy:my_reviews' %}" class="flex-1 px-6 py-3 bg-gray-100 text-gray-700 font-sans font-semibold rounded-lg hover:bg-gray-200 transition-colors text-center">
-                        Back
-                    </a>
-                </div>
-            </form>
-        </div>
-
-        <!-- Tips Section -->
-        <div class="mt-8 bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
-            <h3 class="font-display text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                <span class="text-2xl">💡</span> Writing Tips
-            </h3>
-            <div class="space-y-3">
-                <div class="flex gap-3">
-                    <span class="text-lg flex-shrink-0">✨</span>
-                    <p class="font-sans text-sm text-gray-600">Be honest about your thoughts - what did you like or dislike?</p>
-                </div>
-                <div class="flex gap-3">
-                    <span class="text-lg flex-shrink-0">🎯</span>
-                    <p class="font-sans text-sm text-gray-600">Mention specific scenes or characters that stood out to you</p>
-                </div>
-                <div class="flex gap-3">
-                    <span class="text-lg flex-shrink-0">📌</span>
-                    <p class="font-sans text-sm text-gray-600">Suggest who would enjoy this book and why</p>
-                </div>
-            </div>
+    <!-- Page Header -->
+    <div class="page-header">
+        <div class="page-header-left">
+            <h1 class="page-title">Kirim Review Buku</h1>
+            <p class="page-subtitle">Bagikan pengalaman membacamu dan raih poin literasi</p>
         </div>
     </div>
+
+    <!-- Stats Row -->
+    <div class="stats-row">
+        <div class="stat-card">
+            <div class="stat-icon stat-icon--primary">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/>
+                </svg>
+            </div>
+            <div class="stat-value" data-count="{{ stats.reviews_count }}">{{ stats.reviews_count }}</div>
+            <div class="stat-label">Total Review</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon stat-icon--verified">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+            </div>
+            <div class="stat-value stat-value--verified" data-count="{{ stats.verified_count }}">{{ stats.verified_count }}</div>
+            <div class="stat-label">Disetujui</div>
+        </div>
+        <div class="stat-card stat-card--highlight">
+            <div class="stat-icon stat-icon--accent">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                </svg>
+            </div>
+            <div class="stat-value stat-value--accent">+20</div>
+            <div class="stat-label">Poin per Review</div>
+        </div>
+    </div>
+
+    <!-- Info Banner -->
+    <div class="info-banner">
+        <div class="info-banner-icon">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+        </div>
+        <p class="info-banner-text">Setiap review yang disetujui guru akan menambah <strong>20 poin</strong> ke skormu di leaderboard. Tulis dengan jujur dan lengkap!</p>
+    </div>
+
+    <!-- Form Card -->
+    <div class="form-card">
+        <div class="form-card-header">
+            <div class="form-card-header-icon">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/>
+                </svg>
+            </div>
+            <div>
+                <h2 class="form-card-title">Detail Buku & Review</h2>
+                <p class="form-card-subtitle">Isi informasi buku yang sudah kamu baca</p>
+            </div>
+        </div>
+
+        <form method="POST" class="form-body">
+            {% csrf_token %}
+
+            <!-- Judul Buku -->
+            <div class="field-group">
+                <label class="field-label">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/>
+                    </svg>
+                    {{ form.title.label }}
+                    <span class="field-required">*</span>
+                </label>
+                {{ form.title }}
+                {% if form.title.errors %}
+                <div class="field-error">
+                    <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                    {{ form.title.errors|join:", " }}
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Penulis -->
+            <div class="field-group">
+                <label class="field-label">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/>
+                    </svg>
+                    {{ form.author.label }}
+                    <span class="field-required">*</span>
+                </label>
+                {{ form.author }}
+                {% if form.author.errors %}
+                <div class="field-error">
+                    <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                    {{ form.author.errors|join:", " }}
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Penerbit & Tahun -->
+            <div class="field-row">
+                <div class="field-group">
+                    <label class="field-label">
+                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
+                        </svg>
+                        {{ form.publisher.label }}
+                    </label>
+                    {{ form.publisher }}
+                    {% if form.publisher.errors %}
+                    <div class="field-error">
+                        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                        {{ form.publisher.errors|join:", " }}
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="field-group">
+                    <label class="field-label">
+                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+                        </svg>
+                        {{ form.publication_year.label }}
+                    </label>
+                    {{ form.publication_year }}
+                    {% if form.publication_year.errors %}
+                    <div class="field-error">
+                        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                        {{ form.publication_year.errors|join:", " }}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Rangkuman / Review -->
+            <div class="field-group">
+                <label class="field-label">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                    </svg>
+                    {{ form.summary.label }}
+                    <span class="field-required">*</span>
+                </label>
+                <p class="field-hint">Tulis ulasanmu dengan jujur — apa yang menarik, pesan dari buku, dan siapa yang cocok membacanya. Minimal 50 karakter.</p>
+                {{ form.summary }}
+                <div class="char-counter">
+                    <span id="char-count">0</span> / 1000 karakter
+                </div>
+                {% if form.summary.errors %}
+                <div class="field-error">
+                    <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                    {{ form.summary.errors|join:", " }}
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Actions -->
+            <div class="form-actions">
+                <a href="{% url 'literacy:history' %}" class="btn btn-ghost">
+                    <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+                    Batal
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                    </svg>
+                    Kirim Review
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Tips Section -->
+    <div class="tips-grid">
+        <div class="tips-card tips-card--blue">
+            <div class="tips-card-header">
+                <span class="tips-icon">✏️</span>
+                <h3 class="tips-title">Tips Menulis Review</h3>
+            </div>
+            <ul class="tips-list">
+                <li>Tulis reaksi jujurmu — suka atau tidak suka</li>
+                <li>Sebutkan karakter atau adegan yang berkesan</li>
+                <li>Hubungkan isi buku dengan kehidupan nyata</li>
+                <li>Rekomendasikan kepada siapa buku ini cocok</li>
+            </ul>
+        </div>
+        <div class="tips-card tips-card--red">
+            <div class="tips-card-header">
+                <span class="tips-icon">📋</span>
+                <h3 class="tips-title">Syarat Verifikasi</h3>
+            </div>
+            <ul class="tips-list">
+                <li>Review minimal 50 karakter dan orisinal</li>
+                <li>Judul, penulis, dan rangkuman wajib diisi</li>
+                <li>Isi review harus relevan dengan buku</li>
+                <li>Gunakan bahasa yang sopan dan santun</li>
+            </ul>
+        </div>
+    </div>
+
 </div>
 
+<script>
+    document.querySelector('.main-content').classList.add('ready');
+
+    // Character counter
+    const textarea = document.querySelector('textarea[name="summary"]');
+    const counter  = document.getElementById('char-count');
+    if (textarea && counter) {
+        function updateCount() {
+            const len = textarea.value.length;
+            counter.textContent = len;
+            counter.closest('.char-counter').classList.toggle('char-counter--warn', len > 900);
+            counter.closest('.char-counter').classList.toggle('char-counter--over', len > 1000);
+        }
+        textarea.addEventListener('input', updateCount);
+        updateCount();
+    }
+
+    // Animated counters
+    function animateCount(el) {
+        const target = parseInt(el.dataset.count) || 0;
+        if (target === 0) return;
+        let start = 0;
+        const step = ts => {
+            if (!start) start = ts;
+            const p = Math.min((ts - start) / 700, 1);
+            const ease = 1 - Math.pow(1 - p, 3);
+            el.textContent = Math.floor(ease * target);
+            if (p < 1) requestAnimationFrame(step);
+            else el.textContent = target;
+        };
+        requestAnimationFrame(step);
+    }
+    const obs = new IntersectionObserver(entries => {
+        entries.forEach(e => { if (e.isIntersecting) { animateCount(e.target); obs.unobserve(e.target); } });
+    }, { threshold: .5 });
+    document.querySelectorAll('.stat-value[data-count]').forEach(el => obs.observe(el));
+</script>
+
 <style>
-    input[type="text"],
-    input[type="number"],
-    textarea,
-    select {
-        width: 100%;
-        padding: 0.75rem;
-        border: 1px solid #d1d5db;
-        border-radius: 0.5rem;
-        font-family: inherit;
-        font-size: 0.95rem;
-        color: #111827;
-        transition: all 0.2s;
+    /* ── Breadcrumb ─────────────────────────────────────── */
+    .breadcrumb { margin-bottom: 20px; animation: fadeSlideDown .4s ease both; }
+    .breadcrumb-link {
+        display: inline-flex; align-items: center; gap: 6px;
+        font-size: .85rem; font-weight: 600; color: var(--primary-700);
+        text-decoration: none; transition: color .2s, gap .2s;
+    }
+    .breadcrumb-link:hover { color: var(--primary-900); gap: 10px; }
+
+    /* ── Page Header ─────────────────────────────────────── */
+    .page-header {
+        display: flex; align-items: flex-start; justify-content: space-between;
+        margin-bottom: 24px; gap: 16px;
+        animation: fadeSlideDown .5s ease both;
+    }
+    .page-title {
+        font-family: 'Playfair Display', serif; font-size: 2rem; font-weight: 700;
+        color: var(--primary-900); line-height: 1.2;
+    }
+    .page-subtitle { font-size: .9rem; color: var(--neutral-500); margin-top: 6px; }
+
+    /* ── Stats Row ───────────────────────────────────────── */
+    .stats-row {
+        display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 20px;
+        animation: fadeSlideUp .5s .05s ease both;
+    }
+    .stat-card {
+        background: var(--neutral-50); border: 1.5px solid #1e3a8a;
+        border-radius: var(--radius-md); padding: 20px 24px;
+        box-shadow: var(--shadow-sm); display: flex; flex-direction: column; gap: 8px;
+        transition: transform .25s ease, box-shadow .25s ease; cursor: default;
+        position: relative; overflow: hidden;
+    }
+    .stat-card--highlight { border-color: var(--accent-700); background: var(--accent-50); }
+    .stat-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(30,58,138,.12); }
+    .stat-icon {
+        width: 38px; height: 38px; border-radius: var(--radius-sm);
+        display: flex; align-items: center; justify-content: center;
+        transition: transform .3s ease;
+    }
+    .stat-card:hover .stat-icon { transform: scale(1.12) rotate(-5deg); }
+    .stat-icon--primary  { background: var(--primary-50);  color: var(--primary-700); }
+    .stat-icon--verified { background: #f0fdf4;            color: #15803d; }
+    .stat-icon--accent   { background: var(--accent-50);   color: var(--accent-700); }
+    .stat-value {
+        font-family: 'Playfair Display', serif; font-size: 1.9rem; font-weight: 700;
+        color: var(--primary-900); line-height: 1;
+    }
+    .stat-value--verified { color: #15803d; }
+    .stat-value--accent   { color: var(--accent-700); }
+    .stat-label { font-size: .75rem; color: var(--neutral-500); font-weight: 600; text-transform: uppercase; letter-spacing: .05em; }
+
+    /* ── Info Banner ─────────────────────────────────────── */
+    .info-banner {
+        display: flex; align-items: flex-start; gap: 12px;
+        background: var(--primary-50); border: 1.5px solid #1e3a8a;
+        border-radius: var(--radius-md); padding: 14px 18px;
+        margin-bottom: 24px; animation: fadeSlideUp .5s .1s ease both;
+    }
+    .info-banner-icon { color: var(--primary-700); flex-shrink: 0; margin-top: 1px; }
+    .info-banner-text { font-size: .87rem; color: var(--primary-900); line-height: 1.6; margin: 0; }
+    .info-banner-text strong { font-weight: 700; }
+
+    /* ── Form Card ───────────────────────────────────────── */
+    .form-card {
+        background: var(--neutral-50); border: 1.5px solid #1e3a8a;
+        border-radius: var(--radius-md); overflow: hidden;
+        box-shadow: var(--shadow-sm); margin-bottom: 24px;
+        animation: fadeSlideUp .5s .15s ease both;
+    }
+    .form-card-header {
+        display: flex; align-items: center; gap: 14px;
+        padding: 20px 28px; border-bottom: 1.5px solid rgba(30,58,138,.15);
+        background: var(--primary-50);
+    }
+    .form-card-header-icon {
+        width: 40px; height: 40px; border-radius: var(--radius-sm);
+        background: var(--neutral-50); border: 1.5px solid #1e3a8a;
+        display: flex; align-items: center; justify-content: center;
+        color: var(--primary-700); flex-shrink: 0;
+    }
+    .form-card-title {
+        font-family: 'Playfair Display', serif; font-size: 1.1rem; font-weight: 700;
+        color: var(--primary-900); margin: 0;
+    }
+    .form-card-subtitle { font-size: .8rem; color: var(--neutral-500); margin-top: 2px; }
+
+    .form-body { padding: 28px; display: flex; flex-direction: column; gap: 22px; }
+
+    /* ── Field ───────────────────────────────────────────── */
+    .field-group { display: flex; flex-direction: column; gap: 6px; }
+    .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+    .field-label {
+        display: inline-flex; align-items: center; gap: 6px;
+        font-family: 'Work Sans', sans-serif; font-size: .85rem; font-weight: 700;
+        color: var(--primary-900);
+    }
+    .field-required { color: var(--error-400); font-weight: 700; }
+    .field-hint { font-size: .78rem; color: var(--neutral-500); line-height: 1.5; margin: 0; }
+    .field-error {
+        display: flex; align-items: center; gap: 5px;
+        font-size: .78rem; color: var(--error-400); font-weight: 500;
     }
 
-    input[type="text"]:focus,
-    input[type="number"]:focus,
-    textarea:focus,
-    select:focus {
-        outline: none;
-        border-color: #3b82f6;
-        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    /* Django form inputs */
+    input[type="text"], input[type="number"], textarea, select {
+        width: 100%; padding: 10px 14px;
+        border: 1.5px solid rgba(30,58,138,.35); border-radius: var(--radius-sm);
+        font-family: 'Work Sans', sans-serif; font-size: .9rem;
+        color: var(--primary-900); background: #fff;
+        outline: none; transition: border-color .2s, box-shadow .2s;
+    }
+    input[type="text"]:focus, input[type="number"]:focus, textarea:focus, select:focus {
+        border-color: var(--primary-700);
+        box-shadow: 0 0 0 3px rgba(30,58,138,.1);
+    }
+    textarea { resize: vertical; min-height: 140px; line-height: 1.6; }
+
+    /* Char counter */
+    .char-counter {
+        font-size: .75rem; color: var(--neutral-400); text-align: right; font-weight: 500;
+        transition: color .2s;
+    }
+    .char-counter--warn { color: var(--accent-700); }
+    .char-counter--over { color: var(--error-400); font-weight: 700; }
+
+    /* ── Form Actions ────────────────────────────────────── */
+    .form-actions {
+        display: flex; gap: 12px; padding-top: 6px;
+        border-top: 1px solid rgba(30,58,138,.1);
+    }
+    .btn-primary {
+        display: inline-flex; align-items: center; gap: 7px;
+        transition: transform .2s ease, box-shadow .2s ease;
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(30,58,138,.2); }
+    .btn-ghost {
+        display: inline-flex; align-items: center; gap: 7px;
+        padding: 10px 20px; border-radius: var(--radius-sm);
+        font-family: 'Work Sans', sans-serif; font-size: .88rem; font-weight: 600;
+        border: 1.5px solid #1e3a8a; color: var(--primary-700);
+        background: var(--neutral-50); text-decoration: none;
+        transition: background .18s, color .18s, transform .18s;
+    }
+    .btn-ghost:hover { background: var(--primary-700); color: #fff; transform: translateY(-1px); }
+
+    /* ── Tips Grid ───────────────────────────────────────── */
+    .tips-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; animation: fadeSlideUp .5s .3s ease both; }
+    .tips-card { border-radius: var(--radius-md); padding: 24px; border: 1.5px solid; transition: transform .25s ease, box-shadow .25s ease; }
+    .tips-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(30,58,138,.1); }
+    .tips-card--blue { background: var(--primary-50); border-color: #1e3a8a; }
+    .tips-card--red  { background: var(--error-50);   border-color: var(--error-400); }
+    .tips-card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+    .tips-icon { font-size: 1.1rem; line-height: 1; }
+    .tips-title { font-family: 'Playfair Display', serif; font-size: .95rem; font-weight: 700; color: var(--primary-900); margin: 0; }
+    .tips-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+    .tips-list li {
+        font-size: .85rem; color: var(--neutral-600); padding-left: 20px; position: relative;
+        line-height: 1.4; transition: color .2s, padding-left .2s;
+    }
+    .tips-list li:hover { color: var(--primary-900); padding-left: 24px; }
+    .tips-list li::before {
+        content: ""; position: absolute; left: 0; top: 6px; width: 10px; height: 10px;
+        background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' stroke='%2310b981' stroke-width='3' viewBox='0 0 24 24'%3E%3Cpath d='M20 6L9 17l-5-5'/%3E%3C/svg%3E") center/contain no-repeat;
     }
 
-    textarea {
-        resize: vertical;
-        min-height: 120px;
+    /* ── Keyframes ───────────────────────────────────────── */
+    @keyframes fadeSlideDown { from { opacity: 0; transform: translateY(-14px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes fadeSlideUp   { from { opacity: 0; transform: translateY(14px);  } to { opacity: 1; transform: translateY(0); } }
+
+    /* ── Responsive ──────────────────────────────────────── */
+    @media (max-width: 768px) {
+        .stats-row  { grid-template-columns: repeat(2, 1fr); }
+        .field-row  { grid-template-columns: 1fr; }
+        .tips-grid  { grid-template-columns: 1fr; }
+        .form-actions { flex-direction: column-reverse; }
+        .page-header { flex-direction: column; }
     }
+    .main-content.ready { visibility: visible; }
 </style>
 {% endblock %}

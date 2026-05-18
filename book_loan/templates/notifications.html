@@ -5,29 +5,29 @@
 
 {% block extra_css %}
 <style>
+    .tab-button.active {
+        background-color: #1e293b;
+        color: white;
+    }
+    .tab-button {
+        transition: all 0.2s ease;
+    }
     .notification-card {
         transition: all 0.2s ease;
     }
-    
     .notification-card:hover {
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
         transform: translateY(-1px);
     }
-    
     .notification-card.unread {
-        background: linear-gradient(135deg, #ffffff 0%, #fafafa 100%);
-        border-left: 3px solid #1f2937;
+        border-left: 4px solid #10b981;
     }
-    
     .notification-card.read {
-        background: #ffffff;
-        border-left: 3px solid #e5e7eb;
+        border: 1px solid #e2e8f0;
     }
-    
     .unread-indicator {
         animation: pulse-soft 2s infinite;
     }
-    
     @keyframes pulse-soft {
         0%, 100% { opacity: 1; }
         50% { opacity: 0.6; }
@@ -36,50 +36,73 @@
 {% endblock %}
 
 {% block content %}
-<div class="bg-gradient-to-b from-white via-gray-50 to-white min-h-screen">
-    <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
-        
+<div class="bg-slate-100 min-h-screen">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
         <!-- Header -->
-        <div class="mb-8">
-            <div class="flex items-center justify-between mb-4">
-                <div>
-                    <h1 class="text-4xl md:text-5xl font-display font-bold text-gray-900 mb-1">Notifikasi</h1>
-                    <p class="text-gray-600 font-sans">Tetap update dengan aktivitas peminjaman Anda</p>
+        <div class="bg-white border-b border-slate-200 mb-8">
+            <div class="px-4 md:px-8 py-8 md:py-12">
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    <div class="flex-1">
+                        <h1 class="text-3xl md:text-5xl font-bold text-slate-900 font-['Playfair_Display'] leading-tight md:leading-[60px] mb-2">Notifikasi</h1>
+                        <p class="text-base md:text-lg font-normal text-zinc-600 font-['Work_Sans'] leading-6 md:leading-7">Pantau pembaruan dan informasi penting Anda</p>
+                    </div>
+                    <div class="flex items-center justify-between md:justify-end gap-4">
+                        <div id="unreadBadge" class="hidden px-3 md:px-5 py-2 bg-blue-900 rounded-full flex justify-start items-center gap-2">
+                            <div class="w-3 md:w-4 h-3 md:h-4 relative overflow-hidden">
+                                <div class="w-0.5 h-[0.67px] left-[6.85px] top-[14px] absolute outline outline-[1.33px] outline-offset-[-0.67px] outline-white"></div>
+                                <div class="w-3 h-2.5 left-[2px] top-[1.33px] absolute outline outline-[1.33px] outline-offset-[-0.67px] outline-white"></div>
+                            </div>
+                            <div class="flex-1 h-4 md:h-5 relative">
+                                <div class="text-white text-xs md:text-sm font-semibold font-['Work_Sans'] leading-4 md:leading-5" id="unreadCount">0 Belum Dibaca</div>
+                            </div>
+                        </div>
+                        <div class="text-2xl md:text-4xl">🔔</div>
+                    </div>
                 </div>
-                <div class="text-4xl">🔔</div>
-            </div>
-            
-            <!-- Action Buttons -->
-            <div class="flex gap-3 mt-6">
-                <button onclick="markAllAsRead()" class="px-4 py-2.5 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors text-sm font-medium font-sans">
-                    Tandai Semua Dibaca
-                </button>
-                <button onclick="location.reload()" class="px-4 py-2.5 border border-gray-200 text-gray-700 bg-white rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium font-sans">
-                    Segarkan
-                </button>
             </div>
         </div>
 
-        <!-- Notifications Container -->
-        <div id="notificationsContainer" class="space-y-3">
+        <!-- Tabs -->
+        <div class="mb-8">
+            <div class="bg-white rounded-2xl border border-slate-200 p-1 md:p-2 flex md:inline-flex overflow-x-auto">
+                <button id="tab-all" class="tab-button active px-4 md:px-6 py-2 rounded-xl text-xs md:text-sm font-semibold font-['Work_Sans'] leading-4 md:leading-5 whitespace-nowrap">Semua</button>
+                <button id="tab-unread" class="tab-button px-4 md:px-6 py-2 rounded-xl text-xs md:text-sm font-semibold font-['Work_Sans'] leading-4 md:leading-5 text-zinc-600 whitespace-nowrap">Belum Dibaca</button>
+                <button id="tab-read" class="tab-button px-4 md:px-6 py-2 rounded-xl text-xs md:text-sm font-semibold font-['Work_Sans'] leading-4 md:leading-5 text-zinc-600 whitespace-nowrap">Sudah Dibaca</button>
+            </div>
+        </div>
+
+        <!-- Notifications Grid -->
+        <div id="notificationsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
             <!-- Loading State -->
-            <div id="loadingState" class="text-center py-16">
+            <div id="loadingState" class="col-span-full text-center py-16">
                 <div class="inline-block mb-4">
-                    <div class="w-10 h-10 border-4 border-gray-200 border-t-gray-900 rounded-full animate-spin"></div>
+                    <div class="w-10 h-10 border-4 border-slate-200 border-t-slate-900 rounded-full animate-spin"></div>
                 </div>
-                <p class="text-gray-600 font-sans text-sm">Memuat notifikasi...</p>
+                <p class="text-zinc-600 font-['Work_Sans'] text-sm">Memuat notifikasi...</p>
             </div>
         </div>
 
         <!-- Empty State -->
-        <div id="emptyState" class="hidden">
-            <div class="text-center py-20 bg-white rounded-2xl border border-gray-100">
-                <div class="text-6xl mb-4 opacity-80">📭</div>
-                <h3 class="text-lg font-semibold text-gray-900 mb-2 font-display">Tidak ada notifikasi</h3>
-                <p class="text-gray-600 text-sm font-sans mb-6 max-w-xs mx-auto">Semua notifikasi sudah dibaca atau belum ada notifikasi baru untuk Anda.</p>
-                <a href="{% url 'book_loan:loan_history' %}" class="inline-block px-6 py-2.5 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition-colors font-sans">
-                    Lihat Riwayat Peminjaman
-                </a>
+        <div id="emptyState" class="hidden col-span-full text-center py-20 bg-white rounded-2xl border border-slate-100">
+            <div class="text-6xl mb-4 opacity-80">📭</div>
+            <h3 class="text-lg font-semibold text-slate-900 mb-2 font-['Work_Sans']">Tidak ada notifikasi</h3>
+            <p class="text-zinc-600 text-sm font-['Work_Sans'] mb-6 max-w-xs mx-auto">Semua notifikasi sudah dibaca atau belum ada notifikasi baru untuk Anda.</p>
+            <a href="{% url 'book_loan:loan_history' %}" class="inline-block px-6 py-2.5 bg-slate-900 text-white text-sm font-semibold rounded-lg hover:bg-slate-800 transition-colors font-['Work_Sans']">
+                Lihat Riwayat Peminjaman
+            </a>
+        </div>
+
+        <!-- Footer -->
+        <div class="bg-slate-200 rounded-2xl border border-slate-300 p-4 md:p-6">
+            <div class="flex items-start gap-3 md:gap-4">
+                <div class="w-8 h-8 md:w-9 md:h-9 px-1 md:px-2 pt-1 md:pt-2 bg-slate-500 rounded-full flex items-center justify-center flex-shrink-0">
+                    <div class="text-white text-sm">ℹ️</div>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <h3 class="text-sm md:text-base font-semibold text-slate-900 font-['Work_Sans'] leading-5 md:leading-6 mb-2">Tentang Notifikasi</h3>
+                    <p class="text-zinc-600 text-xs md:text-sm font-['Work_Sans'] leading-5 md:leading-6 break-words">Anda akan menerima notifikasi untuk pembaruan status peminjaman, pengingat pengembalian buku, dan informasi penting lainnya. Notifikasi akan otomatis dihapus setelah 30 hari.</p>
+                </div>
             </div>
         </div>
 
@@ -88,7 +111,23 @@
 
 <script>
     // Load notifications on page load
-    document.addEventListener('DOMContentLoaded', loadNotifications);
+    document.addEventListener('DOMContentLoaded', function() {
+        loadNotifications();
+        setupTabListeners();
+    });
+
+    function setupTabListeners() {
+        document.getElementById('tab-all').addEventListener('click', () => setFilter('all'));
+        document.getElementById('tab-unread').addEventListener('click', () => setFilter('unread'));
+        document.getElementById('tab-read').addEventListener('click', () => setFilter('read'));
+    }
+
+    function setFilter(filter) {
+        currentFilter = filter;
+        document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+        document.getElementById(`tab-${filter}`).classList.add('active');
+        filterAndDisplayNotifications();
+    }
 
     async function loadNotifications() {
         try {
@@ -104,22 +143,56 @@
         }
     }
 
+    let allNotifications = [];
+    let currentFilter = 'all';
+
     function displayNotifications(notifications, unreadCount) {
         const container = document.getElementById('notificationsContainer');
         const emptyState = document.getElementById('emptyState');
-        
+        const unreadBadge = document.getElementById('unreadBadge');
+        const unreadCountEl = document.getElementById('unreadCount');
+
+        allNotifications = notifications || [];
         container.innerHTML = '';
-        
+
         if (!notifications || notifications.length === 0) {
             container.classList.add('hidden');
             emptyState.classList.remove('hidden');
+            unreadBadge.classList.add('hidden');
             return;
         }
-        
+
         container.classList.remove('hidden');
         emptyState.classList.add('hidden');
-        
-        notifications.forEach(notification => {
+
+        if (unreadCount > 0) {
+            unreadBadge.classList.remove('hidden');
+            unreadCountEl.textContent = `${unreadCount} Belum Dibaca`;
+        } else {
+            unreadBadge.classList.add('hidden');
+        }
+
+        filterAndDisplayNotifications();
+    }
+
+    function filterAndDisplayNotifications() {
+        const container = document.getElementById('notificationsContainer');
+        container.innerHTML = '';
+
+        let filteredNotifications = allNotifications;
+
+        if (currentFilter === 'unread') {
+            filteredNotifications = allNotifications.filter(n => !n.is_read);
+        } else if (currentFilter === 'read') {
+            filteredNotifications = allNotifications.filter(n => n.is_read);
+        }
+
+        if (filteredNotifications.length === 0) {
+            container.innerHTML = '<div class="col-span-full text-center py-16 text-zinc-600 font-[\'Work_Sans\'] text-sm">Tidak ada notifikasi dalam kategori ini.</div>';
+            return;
+        }
+
+        filteredNotifications.forEach(notification => {
             const notifElement = createNotificationElement(notification);
             container.appendChild(notifElement);
         });
@@ -130,33 +203,35 @@
         const isUnread = !notification.is_read;
         const createdDate = new Date(notification.created_at);
         const formattedDate = formatDate(createdDate);
-        
-        const icon = getNotificationIcon(notification.type);
-        
-        div.className = `notification-card p-5 rounded-xl border transition-all ${isUnread ? 'unread' : 'read'}`;
+
+        const { iconElement, borderClass } = getNotificationIcon(notification.type);
+
+        div.className = `notification-card p-4 md:p-6 rounded-2xl bg-white transition-all ${isUnread ? 'unread' : 'read'}`;
         div.innerHTML = `
-            <div class="flex gap-4">
-                <div class="text-2xl flex-shrink-0">${icon}</div>
+            <div class="flex gap-3 md:gap-4">
+                <div class="flex-shrink-0">
+                    ${iconElement}
+                </div>
                 <div class="flex-1 min-w-0">
-                    <div class="flex items-start justify-between mb-2 gap-3">
-                        <h3 class="font-semibold text-gray-900 text-base font-display">
+                    <div class="flex items-start justify-between mb-2">
+                        <h3 class="text-sm md:text-base font-semibold text-slate-900 font-['Work_Sans'] leading-4 md:leading-5 break-words">
                             ${notification.title}
                         </h3>
-                        ${isUnread ? `<span class="w-2.5 h-2.5 bg-gray-900 rounded-full flex-shrink-0 mt-1.5 unread-indicator"></span>` : ''}
+                        ${isUnread ? `<div class="w-2 h-2 bg-green-500 rounded-full flex-shrink-0 mt-1 md:mt-2"></div>` : ''}
                     </div>
-                    <p class="text-gray-700 text-sm font-sans leading-relaxed mb-3">
+                    <p class="text-zinc-600 text-xs md:text-sm font-['Work_Sans'] leading-5 md:leading-6 mb-3 md:mb-4 break-words">
                         ${notification.message}
                     </p>
-                    <div class="flex items-center justify-between">
-                        <span class="text-xs text-gray-500 font-sans">${formattedDate}</span>
-                        <div class="flex gap-2">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                        <span class="text-xs text-gray-400 font-['Work_Sans'] leading-4">${formattedDate}</span>
+                        <div class="flex gap-2 flex-wrap">
                             ${notification.type === 'reminder_due' ? `
-                                <button onclick="goToExtension(${notification.loan_id})" class="px-3 py-1.5 bg-gray-900 hover:bg-gray-800 text-white rounded-lg text-xs font-medium font-sans transition-colors">
+                                <button onclick="goToExtension(${notification.loan_id})" class="px-2 md:px-3 py-1 bg-blue-900 hover:bg-blue-800 text-white rounded-lg text-xs font-semibold font-['Work_Sans'] transition-colors">
                                     Ajukan Perpanjangan
                                 </button>
                             ` : ''}
                             ${isUnread ? `
-                                <button onclick="markAsRead(${notification.id})" class="px-3 py-1.5 border border-gray-200 text-gray-700 hover:bg-gray-50 rounded-lg text-xs font-medium font-sans transition-colors">
+                                <button onclick="markAsRead(${notification.id})" class="px-2 md:px-3 py-1 text-blue-900 hover:bg-blue-50 rounded-lg text-xs font-semibold font-['Work_Sans'] transition-colors">
                                     Tandai Dibaca
                                 </button>
                             ` : ''}
@@ -165,7 +240,7 @@
                 </div>
             </div>
         `;
-        
+
         if (isUnread) {
             div.addEventListener('click', function(e) {
                 if (!e.target.closest('button')) {
@@ -173,20 +248,78 @@
                 }
             });
         }
-        
+
         return div;
     }
 
     function getNotificationIcon(type) {
-        const icons = {
-            'reminder_due': '⏰',
-            'extension_approved': '✅',
-            'extension_rejected': '❌',
-            'waitlist_ready': '📚',
-            'loan_approved': '✓',
-            'loan_rejected': '✗',
+        const iconConfigs = {
+            'reminder_due': {
+                svg: `<svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8.55666 17.5C8.70295 17.7533 8.91334 17.9637 9.1667 18.11C9.42006 18.2563 9.70745 18.3333 10 18.3333C10.2925 18.3333 10.5799 18.2563 10.8333 18.11C11.0867 17.9637 11.297 17.7533 11.4433 17.5" stroke="#4B61A1" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round"/><path d="M2.71833 12.772C2.60947 12.8913 2.53763 13.0397 2.51155 13.1991C2.48547 13.3585 2.50627 13.522 2.57142 13.6698C2.63658 13.8176 2.74328 13.9433 2.87855 14.0316C3.01381 14.1198 3.17182 14.1669 3.33333 14.167H16.6667C16.8282 14.167 16.9862 14.1202 17.1216 14.0321C17.2569 13.944 17.3637 13.8184 17.4291 13.6708C17.4944 13.5231 17.5154 13.3596 17.4895 13.2001C17.4637 13.0407 17.392 12.8923 17.2833 12.7728C16.175 11.6303 15 10.4162 15 6.66699C15 5.34091 14.4732 4.06914 13.5355 3.13146C12.5979 2.19378 11.3261 1.66699 10 1.66699C8.67392 1.66699 7.40215 2.19378 6.46447 3.13146C5.52679 4.06914 5 5.34091 5 6.66699C5 10.4162 3.82417 11.6303 2.71833 12.772Z" stroke="#4B61A1" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+                bgColor: 'bg-blue-50',
+                borderColor: 'outline-blue-200',
+                iconColor: 'text-blue-900'
+            },
+            'extension_approved': {
+                svg: `<svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#clip0_699_1332)"><path d="M18.1675 8.33357C18.5481 10.2013 18.2768 12.1431 17.399 13.8351C16.5212 15.527 15.0899 16.8669 13.3438 17.6313C11.5976 18.3957 9.64219 18.5384 7.80358 18.0355C5.96498 17.5327 4.35433 16.4147 3.24023 14.8681C2.12613 13.3214 1.57593 11.4396 1.68139 9.53639C1.78684 7.63318 2.54157 5.82364 3.81971 4.40954C5.09785 2.99545 6.82215 2.06226 8.70505 1.76561C10.588 1.46897 12.5157 1.82679 14.1667 2.7794" stroke="#10B981" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round"/><path d="M7.5 9.16634L10 11.6663L18.3333 3.33301" stroke="#10B981" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round"/></g><defs><clipPath id="clip0_699_1332"><rect width="20" height="20" fill="white"/></clipPath></defs></svg>`,
+                bgColor: 'bg-emerald-50',
+                borderColor: 'outline-emerald-200',
+                iconColor: 'text-emerald-500'
+            },
+            'extension_rejected': {
+                svg: `<svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8.55666 17.5C8.70295 17.7533 8.91334 17.9637 9.1667 18.11C9.42006 18.2563 9.70745 18.3333 10 18.3333C10.2925 18.3333 10.5799 18.2563 10.8333 18.11C11.0867 17.9637 11.297 17.7533 11.4433 17.5" stroke="#4B61A1" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round"/><path d="M2.71833 12.772C2.60947 12.8913 2.53763 13.0397 2.51155 13.1991C2.48547 13.3585 2.50627 13.522 2.57142 13.6698C2.63658 13.8176 2.74328 13.9433 2.87855 14.0316C3.01381 14.1198 3.17182 14.1669 3.33333 14.167H16.6667C16.8282 14.167 16.9862 14.1202 17.1216 14.0321C17.2569 13.944 17.3637 13.8184 17.4291 13.6708C17.4944 13.5231 17.5154 13.3596 17.4895 13.2001C17.4637 13.0407 17.392 12.8923 17.2833 12.7728C16.175 11.6303 15 10.4162 15 6.66699C15 5.34091 14.4732 4.06914 13.5355 3.13146C12.5979 2.19378 11.3261 1.66699 10 1.66699C8.67392 1.66699 7.40215 2.19378 6.46447 3.13146C5.52679 4.06914 5 5.34091 5 6.66699C5 10.4162 3.82417 11.6303 2.71833 12.772Z" stroke="#4B61A1" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+                bgColor: 'bg-red-50',
+                borderColor: 'outline-red-200',
+                iconColor: 'text-red-600'
+            },
+            'waitlist_ready': {
+                svg: `<svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M15.8334 17.5L10 14.1667L4.16669 17.5V4.16667C4.16669 3.72464 4.34228 3.30072 4.65484 2.98816C4.9674 2.67559 5.39133 2.5 5.83335 2.5H14.1667C14.6087 2.5 15.0326 2.67559 15.3452 2.98816C15.6578 3.30072 15.8334 3.72464 15.8334 4.16667V17.5Z" stroke="#10B981" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 5.83301V10.833" stroke="#10B981" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round"/><path d="M12.5 8.33301H7.5" stroke="#10B981" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+                bgColor: 'bg-emerald-50',
+                borderColor: 'outline-emerald-200',
+                iconColor: 'text-emerald-500'
+            },
+            'loan_approved': {
+                svg: `<svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#clip0_699_1332)"><path d="M18.1675 8.33357C18.5481 10.2013 18.2768 12.1431 17.399 13.8351C16.5212 15.527 15.0899 16.8669 13.3438 17.6313C11.5976 18.3957 9.64219 18.5384 7.80358 18.0355C5.96498 17.5327 4.35433 16.4147 3.24023 14.8681C2.12613 13.3214 1.57593 11.4396 1.68139 9.53639C1.78684 7.63318 2.54157 5.82364 3.81971 4.40954C5.09785 2.99545 6.82215 2.06226 8.70505 1.76561C10.588 1.46897 12.5157 1.82679 14.1667 2.7794" stroke="#10B981" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round"/><path d="M7.5 9.16634L10 11.6663L18.3333 3.33301" stroke="#10B981" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round"/></g><defs><clipPath id="clip0_699_1332"><rect width="20" height="20" fill="white"/></clipPath></defs></svg>`,
+                bgColor: 'bg-emerald-50',
+                borderColor: 'outline-emerald-200',
+                iconColor: 'text-emerald-500'
+            },
+            'loan_rejected': {
+                svg: `<svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8.55666 17.5C8.70295 17.7533 8.91334 17.9637 9.1667 18.11C9.42006 18.2563 9.70745 18.3333 10 18.3333C10.2925 18.3333 10.5799 18.2563 10.8333 18.11C11.0867 17.9637 11.297 17.7533 11.4433 17.5" stroke="#4B61A1" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round"/><path d="M2.71833 12.772C2.60947 12.8913 2.53763 13.0397 2.51155 13.1991C2.48547 13.3585 2.50627 13.522 2.57142 13.6698C2.63658 13.8176 2.74328 13.9433 2.87855 14.0316C3.01381 14.1198 3.17182 14.1669 3.33333 14.167H16.6667C16.8282 14.167 16.9862 14.1202 17.1216 14.0321C17.2569 13.944 17.3637 13.8184 17.4291 13.6708C17.4944 13.5231 17.5154 13.3596 17.4895 13.2001C17.4637 13.0407 17.392 12.8923 17.2833 12.7728C16.175 11.6303 15 10.4162 15 6.66699C15 5.34091 14.4732 4.06914 13.5355 3.13146C12.5979 2.19378 11.3261 1.66699 10 1.66699C8.67392 1.66699 7.40215 2.19378 6.46447 3.13146C5.52679 4.06914 5 5.34091 5 6.66699C5 10.4162 3.82417 11.6303 2.71833 12.772Z" stroke="#4B61A1" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+                bgColor: 'bg-red-50',
+                borderColor: 'outline-red-200',
+                iconColor: 'text-red-600'
+            },
+            'overdue': {
+                svg: `<svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8.55666 17.5C8.70295 17.7533 8.91334 17.9637 9.1667 18.11C9.42006 18.2563 9.70745 18.3333 10 18.3333C10.2925 18.3333 10.5799 18.2563 10.8333 18.11C11.0867 17.9637 11.297 17.7533 11.4433 17.5" stroke="#4B61A1" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round"/><path d="M2.71833 12.772C2.60947 12.8913 2.53763 13.0397 2.51155 13.1991C2.48547 13.3585 2.50627 13.522 2.57142 13.6698C2.63658 13.8176 2.74328 13.9433 2.87855 14.0316C3.01381 14.1198 3.17182 14.1669 3.33333 14.167H16.6667C16.8282 14.167 16.9862 14.1202 17.1216 14.0321C17.2569 13.944 17.3637 13.8184 17.4291 13.6708C17.4944 13.5231 17.5154 13.3596 17.4895 13.2001C17.4637 13.0407 17.392 12.8923 17.2833 12.7728C16.175 11.6303 15 10.4162 15 6.66699C15 5.34091 14.4732 4.06914 13.5355 3.13146C12.5979 2.19378 11.3261 1.66699 10 1.66699C8.67392 1.66699 7.40215 2.19378 6.46447 3.13146C5.52679 4.06914 5 5.34091 5 6.66699C5 10.4162 3.82417 11.6303 2.71833 12.772Z" stroke="#4B61A1" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+                bgColor: 'bg-red-50',
+                borderColor: 'outline-red-200',
+                iconColor: 'text-red-600'
+            },
+            'new_books': {
+                svg: `<svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M15.8334 17.5L10 14.1667L4.16669 17.5V4.16667C4.16669 3.72464 4.34228 3.30072 4.65484 2.98816C4.9674 2.67559 5.39133 2.5 5.83335 2.5H14.1667C14.6087 2.5 15.0326 2.67559 15.3452 2.98816C15.6578 3.30072 15.8334 3.72464 15.8334 4.16667V17.5Z" stroke="#10B981" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 5.83301V10.833" stroke="#10B981" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round"/><path d="M12.5 8.33301H7.5" stroke="#10B981" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+                bgColor: 'bg-blue-50',
+                borderColor: 'outline-blue-200',
+                iconColor: 'text-blue-900'
+            }
         };
-        return icons[type] || '📬';
+
+        const config = iconConfigs[type] || {
+            svg: `<svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M15.8334 17.5L10 14.1667L4.16669 17.5V4.16667C4.16669 3.72464 4.34228 3.30072 4.65484 2.98816C4.9674 2.67559 5.39133 2.5 5.83335 2.5H14.1667C14.6087 2.5 15.0326 2.67559 15.3452 2.98816C15.6578 3.30072 15.8334 3.72464 15.8334 4.16667V17.5Z" stroke="#64748B" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 5.83301V10.833" stroke="#64748B" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round"/><path d="M12.5 8.33301H7.5" stroke="#64748B" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+            bgColor: 'bg-slate-50',
+            borderColor: 'outline-slate-200',
+            iconColor: 'text-slate-500'
+        };
+
+        const iconElement = `
+            <div class="w-10 h-10 md:w-11 md:h-11 px-2 md:px-3 pt-2 md:pt-3 pb-px ${config.bgColor} rounded-xl outline outline-1 outline-offset-[-1px] ${config.borderColor} inline-flex flex-col justify-center items-center">
+                <div class="w-5 h-5 md:w-6 md:h-6 flex items-center justify-center">
+                    ${config.svg}
+                </div>
+            </div>
+        `;
+
+        return { iconElement, borderClass: config.borderColor };
     }
 
     function formatDate(date) {
@@ -220,10 +353,12 @@
                     'X-CSRFToken': getCookie('csrftoken'),
                 }
             });
-            
+
             const data = await response.json();
             if (data.status === 'success') {
-                loadNotifications();
+                // Update local notifications
+                allNotifications = allNotifications.map(n => n.id == notificationId ? { ...n, is_read: true } : n);
+                filterAndDisplayNotifications();
             }
         } catch (error) {
             console.error('Error marking notification as read:', error);

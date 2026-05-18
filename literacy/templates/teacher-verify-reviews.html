@@ -1,115 +1,705 @@
 {% extends 'base.html' %}
 
-{% block title %}Verify Reviews - NASA Library Admin{% endblock %}
+{% block title %}Verifikasi Review — NASA Library{% endblock %}
 
 {% block content %}
-<div class="min-h-screen bg-gradient-to-br from-white via-orange-50 to-white">
-    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        
-        <!-- Header -->
-        <div class="mb-8">
-            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <div>
-                    <h1 class="font-display text-4xl md:text-5xl font-bold text-gray-900">✓ Verify Book Reviews</h1>
-                    <p class="font-sans text-gray-600 mt-2">Review and approve student submissions for {{ user_profile.kelas }}</p>
+<style>.verify-page { visibility: hidden; }</style>
+<div class="verify-page">
+    <div class="verify-container">
+
+        <!-- ── Page Header ── -->
+        <div class="page-header" style="--d:0">
+            <div class="page-header-left">
+                <p class="page-eyebrow">
+                    <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    Panel Guru
+                </p>
+                <h1 class="page-title">Verifikasi Review</h1>
+                <p class="page-subtitle">
+                    {% if user_profile.kelas %}Kelas {{ user_profile.kelas }}{% else %}Semua Kelas{% endif %}
+                    · Tinjau dan setujui kiriman siswa
+                </p>
+            </div>
+            <a href="{% url 'literacy:forum' %}" class="btn-outline-nav">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+                Kembali ke Forum
+            </a>
+        </div>
+
+        <!-- ── Stats Row ── -->
+        <div class="stats-grid" style="--d:1">
+            <div class="stat-card stat-card--amber">
+                <div class="stat-icon stat-icon--amber">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                </div>
+                <div class="stat-body">
+                    <p class="stat-value" id="stat-pending">{{ stats.pending_count }}</p>
+                    <p class="stat-label">Menunggu</p>
+                </div>
+            </div>
+            <div class="stat-card stat-card--green">
+                <div class="stat-icon stat-icon--green">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                </div>
+                <div class="stat-body">
+                    <p class="stat-value">{{ stats.verified_today }}</p>
+                    <p class="stat-label">Disetujui Hari Ini</p>
+                </div>
+            </div>
+            <div class="stat-card stat-card--blue">
+                <div class="stat-icon stat-icon--blue">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+                </div>
+                <div class="stat-body">
+                    <p class="stat-value">{{ stats.total_verified }}</p>
+                    <p class="stat-label">Total Disetujui</p>
                 </div>
             </div>
         </div>
 
-        <!-- Stats Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div class="bg-gradient-to-br from-orange-50 to-orange-100 border-2 border-orange-300 rounded-xl p-6 text-center">
-                <div class="text-4xl font-bold text-orange-600">{{ stats.pending_count }}</div>
-                <div class="font-sans text-sm text-orange-700 mt-2">Pending Reviews</div>
+        <!-- ── Filter Card ── -->
+        <div class="filter-card" style="--d:2">
+            <div class="filter-row">
+                <div class="filter-group">
+                    <label class="filter-label">Kelas</label>
+                    <select class="filter-select" id="kelas-select" onchange="applyKelasFilter(this.value)">
+                        <option value="">
+                            {% if user_profile.kelas %}Kelas Saya ({{ user_profile.kelas }}){% else %}Semua Kelas{% endif %}
+                        </option>
+                        {% for kelas in available_kelas %}
+                        {% if kelas != user_profile.kelas %}
+                        <option value="{{ kelas }}">{{ kelas }}</option>
+                        {% endif %}
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Tipe Konten</label>
+                    <div class="type-tabs">
+                        <button class="type-tab type-tab--active" id="btn-all" onclick="setTypeFilter('all')">Semua</button>
+                        <button class="type-tab" id="btn-book_review" onclick="setTypeFilter('book_review')">
+                            <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+                            Ulasan Buku
+                        </button>
+                        <button class="type-tab" id="btn-literacy_post" onclick="setTypeFilter('literacy_post')">
+                            <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                            Lesson Learned
+                        </button>
+                    </div>
+                </div>
             </div>
-            <div class="bg-gradient-to-br from-green-50 to-green-100 border border-green-300 rounded-xl p-6 text-center">
-                <div class="text-4xl font-bold text-green-600">{{ stats.verified_today }}</div>
-                <div class="font-sans text-sm text-green-700 mt-2">Verified Today</div>
-            </div>
-            <div class="bg-gradient-to-br from-blue-50 to-blue-100 border-2 border-blue-300 rounded-xl p-6 text-center">
-                <div class="text-4xl font-bold text-blue-600">{{ stats.total_verified }}</div>
-                <div class="font-sans text-sm text-blue-700 mt-2">Total Verified</div>
+            <div class="filter-meta">
+                <span class="filter-meta-label">Menampilkan:</span>
+                <span class="filter-meta-count" id="section-count">Memuat…</span>
             </div>
         </div>
 
-        <!-- Reviews List -->
-        {% if pending_reviews %}
-            <div class="space-y-6">
-                {% for review in pending_reviews %}
-                    <div class="bg-white border-2 border-gray-200 rounded-2xl p-6 hover:shadow-lg transition-shadow">
-                        <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-4">
-                            <div class="flex-1 min-w-0">
-                                <div class="flex items-start gap-2 mb-2">
-                                    <h3 class="font-display text-xl font-bold text-gray-900 flex-1">{{ review.title }}</h3>
-                                    <span class="inline-flex items-center gap-1 px-3 py-1 bg-orange-100 border border-orange-300 text-orange-700 font-semibold rounded-full whitespace-nowrap text-sm">
-                                        ⏳ Pending
-                                    </span>
-                                </div>
-                                
-                                <p class="font-sans text-gray-600 mb-2">
-                                    <span class="font-semibold">{{ review.author }}</span> • {{ review.publisher }} ({{ review.year_published }})
-                                </p>
-                                
-                                <p class="font-sans text-gray-600 text-sm mb-3">
-                                    by <span class="font-semibold">{{ review.student.get_full_name }}</span>
-                                    • Submitted {{ review.created_at|date:"d M Y \a\t H:i" }}
-                                </p>
-                                
-                                <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-4">
-                                    <p class="font-sans text-gray-700 text-sm">{{ review.summary|truncatewords:50 }}</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Action Buttons -->
-                        <div class="flex gap-3">
-                            <a href="{% url 'literacy:verify_review' review.pk %}" class="flex-1 px-4 py-3 bg-green-600 text-white font-sans font-semibold rounded-lg hover:bg-green-700 transition-colors text-center">
-                                ✓ Approve
-                            </a>
-                            <a href="{% url 'literacy:verify_review' review.pk %}" class="flex-1 px-4 py-3 bg-red-600 text-white font-sans font-semibold rounded-lg hover:bg-red-700 transition-colors text-center">
-                                ✕ Reject
-                            </a>
-                            <a href="javascript:void(0)" onclick="toggleDetails(this)" class="flex-1 px-4 py-3 bg-gray-600 text-white font-sans font-semibold rounded-lg hover:bg-gray-700 transition-colors text-center">
-                                👁️ Read Full
-                            </a>
-                        </div>
+        <!-- ── Review List ── -->
+        <div class="review-list" id="review-list" style="--d:3">
+            <div id="loading-state" class="skeleton-list">
+                {% for i in "1234" %}
+                <div class="skeleton-card">
+                    <div class="skel-avatar"></div>
+                    <div class="skel-body">
+                        <div class="skel skel--name"></div>
+                        <div class="skel skel--title"></div>
+                        <div class="skel skel--meta"></div>
+                        <div class="skel skel--block"></div>
                     </div>
+                </div>
                 {% endfor %}
             </div>
-        {% else %}
-            <div class="bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200 rounded-2xl p-12 text-center">
-                <div class="text-6xl mb-4">🎉</div>
-                <h3 class="font-display text-2xl font-bold text-gray-900 mb-2">All Caught Up!</h3>
-                <p class="font-sans text-gray-600">There are no pending reviews to verify right now.</p>
+            <div id="empty-state" class="empty-state" style="display:none;">
+                <div class="empty-icon">
+                    <svg width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                </div>
+                <h3 class="empty-title">Semua Sudah Ditinjau!</h3>
+                <p class="empty-desc">Tidak ada review yang menunggu verifikasi untuk filter ini.</p>
             </div>
-        {% endif %}
+        </div>
 
-        <!-- Info Card -->
-        <div class="mt-12 p-6 bg-blue-50 border border-blue-200 rounded-xl">
-            <h3 class="font-display text-lg font-bold text-blue-900 mb-3">Teacher Verification Guide</h3>
-            <ul class="font-sans text-sm text-blue-900 space-y-2">
-                <li>✓ Check if the review meets quality standards</li>
-                <li>✓ Verify the student actually read the book</li>
-                <li>✓ Ensure the summary is accurate and genuine</li>
-                <li>✓ Provide constructive feedback if rejecting</li>
-                <li>✓ Each verified review gives students 20 points</li>
-            </ul>
+    </div>
+</div>
+
+<!-- ══ Modal: Setujui ════════════════════════════════ -->
+<div id="modal-approve" class="modal-overlay" role="dialog" aria-modal="true">
+    <div class="modal-box">
+        <button class="modal-close" onclick="closeModal('modal-approve')" aria-label="Tutup">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+        <div class="modal-icon modal-icon--green">
+            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        </div>
+        <h2 class="modal-title">Setujui Review?</h2>
+        <p id="modal-approve-desc" class="modal-desc"></p>
+        <div class="modal-notice modal-notice--green">
+            Siswa akan mendapat <strong>10 poin</strong> dan review akan tampil di forum.
+        </div>
+        <div class="modal-actions">
+            <button onclick="closeModal('modal-approve')" class="btn-modal-ghost">Batal</button>
+            <button id="btn-confirm-approve" class="btn-modal-confirm btn-modal-confirm--green">
+                <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                Ya, Setujui
+            </button>
         </div>
     </div>
 </div>
 
-<script>
-function toggleDetails(btn) {
-    const card = btn.closest('.bg-white');
-    const summary = card.querySelector('.bg-gray-50');
-    
-    if (summary.style.display === 'none') {
-        summary.style.display = 'block';
-        btn.textContent = '👁️ Hide Full';
-    } else {
-        summary.style.display = 'none';
-        btn.textContent = '👁️ Read Full';
+<!-- ══ Modal: Tolak ══════════════════════════════════ -->
+<div id="modal-reject" class="modal-overlay" role="dialog" aria-modal="true">
+    <div class="modal-box">
+        <button class="modal-close" onclick="closeModal('modal-reject')" aria-label="Tutup">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+        <div class="modal-icon modal-icon--red">
+            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+        </div>
+        <h2 class="modal-title">Tolak Review</h2>
+        <p id="modal-reject-desc" class="modal-desc"></p>
+        <label class="modal-field-label">
+            Catatan Penolakan <span class="modal-required">*</span>
+        </label>
+        <textarea id="reject-reason" class="modal-textarea"
+                  placeholder="Jelaskan alasan penolakan dan saran perbaikan untuk siswa…"></textarea>
+        <p id="reject-reason-error" class="modal-error" style="display:none;">Catatan wajib diisi.</p>
+        <div class="modal-actions">
+            <button onclick="closeModal('modal-reject')" class="btn-modal-ghost">Batal</button>
+            <button id="btn-confirm-reject" class="btn-modal-confirm btn-modal-confirm--red">
+                <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                Tolak Review
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ══ Toast ═════════════════════════════════════════ -->
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<style>
+    /* ── Reveal system ───────────────────── */
+    .verify-page { animation: fadeIn .3s ease both; }
+    .verify-page.ready { visibility: visible; }
+    [style*="--d"] { animation: slideUp .42s calc(var(--d,0) * 80ms) cubic-bezier(.22,.68,0,1.2) both; }
+
+    /* ── Layout ──────────────────────────── */
+    .verify-container {
+        max-width: 860px; margin: 0 auto;
+        padding: 28px 20px 72px;
+        display: flex; flex-direction: column; gap: 20px;
     }
-}
+
+    /* ── Page Header ─────────────────────── */
+    .page-header {
+        display: flex; align-items: flex-start; justify-content: space-between;
+        gap: 16px; flex-wrap: wrap;
+    }
+    .page-header-left { display: flex; flex-direction: column; gap: 5px; }
+    .page-eyebrow {
+        display: inline-flex; align-items: center; gap: 6px;
+        font-family: 'Work Sans', sans-serif; font-size: .7rem; font-weight: 700;
+        letter-spacing: .08em; text-transform: uppercase;
+        color: var(--primary-600); margin: 0;
+    }
+    .page-title {
+        font-family: 'Playfair Display', serif; font-size: 2rem; font-weight: 700;
+        color: var(--primary-900); margin: 0; line-height: 1.2;
+    }
+    .page-subtitle {
+        font-family: 'Work Sans', sans-serif; font-size: .88rem;
+        color: var(--neutral-500); margin: 0;
+    }
+    .btn-outline-nav {
+        display: inline-flex; align-items: center; gap: 7px;
+        font-family: 'Work Sans', sans-serif; font-size: .82rem; font-weight: 700;
+        color: var(--primary-700); text-decoration: none;
+        padding: 9px 16px; border: 1.5px solid rgba(30,58,138,.3);
+        border-radius: var(--radius-sm); background: var(--neutral-50);
+        white-space: nowrap; flex-shrink: 0;
+        transition: background .2s, border-color .2s, transform .2s;
+    }
+    .btn-outline-nav:hover { background: var(--primary-50); border-color: #1e3a8a; transform: translateY(-1px); }
+
+    /* ── Stats Grid ──────────────────────── */
+    .stats-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; }
+    .stat-card {
+        display: flex; align-items: center; gap: 14px;
+        background: var(--neutral-50); border: 1.5px solid #1e3a8a;
+        border-radius: var(--radius-md); padding: 18px 20px;
+        box-shadow: var(--shadow-sm);
+        transition: transform .25s cubic-bezier(.22,.68,0,1.2), box-shadow .25s ease;
+    }
+    .stat-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(30,58,138,.11); }
+    .stat-card--amber { border-color: #fcd34d; background: linear-gradient(135deg,#fffbeb,#fef9ee); }
+    .stat-card--green { border-color: #86efac; background: linear-gradient(135deg,#f0fdf4,#f7fef9); }
+    .stat-card--blue  { border-color: #93c5fd; background: linear-gradient(135deg,#eff6ff,#f5f9ff); }
+    .stat-icon {
+        width: 42px; height: 42px; border-radius: 10px; flex-shrink: 0;
+        display: flex; align-items: center; justify-content: center;
+        transition: transform .3s cubic-bezier(.22,.68,0,1.4);
+    }
+    .stat-card:hover .stat-icon { transform: scale(1.1) rotate(-5deg); }
+    .stat-icon--amber { background: #fef3c7; color: #d97706; }
+    .stat-icon--green { background: #bbf7d0; color: #15803d; }
+    .stat-icon--blue  { background: #bfdbfe; color: #1d4ed8; }
+    .stat-body { display: flex; flex-direction: column; gap: 2px; }
+    .stat-value {
+        font-family: 'Playfair Display', serif; font-size: 1.9rem; font-weight: 700;
+        color: var(--primary-900); line-height: 1; margin: 0;
+    }
+    .stat-label {
+        font-family: 'Work Sans', sans-serif; font-size: .72rem; font-weight: 700;
+        text-transform: uppercase; letter-spacing: .05em; color: var(--neutral-500); margin: 0;
+    }
+
+    /* ── Filter Card ─────────────────────── */
+    .filter-card {
+        background: var(--neutral-50);
+        border: 1.5px solid rgba(30,58,138,.2);
+        border-radius: var(--radius-md);
+        padding: 20px 24px; box-shadow: var(--shadow-sm);
+    }
+    .filter-row { display: flex; gap: 20px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 14px; }
+    .filter-group { display: flex; flex-direction: column; gap: 6px; }
+    .filter-label {
+        font-family: 'Work Sans', sans-serif; font-size: .7rem; font-weight: 700;
+        text-transform: uppercase; letter-spacing: .06em; color: var(--primary-700);
+    }
+    .filter-select {
+        padding: 9px 32px 9px 13px; border: 1.5px solid rgba(30,58,138,.25);
+        border-radius: var(--radius-sm); font-family: 'Work Sans', sans-serif;
+        font-size: .86rem; color: var(--primary-900);
+        background: var(--neutral-50) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%231e3a8a' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 10px center;
+        appearance: none; outline: none; cursor: pointer;
+        transition: border-color .2s, box-shadow .2s;
+    }
+    .filter-select:focus { border-color: #1e3a8a; box-shadow: 0 0 0 3px rgba(30,58,138,.08); }
+    .type-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+    .type-tab {
+        display: inline-flex; align-items: center; gap: 5px;
+        padding: 8px 13px; border: 1.5px solid rgba(30,58,138,.22);
+        border-radius: var(--radius-sm);
+        font-family: 'Work Sans', sans-serif; font-size: .82rem; font-weight: 600;
+        color: var(--primary-700); background: var(--neutral-50); cursor: pointer;
+        transition: background .18s, color .18s, border-color .18s, transform .18s;
+    }
+    .type-tab:hover { background: var(--primary-50); border-color: rgba(30,58,138,.45); transform: translateY(-1px); }
+    .type-tab--active { background: #1e3a8a; color: #fff; border-color: #1e3a8a; }
+    .type-tab--active:hover { background: var(--primary-700); transform: translateY(-1px); }
+    .filter-meta {
+        display: flex; align-items: center; gap: 6px;
+        font-family: 'Work Sans', sans-serif; font-size: .8rem;
+        padding-top: 12px; border-top: 1px solid rgba(30,58,138,.08);
+    }
+    .filter-meta-label { color: var(--neutral-400); }
+    .filter-meta-count { font-weight: 700; color: var(--primary-700); }
+
+    /* ── Skeleton ────────────────────────── */
+    .skeleton-list { display: flex; flex-direction: column; gap: 12px; }
+    .skeleton-card {
+        display: flex; gap: 16px; padding: 22px;
+        border: 1.5px solid rgba(30,58,138,.14); border-radius: var(--radius-md);
+        background: var(--neutral-50);
+    }
+    .skel-avatar { width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0; background: linear-gradient(90deg,#e2e8f0 25%,#f1f5f9 50%,#e2e8f0 75%); background-size: 200% 100%; animation: shimmer 1.4s infinite; }
+    .skel-body { flex: 1; display: flex; flex-direction: column; gap: 10px; }
+    .skel { height: 12px; border-radius: 6px; background: linear-gradient(90deg,#e2e8f0 25%,#f1f5f9 50%,#e2e8f0 75%); background-size: 200% 100%; animation: shimmer 1.4s infinite; }
+    .skel--name  { width: 32%; }
+    .skel--title { width: 58%; height: 15px; }
+    .skel--meta  { width: 44%; }
+    .skel--block { width: 100%; height: 48px; border-radius: 8px; }
+    @keyframes shimmer { to { background-position: -200% 0; } }
+
+    /* ── Review List + Cards ─────────────── */
+    .review-list { display: flex; flex-direction: column; gap: 12px; }
+    .review-card {
+        border: 1.5px solid #1e3a8a; border-radius: var(--radius-md);
+        background: var(--neutral-50); padding: 22px 24px;
+        box-shadow: var(--shadow-sm); min-width: 0; overflow: hidden;
+        animation: slideUp .38s calc(var(--i,1) * 55ms) cubic-bezier(.22,.68,0,1.1) both;
+        transition: box-shadow .25s ease, transform .25s cubic-bezier(.22,.68,0,1.2);
+    }
+    .review-card:hover { box-shadow: 0 8px 28px rgba(30,58,138,.12); transform: translateY(-2px); }
+    @keyframes card-out { to { opacity: 0; transform: translateX(60px) scale(.95); } }
+    .card-removing { animation: card-out .3s cubic-bezier(.4,0,1,1) forwards; }
+
+    .card-top {
+        display: flex; align-items: flex-start; justify-content: space-between;
+        gap: 12px; margin-bottom: 14px; flex-wrap: wrap;
+    }
+    .card-student { display: flex; align-items: center; gap: 11px; }
+    .student-avatar {
+        width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0;
+        background: linear-gradient(135deg, #1e3a8a, #2563eb);
+        color: #fff; font-family: 'Playfair Display', serif; font-weight: 700;
+        font-size: 1rem; display: flex; align-items: center; justify-content: center;
+        border: 2px solid rgba(30,58,138,.2);
+    }
+    .student-name { font-family: 'Work Sans', sans-serif; font-weight: 700; font-size: .9rem; color: var(--primary-900); margin: 0 0 2px; }
+    .student-meta { font-family: 'Work Sans', sans-serif; font-size: .74rem; color: var(--neutral-500); margin: 0; }
+    .card-badges { display: flex; align-items: center; gap: 7px; flex-shrink: 0; flex-wrap: wrap; }
+    .type-badge {
+        display: inline-flex; align-items: center; gap: 4px;
+        padding: 3px 10px; border-radius: 100px; border: 1.5px solid;
+        font-family: 'Work Sans', sans-serif; font-size: .7rem; font-weight: 700;
+    }
+    .type-badge--book { background: var(--primary-50); color: var(--primary-700); border-color: rgba(30,58,138,.3); }
+    .type-badge--post { background: #f0fdf4; color: #15803d; border-color: rgba(22,163,74,.3); }
+    .status-badge {
+        display: inline-flex; align-items: center;
+        padding: 3px 10px; border-radius: 100px;
+        font-family: 'Work Sans', sans-serif; font-size: .7rem; font-weight: 700;
+        border: 1.5px solid #fbbf24; background: #fef9c3; color: #92400e;
+    }
+    .card-title {
+        font-family: 'Playfair Display', serif; font-size: 1.05rem; font-weight: 700;
+        color: var(--primary-900); margin: 0 0 4px;
+    }
+    .card-meta { font-family: 'Work Sans', sans-serif; font-size: .78rem; color: var(--neutral-500); margin: 0 0 14px; }
+    .card-summary-wrap {
+        background: rgba(30,58,138,.03); border: 1px solid rgba(30,58,138,.1);
+        border-radius: var(--radius-sm); padding: 12px 15px; margin-bottom: 16px;
+        overflow: hidden; min-width: 0;
+    }
+    .card-summary { font-family: 'Work Sans', sans-serif; font-size: .86rem; color: var(--neutral-700); line-height: 1.7; margin: 0; word-break: break-word; overflow-wrap: break-word; white-space: pre-wrap; }
+    .btn-expand {
+        background: none; border: none; cursor: pointer; padding: 0; margin-top: 7px;
+        font-family: 'Work Sans', sans-serif; font-size: .78rem; font-weight: 700;
+        color: var(--primary-700); display: block; transition: color .18s;
+    }
+    .btn-expand:hover { color: var(--primary-900); }
+    .card-actions { display: flex; gap: 10px; }
+    .btn-approve-card {
+        flex: 1; padding: 10px; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+        border: 1.5px solid #16a34a; border-radius: var(--radius-sm);
+        color: #16a34a; background: #f0fdf4; font-family: 'Work Sans', sans-serif;
+        font-size: .84rem; font-weight: 700; cursor: pointer;
+        transition: background .2s, color .2s, transform .2s, box-shadow .2s;
+    }
+    .btn-approve-card:hover { background: #16a34a; color: #fff; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(22,163,74,.2); }
+    .btn-reject-card {
+        flex: 1; padding: 10px; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+        border: 1.5px solid #f87171; border-radius: var(--radius-sm);
+        color: #dc2626; background: #fff8f8; font-family: 'Work Sans', sans-serif;
+        font-size: .84rem; font-weight: 700; cursor: pointer;
+        transition: background .2s, color .2s, transform .2s, box-shadow .2s;
+    }
+    .btn-reject-card:hover { background: #dc2626; color: #fff; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(220,38,38,.2); }
+
+    /* ── Empty State ─────────────────────── */
+    .empty-state {
+        flex-direction: column; align-items: center;
+        padding: 60px 24px; gap: 10px; text-align: center;
+        background: var(--neutral-50);
+        border: 1.5px dashed rgba(30,58,138,.25); border-radius: var(--radius-md);
+        animation: slideUp .4s ease;
+    }
+    .empty-icon { color: #16a34a; margin-bottom: 4px; }
+    .empty-title { font-family: 'Playfair Display', serif; font-size: 1.15rem; font-weight: 700; color: var(--primary-900); margin: 0; }
+    .empty-desc  { font-family: 'Work Sans', sans-serif; font-size: .85rem; color: var(--neutral-500); max-width: 280px; margin: 0; }
+
+    /* ── Modal ───────────────────────────── */
+    .modal-overlay {
+        position: fixed; inset: 0; background: rgba(15,23,42,.45);
+        z-index: 1000; display: none; align-items: center; justify-content: center;
+        padding: 20px; backdrop-filter: blur(4px);
+        opacity: 0; transition: opacity .24s ease;
+    }
+    .modal-overlay.is-open { opacity: 1; }
+    .modal-box {
+        background: var(--neutral-50); border-radius: var(--radius-md);
+        border: 1.5px solid #1e3a8a; max-width: 460px; width: 100%;
+        padding: 32px 28px; box-shadow: 0 28px 64px rgba(15,23,42,.26); position: relative;
+        transform: translateY(14px) scale(.98); transition: transform .26s cubic-bezier(.22,.68,0,1.2);
+    }
+    .modal-overlay.is-open .modal-box { transform: translateY(0) scale(1); }
+    .modal-close {
+        position: absolute; top: 14px; right: 14px; background: none; border: none;
+        cursor: pointer; color: var(--neutral-400); padding: 5px; border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        transition: color .18s, background .18s;
+    }
+    .modal-close:hover { color: var(--primary-900); background: var(--primary-50); }
+    .modal-icon {
+        width: 50px; height: 50px; border-radius: 50%; border: 2px solid;
+        display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;
+    }
+    .modal-icon--green { background: #f0fdf4; border-color: #16a34a; color: #16a34a; }
+    .modal-icon--red   { background: #fff5f5; border-color: #f87171; color: #dc2626; }
+    .modal-title {
+        font-family: 'Playfair Display', serif; font-size: 1.25rem; font-weight: 700;
+        color: var(--primary-900); text-align: center; margin: 0 0 6px;
+    }
+    .modal-desc {
+        font-family: 'Work Sans', sans-serif; font-size: .88rem;
+        color: var(--neutral-600); text-align: center; margin: 0 0 16px;
+    }
+    .modal-notice {
+        font-family: 'Work Sans', sans-serif; font-size: .84rem;
+        border-radius: var(--radius-sm); padding: 11px 15px; margin-bottom: 20px;
+    }
+    .modal-notice--green { background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; }
+    .modal-field-label {
+        display: block; font-family: 'Work Sans', sans-serif;
+        font-size: .82rem; font-weight: 700; color: var(--primary-900); margin-bottom: 8px;
+    }
+    .modal-required { color: #dc2626; }
+    .modal-textarea {
+        width: 100%; box-sizing: border-box;
+        border: 1.5px solid rgba(30,58,138,.25); border-radius: var(--radius-sm);
+        padding: 10px 13px; font-family: 'Work Sans', sans-serif; font-size: .86rem;
+        color: var(--primary-900); resize: none; height: 108px; outline: none;
+        transition: box-shadow .2s, border-color .2s; margin-bottom: 4px;
+        background: var(--neutral-50);
+    }
+    .modal-textarea:focus { box-shadow: 0 0 0 3px rgba(30,58,138,.08); border-color: #1e3a8a; }
+    .modal-error { font-family: 'Work Sans', sans-serif; font-size: .78rem; color: #dc2626; margin-bottom: 10px; }
+    .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+    .btn-modal-ghost {
+        flex: 1; padding: 11px; font-family: 'Work Sans', sans-serif; font-weight: 700;
+        font-size: .88rem; color: var(--primary-700); background: var(--neutral-50);
+        border: 1.5px solid rgba(30,58,138,.28); border-radius: var(--radius-sm);
+        cursor: pointer; transition: background .2s, transform .2s;
+    }
+    .btn-modal-ghost:hover { background: var(--primary-50); transform: translateY(-1px); }
+    .btn-modal-confirm {
+        flex: 1; padding: 11px; font-family: 'Work Sans', sans-serif; font-weight: 700;
+        font-size: .88rem; color: #fff; border: none; border-radius: var(--radius-sm);
+        cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+        transition: background .2s, transform .2s, box-shadow .2s;
+    }
+    .btn-modal-confirm--green { background: #16a34a; }
+    .btn-modal-confirm--green:hover { background: #15803d; transform: translateY(-1px); box-shadow: 0 4px 14px rgba(22,163,74,.25); }
+    .btn-modal-confirm--red { background: #dc2626; }
+    .btn-modal-confirm--red:hover { background: #b91c1c; transform: translateY(-1px); box-shadow: 0 4px 14px rgba(220,38,38,.25); }
+
+    /* ── Toast ───────────────────────────── */
+    .toast {
+        position: fixed; bottom: 28px; left: 50%;
+        transform: translateX(-50%) translateY(14px);
+        z-index: 9999; padding: 12px 22px; border-radius: 100px;
+        font-family: 'Work Sans', sans-serif; font-size: .88rem; font-weight: 700;
+        color: #fff; pointer-events: none;
+        opacity: 0; transition: opacity .28s ease, transform .28s cubic-bezier(.22,.68,0,1.2);
+        box-shadow: 0 8px 24px rgba(0,0,0,.18);
+    }
+    .toast--visible { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .toast--approve { background: #16a34a; }
+    .toast--reject  { background: #dc2626; }
+
+    /* ── Keyframes ───────────────────────── */
+    @keyframes fadeIn  { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* ── Responsive ──────────────────────── */
+    @media (max-width: 768px) {
+        .stats-grid { grid-template-columns: 1fr; }
+        .filter-row { flex-direction: column; align-items: flex-start; }
+        .card-top { flex-wrap: wrap; }
+        .card-badges { justify-content: flex-start; }
+        .page-title { font-size: 1.55rem; }
+    }
+    @media (max-width: 480px) {
+        .type-tabs { flex-wrap: wrap; }
+        .card-actions { flex-direction: column; }
+        .stats-grid { grid-template-columns: 1fr 1fr; }
+    }
+</style>
+
+<script>
+    const CSRF        = '{{ csrf_token }}';
+    const PENDING_URL = '{% url "literacy:api_pending_reviews" %}';
+    const VERIFY_URL  = id => '{% url "literacy:api_verify_review" id=0 %}'.replace('0/verify', `${id}/verify`);
+
+    let allReviews    = [];
+    let activeType    = 'all';
+    let activeKelas   = '{{ user_profile.kelas|default:"" }}';
+    if (activeKelas === 'None') activeKelas = '';
+    let pendingAction = null;
+
+    async function loadReviews() {
+        document.getElementById('loading-state').style.display = 'flex';
+        document.getElementById('empty-state').style.display   = 'none';
+        document.querySelectorAll('.review-card').forEach(c => c.remove());
+        document.getElementById('section-count').textContent = 'Memuat…';
+        try {
+            const url = new URL(PENDING_URL, window.location.origin);
+            url.searchParams.set('kelas', activeKelas);
+            const res  = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+            allReviews = await res.json();
+            renderList();
+        } catch {
+            document.getElementById('loading-state').innerHTML =
+                '<p style="padding:32px;text-align:center;color:#dc2626;font-size:.88rem;font-family:\'Work Sans\',sans-serif">Gagal memuat data. Muat ulang halaman.</p>';
+        }
+    }
+
+    function renderList() {
+        document.getElementById('loading-state').style.display = 'none';
+        document.querySelectorAll('.review-card').forEach(c => c.remove());
+        const filtered = activeType === 'all' ? allReviews : allReviews.filter(r => r.type === activeType);
+        document.getElementById('section-count').textContent = `${filtered.length} review`;
+        document.getElementById('stat-pending').textContent  = allReviews.length;
+        if (filtered.length === 0) { document.getElementById('empty-state').style.display = 'flex'; return; }
+        document.getElementById('empty-state').style.display = 'none';
+        const list = document.getElementById('review-list');
+        filtered.forEach((r, idx) => list.appendChild(buildCard(r, idx + 1)));
+    }
+
+    function buildCard(r, idx) {
+        const isBook    = r.type === 'book_review';
+        const date      = r.tanggal_submit
+            ? new Date(r.tanggal_submit).toLocaleDateString('id-ID', { day:'numeric', month:'short', year:'numeric' })
+            : '—';
+        const typeBadge = isBook
+            ? `<span class="type-badge type-badge--book"><svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg> Ulasan Buku</span>`
+            : `<span class="type-badge type-badge--post"><svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg> Lesson Learned</span>`;
+        const metaLine  = isBook
+            ? [r.penulis, r.penerbit, r.tahun ? `(${r.tahun})` : ''].filter(Boolean).join(' · ')
+            : (r.penerbit ? `Sesi: ${esc(r.penerbit)}` : '');
+        const initial   = (r.nama_siswa || '?').charAt(0).toUpperCase();
+        const bodyHtml  = r.rangkuman && r.rangkuman.length > 200
+            ? `<p class="card-summary summary-short">${esc(truncate(r.rangkuman, 200))}</p>
+               <p class="card-summary summary-full" style="display:none;white-space:pre-wrap;">${esc(r.rangkuman)}</p>
+               <button class="btn-expand" onclick="toggleSummary(this)">Baca Selengkapnya ↓</button>`
+            : `<p class="card-summary">${esc(r.rangkuman || '—')}</p>`;
+        const div = document.createElement('div');
+        div.className           = 'review-card';
+        div.dataset.id          = r.id;
+        div.dataset.type        = r.type;
+        div.dataset.sourceModel = r.source_model || r.type;
+        div.style.setProperty('--i', idx);
+        div.innerHTML = `
+            <div class="card-top">
+                <div class="card-student">
+                    <div class="student-avatar">${initial}</div>
+                    <div>
+                        <p class="student-name">${esc(r.nama_siswa)}</p>
+                        <p class="student-meta">${esc(r.kelas)} · ${date}</p>
+                    </div>
+                </div>
+                <div class="card-badges">
+                    ${typeBadge}
+                    <span class="status-badge">⏳ Menunggu</span>
+                </div>
+            </div>
+            <h3 class="card-title">${esc(r.judul_buku)}</h3>
+            ${metaLine ? `<p class="card-meta">${metaLine}</p>` : ''}
+            <div class="card-summary-wrap">${bodyHtml}</div>
+            <div class="card-actions">
+                <button class="btn-approve-card" onclick="openApprove(${r.id},'${r.type}','${esc(r.judul_buku)}')">
+                    <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                    Setujui
+                </button>
+                <button class="btn-reject-card" onclick="openReject(${r.id},'${r.type}','${esc(r.judul_buku)}')">
+                    <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    Tolak
+                </button>
+            </div>`;
+        return div;
+    }
+
+    function toggleSummary(btn) {
+        const wrap  = btn.closest('.card-summary-wrap');
+        const short = wrap.querySelector('.summary-short');
+        const full  = wrap.querySelector('.summary-full');
+        const isOpen = full.style.display !== 'none';
+        full.style.display  = isOpen ? 'none' : 'block';
+        short.style.display = isOpen ? 'block' : 'none';
+        btn.textContent     = isOpen ? 'Baca Selengkapnya ↓' : 'Sembunyikan ↑';
+    }
+
+    function applyKelasFilter(kelas) { activeKelas = kelas; loadReviews(); }
+    function setTypeFilter(type) {
+        activeType = type;
+        document.querySelectorAll('.type-tab').forEach(b => b.classList.remove('type-tab--active'));
+        document.getElementById('btn-' + type).classList.add('type-tab--active');
+        renderList();
+    }
+
+    function openApprove(id, type, title) {
+        const card = document.querySelector(`.review-card[data-id="${id}"]`);
+        const sourceModel = card ? card.dataset.sourceModel : type;
+        pendingAction = { id, type, sourceModel };
+        document.getElementById('modal-approve-desc').textContent = `"${title}"`;
+        showModal('modal-approve');
+    }
+    function openReject(id, type, title) {
+        const card = document.querySelector(`.review-card[data-id="${id}"]`);
+        const sourceModel = card ? card.dataset.sourceModel : type;
+        pendingAction = { id, type, sourceModel };
+        document.getElementById('modal-reject-desc').textContent = `"${title}"`;
+        document.getElementById('reject-reason').value = '';
+        document.getElementById('reject-reason-error').style.display = 'none';
+        showModal('modal-reject');
+    }
+
+    document.getElementById('btn-confirm-approve').addEventListener('click', async () => {
+        if (!pendingAction) return;
+        await submitVerification(pendingAction.id, pendingAction.type, 'Disetujui', '', pendingAction.sourceModel);
+        closeModal('modal-approve');
+    });
+    document.getElementById('btn-confirm-reject').addEventListener('click', async () => {
+        const reason = document.getElementById('reject-reason').value.trim();
+        if (!reason) { document.getElementById('reject-reason-error').style.display = 'block'; return; }
+        if (!pendingAction) return;
+        await submitVerification(pendingAction.id, pendingAction.type, 'Ditolak', reason, pendingAction.sourceModel);
+        closeModal('modal-reject');
+    });
+
+    function showModal(id) { const m = document.getElementById(id); m.style.display = 'flex'; requestAnimationFrame(() => m.classList.add('is-open')); }
+    function closeModal(id) { const m = document.getElementById(id); m.classList.remove('is-open'); setTimeout(() => { m.style.display = 'none'; pendingAction = null; }, 260); }
+
+    ['modal-approve','modal-reject'].forEach(id => {
+        document.getElementById(id).addEventListener('click', e => { if (e.target.id === id) closeModal(id); });
+    });
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') { closeModal('modal-approve'); closeModal('modal-reject'); }
+    });
+
+    async function submitVerification(id, type, status, catatan, sourceModel) {
+        try {
+            const res  = await fetch(VERIFY_URL(id), {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF, 'X-Requested-With': 'XMLHttpRequest' },
+                body: JSON.stringify({ status, catatan, type, source_model: sourceModel }),
+            });
+            const data = await res.json();
+            if (res.ok) {
+                const msg = status === 'Disetujui'
+                    ? '✅ Review berhasil disetujui!'
+                    : '🚫 Review berhasil ditolak.';
+                showToast(msg, status === 'Disetujui' ? 'approve' : 'reject');
+                removeCard(id);
+            }
+            else { showToast('⚠️ ' + (data.error || 'Terjadi kesalahan.'), 'reject'); }
+        } catch { showToast('⚠️ Gagal menghubungi server.', 'reject'); }
+    }
+
+    function removeCard(id) {
+        const card = document.querySelector(`.review-card[data-id="${id}"]`);
+        if (!card) return;
+        card.classList.add('card-removing');
+        card.addEventListener('animationend', () => {
+            card.remove();
+            allReviews = allReviews.filter(r => r.id != id);
+            document.getElementById('stat-pending').textContent = allReviews.length;
+            const remaining = document.querySelectorAll('.review-card').length;
+            document.getElementById('section-count').textContent = `${remaining} review`;
+            if (remaining === 0) document.getElementById('empty-state').style.display = 'flex';
+        }, { once: true });
+    }
+
+    function showToast(msg, type = 'approve') {
+        const t = document.getElementById('toast');
+        t.textContent = msg; t.className = `toast toast--${type} toast--visible`;
+        setTimeout(() => { t.className = 'toast'; }, 3500);
+    }
+    function esc(str) { return String(str ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+    function truncate(str, n) { return str && str.length > n ? str.slice(0, n) + '…' : (str || ''); }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        loadReviews();
+        document.querySelector('.verify-page').classList.add('ready');
+    });
 </script>
 {% endblock %}

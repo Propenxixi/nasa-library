@@ -33,6 +33,7 @@ def _serialize_user(user):
         "nis":          profile.nis if profile else None,
         "kelas":        profile.kelas if profile else None,
         "gender":       profile.gender if profile else None,
+        "profile_picture_url": profile.get_profile_picture_url() if profile else None,
     }
 
 

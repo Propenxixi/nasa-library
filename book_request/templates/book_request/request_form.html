@@ -5,6 +5,7 @@
 {% block content %}
 
 <style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Work+Sans:wght@600&family=Inter:wght@400&display=swap');
   :root {
     --yellow:    #F8BE5C;
     --green:     #0FA875;
@@ -21,7 +22,9 @@
   .rf-page {
     min-height: 100vh;
     background: linear-gradient(135deg, #f0f4ff 0%, #ffffff 50%, #f0f4ff 100%);
-    font-family: 'Segoe UI', system-ui, sans-serif;
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    line-height: 1.5;
   }
 
   .rf-container {
@@ -47,7 +50,9 @@
   /* ── Page title ── */
   .rf-title {
     font-size: 2rem;
-    font-weight: 800;
+    font-family: 'Playfair Display', serif;
+    font-weight: 700;
+    line-height: 1.2;
     color: var(--blue);
     letter-spacing: -.03em;
     margin: 0 0 .3rem;
@@ -56,6 +61,9 @@
 
   .rf-subtitle {
     font-size: .9rem;
+    font-family: 'Work Sans', sans-serif;
+    font-weight: 600;
+    line-height: 1.2;
     color: var(--gray-ui);
     margin: 0 0 1.5rem;
     text-align: center;
@@ -76,7 +84,9 @@
 
   .rf-banner__title {
     font-size: .8rem;
-    font-weight: 700;
+    font-family: 'Work Sans', sans-serif;
+    font-weight: 600;
+    line-height: 1.2;
     color: #0a7a55;
     margin: 0 0 .2rem;
   }
@@ -103,7 +113,9 @@
   .rf-label {
     display: block;
     font-size: .82rem;
-    font-weight: 700;
+    font-family: 'Work Sans', sans-serif;
+    font-weight: 600;
+    line-height: 1.2;
     color: #111827;
     margin-bottom: .45rem;
   }
@@ -244,7 +256,9 @@
 
   .dup-card h3 {
     font-size: 1.15rem;
-    font-weight: 800;
+    font-family: 'Work Sans', sans-serif;
+    font-weight: 600;
+    line-height: 1.2;
     color: #111827;
     margin: 0 0 .35rem;
   }
@@ -490,7 +504,7 @@
       dupIcon.textContent = '⚠️';
       dupIcon.className   = 'dup-icon dup-icon--yellow';
       dupTitle.textContent = 'Buku Sudah Pernah Diajukan';
-      dupMsg.textContent  = 'Buku ini sudah pernah diajukan sebelumnya dan sedang diproses atau sudah disetujui. Apakah Anda tetap ingin melanjutkan?';
+      dupMsg.textContent  = 'Buku ini sudah pernah diajukan sebelumnya dan sedang diproses atau sudah disetujui. Apakah Anda tetap ingin melanjutkan dan menjadikannya sebagai stok baru?';
       dupConfBtn.className = 'dup-btn dup-btn--dark';
       dupConfBtn.style.display = '';
       dupCancelBtn.textContent = 'Batal';

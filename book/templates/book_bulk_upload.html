@@ -1,0 +1,845 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Bulk Upload Buku — Nasa Library{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --primary-900: #0d183a;
+        --primary-500: #1e3a8a;
+        --primary-400: #4b61a1;
+        --primary-50:  #e9ebf3;
+        --neutral-800: #1f1f1f;
+        --neutral-500: #595959;
+        --neutral-400: #8c8c8c;
+        --neutral-200: #f0f0f0;
+        --neutral-100: #fcfcfc;
+        --success:     #10b981;
+        --danger:      #dc2626;
+        --warning:     #d97706;
+    }
+
+    body { background-color: var(--neutral-100); }
+
+    .page-header {
+        margin-bottom: 28px;
+    }
+    .page-header h1 {
+        font-family: 'Work Sans', sans-serif;
+        font-size: 24px;
+        font-weight: 700;
+        color: var(--neutral-800);
+    }
+    .page-header p {
+        font-size: 14px;
+        color: var(--neutral-500);
+        margin-top: 4px;
+    }
+
+    .card {
+        background: #fff;
+        border-radius: 12px;
+        padding: 28px;
+        margin-bottom: 24px;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    }
+
+    .card-title {
+        font-family: 'Work Sans', sans-serif;
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--primary-500);
+        margin-bottom: 16px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    /* ── Template Info Table ── */
+    .template-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+        margin-top: 8px;
+    }
+    .template-table th {
+        background: var(--primary-500);
+        color: #fff;
+        padding: 10px 14px;
+        text-align: left;
+        font-weight: 600;
+    }
+    .template-table th:first-child { border-radius: 8px 0 0 0; }
+    .template-table th:last-child  { border-radius: 0 8px 0 0; }
+    .template-table td {
+        padding: 9px 14px;
+        border-bottom: 1px solid var(--neutral-200);
+        color: var(--neutral-800);
+        vertical-align: top;
+    }
+    .template-table tr:last-child td { border-bottom: none; }
+    .template-table tr:nth-child(even) td { background: var(--primary-50); }
+    .badge-wajib {
+        display: inline-block;
+        background: #fee2e2;
+        color: var(--danger);
+        font-size: 10px;
+        font-weight: 700;
+        padding: 2px 7px;
+        border-radius: 20px;
+        text-transform: uppercase;
+    }
+    .badge-opsional {
+        display: inline-block;
+        background: #d1fae5;
+        color: #065f46;
+        font-size: 10px;
+        font-weight: 700;
+        padding: 2px 7px;
+        border-radius: 20px;
+        text-transform: uppercase;
+    }
+    .example-value {
+        color: var(--neutral-400);
+        font-style: italic;
+        font-size: 12px;
+    }
+
+    /* ── Drop Zone ── */
+    #dropZone {
+        border: 2.5px dashed var(--primary-400);
+        border-radius: 14px;
+        background: var(--primary-50);
+        padding: 48px 24px;
+        text-align: center;
+        cursor: pointer;
+        transition: background 0.2s, border-color 0.2s;
+        position: relative;
+    }
+    #dropZone.drag-over {
+        background: #dde3f0;
+        border-color: var(--primary-900);
+    }
+    #dropZone .drop-icon {
+        font-size: 44px;
+        margin-bottom: 12px;
+        display: block;
+    }
+    #dropZone .drop-title {
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--primary-500);
+        margin-bottom: 6px;
+    }
+    #dropZone .drop-subtitle {
+        font-size: 13px;
+        color: var(--neutral-500);
+    }
+    #dropZone .drop-formats {
+        margin-top: 10px;
+        font-size: 12px;
+        color: var(--neutral-400);
+    }
+    #fileInput { display: none; }
+
+    #selectedFileInfo {
+        display: none;
+        margin-top: 16px;
+        align-items: center;
+        gap: 10px;
+        background: #fff;
+        border: 1.5px solid var(--primary-400);
+        border-radius: 10px;
+        padding: 12px 16px;
+    }
+    #selectedFileInfo .file-name {
+        font-weight: 600;
+        color: var(--neutral-800);
+        font-size: 14px;
+        flex: 1;
+    }
+    #selectedFileInfo .file-size {
+        font-size: 12px;
+        color: var(--neutral-400);
+    }
+    #removeFile {
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: var(--danger);
+        font-size: 18px;
+        line-height: 1;
+        padding: 0 4px;
+    }
+
+    /* ── Buttons ── */
+    .btn-primary {
+        background: var(--primary-500);
+        color: #fff;
+        padding: 12px 32px;
+        border-radius: 10px;
+        font-weight: 700;
+        font-size: 15px;
+        border: none;
+        cursor: pointer;
+        transition: background 0.2s;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .btn-primary:hover  { background: var(--primary-900); }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .btn-outline {
+        background: transparent;
+        color: var(--primary-500);
+        padding: 12px 32px;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 15px;
+        border: 1.5px solid var(--primary-500);
+        cursor: pointer;
+        transition: background 0.2s;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .btn-outline:hover { background: var(--primary-50); }
+
+    /* ── Loading Overlay ── */
+    #loadingOverlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(13,24,58,0.45);
+        z-index: 999;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        gap: 16px;
+        backdrop-filter: blur(3px);
+    }
+    #loadingOverlay .spinner {
+        width: 52px; height: 52px;
+        border: 5px solid rgba(255,255,255,0.25);
+        border-top-color: #fff;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+    }
+    #loadingOverlay p {
+        color: #fff;
+        font-size: 16px;
+        font-weight: 600;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Result Area ── */
+    #resultArea { display: none; }
+
+    .result-success {
+        background: #ecfdf5;
+        border: 1.5px solid #6ee7b7;
+        border-radius: 12px;
+        padding: 24px;
+        text-align: center;
+    }
+    .result-success .result-icon { font-size: 52px; }
+    .result-success h3 {
+        font-size: 20px; font-weight: 700;
+        color: #065f46; margin: 12px 0 6px;
+    }
+    .result-success p { color: #047857; font-size: 14px; }
+
+    .result-error {
+        background: #fef2f2;
+        border: 1.5px solid #fca5a5;
+        border-radius: 12px;
+        padding: 24px;
+    }
+    .result-error h3 {
+        font-size: 17px; font-weight: 700;
+        color: var(--danger); margin-bottom: 12px;
+        display: flex; align-items: center; gap: 8px;
+    }
+    .result-error .error-summary {
+        font-size: 14px; color: #7f1d1d; margin-bottom: 16px;
+    }
+
+    .error-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+        background: #fff;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    .error-table th {
+        background: #fee2e2;
+        color: var(--danger);
+        padding: 9px 14px;
+        text-align: left;
+        font-weight: 700;
+    }
+    .error-table td {
+        padding: 8px 14px;
+        border-bottom: 1px solid #fee2e2;
+        color: var(--neutral-800);
+        vertical-align: top;
+    }
+    .error-table tr:last-child td { border-bottom: none; }
+    .error-list {
+        margin: 0; padding: 0 0 0 16px;
+        color: var(--danger);
+    }
+    .error-list li { margin-bottom: 2px; }
+
+    .retry-area {
+        margin-top: 20px;
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    /* ── Summary Section ── */
+    .summary-section {
+        margin-top: 20px;
+        border-top: 1px solid #d1fae5;
+        padding-top: 20px;
+        text-align: left;
+    }
+    .summary-stats {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-bottom: 20px;
+    }
+    .stat-card {
+        flex: 1;
+        min-width: 110px;
+        border-radius: 10px;
+        padding: 14px 16px;
+        text-align: center;
+    }
+    .stat-card .stat-num   { font-size: 28px; font-weight: 800; line-height: 1; }
+    .stat-card .stat-label { font-size: 12px; margin-top: 4px; font-weight: 600; }
+    .stat-card.inserted  { background: #d1fae5; }
+    .stat-card.inserted .stat-num   { color: #065f46; }
+    .stat-card.inserted .stat-label { color: #047857; }
+    .stat-card.updated   { background: #dbeafe; }
+    .stat-card.updated .stat-num    { color: #1e3a8a; }
+    .stat-card.updated .stat-label  { color: #1d4ed8; }
+    .stat-card.skipped   { background: #fef9c3; }
+    .stat-card.skipped .stat-num    { color: #854d0e; }
+    .stat-card.skipped .stat-label  { color: #92400e; }
+    .stat-card.rejected  { background: #fee2e2; }
+    .stat-card.rejected .stat-num   { color: #991b1b; }
+    .stat-card.rejected .stat-label { color: #b91c1c; }
+
+    .detail-table-wrap { margin-bottom: 16px; }
+    .detail-table-wrap .detail-label {
+        font-size: 13px; font-weight: 700;
+        color: var(--neutral-800); margin-bottom: 6px;
+    }
+    .detail-table {
+        width: 100%; border-collapse: collapse;
+        font-size: 12px; border-radius: 8px;
+        overflow: hidden; border: 1px solid #e5e7eb;
+    }
+    .detail-table th {
+        padding: 8px 12px; text-align: left; font-weight: 700;
+        background: var(--neutral-200); color: var(--neutral-800);
+    }
+    .detail-table td {
+        padding: 7px 12px; border-top: 1px solid #f0f0f0;
+        color: var(--neutral-800); vertical-align: top;
+    }
+    .detail-table tr:nth-child(even) td { background: #fafafa; }
+    .detail-table .isbn-cell   { color: var(--neutral-400); font-size: 11px; }
+    .detail-table .reason-cell { color: var(--danger); font-size: 11px; }
+    .summary-detail-title {
+        font-size: 13px; font-weight: 700;
+        color: var(--neutral-800); margin-bottom: 8px;
+    }
+
+    .info-banner {
+        background: #eff6ff;
+        border-left: 4px solid var(--primary-500);
+        border-radius: 8px;
+        padding: 12px 16px;
+        font-size: 13px;
+        color: var(--primary-500);
+        margin-bottom: 20px;
+        display: flex;
+        gap: 10px;
+        align-items: flex-start;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 py-8">
+
+    <!-- Page Header -->
+    <div class="page-header">
+        <h1>📥 Bulk Upload Buku</h1>
+        <p>Tambahkan banyak buku sekaligus dengan mengunggah file CSV atau Excel.</p>
+    </div>
+
+    <!-- Info Banner -->
+    <div class="info-banner">
+        <span>ℹ️</span>
+        <span>Seluruh data akan divalidasi terlebih dahulu. Jika ada baris yang tidak valid, <strong>tidak ada data yang disimpan</strong> sampai semua error diperbaiki.</span>
+    </div>
+
+    <!-- Template Format Card -->
+    <div class="card">
+        <div class="card-title">
+            📋 Format Template File
+        </div>
+        <p style="font-size:13px; color:var(--neutral-500); margin-bottom:14px;">
+            Pastikan file CSV/Excel Anda memiliki kolom-kolom berikut (urutan bebas, nama header harus persis seperti di bawah):
+        </p>
+        <table class="template-table">
+            <thead>
+                <tr>
+                    <th>Nama Kolom (Header)</th>
+                    <th>Keterangan</th>
+                    <th>Status</th>
+                    <th>Contoh Nilai</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Title</strong></td>
+                    <td>Judul buku</td>
+                    <td><span class="badge-wajib">Wajib</span></td>
+                    <td class="example-value">Laskar Pelangi</td>
+                </tr>
+                <tr>
+                    <td><strong>Author(s)</strong></td>
+                    <td>Nama penulis, pisahkan dengan koma jika lebih dari satu</td>
+                    <td><span class="badge-wajib">Wajib</span></td>
+                    <td class="example-value">Andrea Hirata</td>
+                </tr>
+                <tr>
+                    <td><strong>ISBN Code</strong></td>
+                    <td>Kode ISBN unik buku (ISBN-10 atau ISBN-13)</td>
+                    <td><span class="badge-opsional">Opsional</span></td>
+                    <td class="example-value">9789792231991</td>
+                </tr>
+                <tr>
+                    <td><strong>Length</strong></td>
+                    <td>Jumlah halaman (angka bulat positif)</td>
+                    <td><span class="badge-opsional">Opsional</span></td>
+                    <td class="example-value">529</td>
+                </tr>
+                <tr>
+                    <td><strong>Language</strong></td>
+                    <td>Bahasa buku. Kosong = otomatis "Indonesian"</td>
+                    <td><span class="badge-opsional">Opsional</span></td>
+                    <td class="example-value">Indonesian</td>
+                </tr>
+                <tr>
+                    <td><strong>Total Copies</strong></td>
+                    <td>Jumlah stok buku yang tersedia (angka bulat positif)</td>
+                    <td><span class="badge-wajib">Wajib</span></td>
+                    <td class="example-value">3</td>
+                </tr>
+                <tr>
+                    <td><strong>Shelf Location</strong></td>
+                    <td>Lokasi rak penyimpanan di perpustakaan</td>
+                    <td><span class="badge-opsional">Opsional</span></td>
+                    <td class="example-value">Rak A-2</td>
+                </tr>
+                <tr>
+                    <td><strong>Image(URL)</strong></td>
+                    <td>URL gambar sampul buku (harus diawali https://)</td>
+                    <td><span class="badge-opsional">Opsional</span></td>
+                    <td class="example-value">https://example.com/cover.jpg</td>
+                </tr>
+                <tr>
+                    <td><strong>Category</strong></td>
+                    <td>Kategori atau genre buku</td>
+                    <td><span class="badge-opsional">Opsional</span></td>
+                    <td class="example-value">Fiksi, Novel</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- Download Template CSV -->
+        <div style="margin-top:16px;">
+            <button onclick="downloadTemplate()" class="btn-outline" style="font-size:13px; padding: 8px 18px;">
+                ⬇️ Unduh Template Excel
+            </button>
+            <span style="font-size:12px; color:var(--neutral-400); margin-left:10px;">Gunakan file ini sebagai panduan format.</span>
+        </div>
+    </div>
+
+    <!-- Upload Card -->
+    <div class="card" id="uploadCard">
+        <div class="card-title">
+            📁 Unggah File
+        </div>
+
+        <!-- Drop Zone -->
+        <div id="dropZone" onclick="document.getElementById('fileInput').click()">
+            <span class="drop-icon">☁️</span>
+            <div class="drop-title">Klik untuk memilih file, atau seret & lepas di sini</div>
+            <div class="drop-subtitle">CSV atau Excel (.xlsx / .xls)</div>
+            <div class="drop-formats">Ukuran maksimal: 5 MB</div>
+        </div>
+        <input type="file" id="fileInput" accept=".csv,.xlsx,.xls">
+
+        <!-- Selected File Info -->
+        <div id="selectedFileInfo">
+            <span style="font-size:22px;">📄</span>
+            <span class="file-name" id="fileName">—</span>
+            <span class="file-size" id="fileSize"></span>
+            <button id="removeFile" title="Hapus file" onclick="removeSelectedFile()">✕</button>
+        </div>
+
+        <!-- Action Buttons -->
+        <div style="margin-top:24px; display:flex; gap:12px; flex-wrap:wrap;">
+            <button id="uploadBtn" class="btn-primary" onclick="startUpload()" disabled>
+                <span id="uploadBtnText">⬆️ Upload & Validasi</span>
+            </button>
+            <a href="{% url 'book:book_list' %}" class="btn-outline">Batal</a>
+        </div>
+    </div>
+
+    <!-- Result Area -->
+    <div id="resultArea">
+        <!-- Filled dynamically -->
+    </div>
+
+</div>
+
+<!-- Loading Overlay -->
+<div id="loadingOverlay">
+    <div class="spinner"></div>
+    <p>Sedang memproses file…</p>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+<script>
+const dropZone    = document.getElementById('dropZone');
+const fileInput   = document.getElementById('fileInput');
+const uploadBtn   = document.getElementById('uploadBtn');
+const resultArea  = document.getElementById('resultArea');
+const loadingOverlay = document.getElementById('loadingOverlay');
+
+let selectedFile = null;
+
+// ── Drag & Drop ──────────────────────────────────────────────────────────────
+dropZone.addEventListener('dragover', e => {
+    e.preventDefault();
+    dropZone.classList.add('drag-over');
+});
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop', e => {
+    e.preventDefault();
+    dropZone.classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (file) handleFileSelected(file);
+});
+fileInput.addEventListener('change', () => {
+    if (fileInput.files[0]) handleFileSelected(fileInput.files[0]);
+});
+
+function handleFileSelected(file) {
+    const allowed = ['.csv', '.xlsx', '.xls'];
+    const ext = '.' + file.name.split('.').pop().toLowerCase();
+    if (!allowed.includes(ext)) {
+        showInlineError('Format file tidak valid. Hanya CSV dan Excel (.xlsx/.xls) yang diperbolehkan.');
+        return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+        showInlineError('Ukuran file terlalu besar. Maksimal 5 MB.');
+        return;
+    }
+    selectedFile = file;
+    document.getElementById('fileName').textContent = file.name;
+    document.getElementById('fileSize').textContent = formatBytes(file.size);
+    document.getElementById('selectedFileInfo').style.display = 'flex';
+    uploadBtn.disabled = false;
+    resultArea.style.display = 'none';
+    resultArea.innerHTML = '';
+}
+
+function removeSelectedFile() {
+    selectedFile = null;
+    fileInput.value = '';
+    document.getElementById('selectedFileInfo').style.display = 'none';
+    uploadBtn.disabled = true;
+    resultArea.style.display = 'none';
+    resultArea.innerHTML = '';
+}
+
+function showInlineError(msg) {
+    resultArea.style.display = 'block';
+    resultArea.innerHTML = `
+        <div class="result-error">
+            <h3>⚠️ File Tidak Valid</h3>
+            <p class="error-summary">${escapeHtml(msg)}</p>
+        </div>`;
+}
+
+// ── Upload ───────────────────────────────────────────────────────────────────
+async function startUpload() {
+    if (!selectedFile) return;
+
+    loadingOverlay.style.display = 'flex';
+    uploadBtn.disabled = true;
+    resultArea.style.display = 'none';
+    resultArea.innerHTML = '';
+
+    const formData = new FormData();
+    formData.append('file', selectedFile);
+
+    const csrfToken = getCookie('csrftoken');
+
+    try {
+        const resp = await fetch("{% url 'book:api_bulk_upload_books' %}", {
+            method: 'POST',
+            body: formData,
+            headers: { 'X-CSRFToken': csrfToken }
+        });
+        const data = await resp.json();
+        loadingOverlay.style.display = 'none';
+
+        if (resp.ok && data.success) {
+            showSuccess(data);
+        } else {
+            showErrors(data);
+            uploadBtn.disabled = false;
+        }
+    } catch (err) {
+        loadingOverlay.style.display = 'none';
+        uploadBtn.disabled = false;
+        showInlineError('Terjadi kesalahan jaringan. Silakan coba lagi.');
+        console.error(err);
+    }
+}
+
+function showSuccess(data) {
+    const hasRejected = data.count_rejected > 0;
+    const titleText   = hasRejected ? 'Upload Selesai (Ada Buku Ditolak)' : 'Upload Berhasil!';
+    const iconText    = hasRejected ? '⚠️' : '✅';
+    const wrapClass   = hasRejected ? 'result-success' : 'result-success';
+
+    // ── Stat cards ──────────────────────────────────────────────────────────
+    let statsHtml = `<div class="summary-stats">`;
+    if (data.count_inserted > 0)
+        statsHtml += `<div class="stat-card inserted"><div class="stat-num">${data.count_inserted}</div><div class="stat-label">✅ Ditambahkan</div></div>`;
+    if (data.count_updated > 0)
+        statsHtml += `<div class="stat-card updated"><div class="stat-num">${data.count_updated}</div><div class="stat-label">🔄 Diperbarui</div></div>`;
+    if (data.count_skipped > 0)
+        statsHtml += `<div class="stat-card skipped"><div class="stat-num">${data.count_skipped}</div><div class="stat-label">⏭️ Dilewati</div></div>`;
+    if (data.count_rejected > 0)
+        statsHtml += `<div class="stat-card rejected"><div class="stat-num">${data.count_rejected}</div><div class="stat-label">❌ Ditolak</div></div>`;
+    statsHtml += `</div>`;
+
+    // ── Detail tables ────────────────────────────────────────────────────────
+    let detailHtml = '';
+
+    // Berhasil ditambahkan
+    if (data.inserted && data.inserted.length > 0) {
+        detailHtml += `
+        <div class="detail-table-wrap">
+            <div class="summary-detail-title">✅ Buku Berhasil Ditambahkan (${data.inserted.length})</div>
+            <table class="detail-table">
+                <thead><tr><th>Baris</th><th>Judul</th><th>ISBN</th></tr></thead>
+                <tbody>
+                    ${data.inserted.map(b => `
+                    <tr>
+                        <td style="white-space:nowrap;">${b.row}</td>
+                        <td>${escapeHtml(b.title)}</td>
+                        <td class="isbn-cell">${escapeHtml(b.isbn || '—')}</td>
+                    </tr>`).join('')}
+                </tbody>
+            </table>
+        </div>`;
+    }
+
+    // Berhasil diperbarui stoknya
+    if (data.updated && data.updated.length > 0) {
+        detailHtml += `
+        <div class="detail-table-wrap">
+            <div class="summary-detail-title">🔄 Buku Diperbarui Stoknya (${data.updated.length})</div>
+            <table class="detail-table">
+                <thead><tr><th>Baris</th><th>Judul</th><th>ISBN</th></tr></thead>
+                <tbody>
+                    ${data.updated.map(b => `
+                    <tr>
+                        <td style="white-space:nowrap;">${b.row}</td>
+                        <td>${escapeHtml(b.title)}</td>
+                        <td class="isbn-cell">${escapeHtml(b.isbn || '—')}</td>
+                    </tr>`).join('')}
+                </tbody>
+            </table>
+        </div>`;
+    }
+
+    // Ditolak karena ISBN duplikat
+    if (data.rejected && data.rejected.length > 0) {
+        detailHtml += `
+        <div class="detail-table-wrap">
+            <div class="summary-detail-title" style="color:var(--danger);">❌ Buku Ditolak — ISBN Sudah Terdaftar (${data.rejected.length})</div>
+            <table class="detail-table">
+                <thead><tr><th>Baris</th><th>Judul</th><th>ISBN</th><th>Alasan Penolakan</th></tr></thead>
+                <tbody>
+                    ${data.rejected.map(b => `
+                    <tr>
+                        <td style="white-space:nowrap;">${b.row}</td>
+                        <td>${escapeHtml(b.title)}</td>
+                        <td class="isbn-cell">${escapeHtml(b.isbn || '—')}</td>
+                        <td class="reason-cell">${escapeHtml(b.reason)}</td>
+                    </tr>`).join('')}
+                </tbody>
+            </table>
+        </div>`;
+    }
+
+    // Dilewati (stok sama/lebih rendah)
+    if (data.skipped && data.skipped.length > 0) {
+        detailHtml += `
+        <div class="detail-table-wrap">
+            <div class="summary-detail-title" style="color:#92400e;">⏭️ Buku Dilewati — Stok Tidak Diperbarui (${data.skipped.length})</div>
+            <table class="detail-table">
+                <thead><tr><th>Baris</th><th>Judul</th></tr></thead>
+                <tbody>
+                    ${data.skipped.map(b => `
+                    <tr>
+                        <td style="white-space:nowrap;">${b.row}</td>
+                        <td>${escapeHtml(b.title)}</td>
+                    </tr>`).join('')}
+                </tbody>
+            </table>
+        </div>`;
+    }
+
+    resultArea.style.display = 'block';
+    resultArea.innerHTML = `
+        <div class="${wrapClass}">
+            <div class="result-icon">${iconText}</div>
+            <h3>${escapeHtml(titleText)}</h3>
+            <p>${escapeHtml(data.message)}</p>
+
+            <div class="summary-section">
+                ${statsHtml}
+                ${detailHtml}
+            </div>
+
+            <div style="margin-top:20px; display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
+                <a href="{% url 'book:book_list' %}" class="btn-primary" style="text-decoration:none;">
+                    📚 Lihat Katalog Buku
+                </a>
+                <button class="btn-outline" onclick="resetUpload()">
+                    ⬆️ Upload Lagi
+                </button>
+            </div>
+        </div>`;
+
+    resultArea.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function showErrors(data) {
+    let html = `<div class="result-error">
+        <h3>❌ Upload Gagal</h3>
+        <p class="error-summary">${escapeHtml(data.error || data.message || 'Terdapat error dalam file.')}</p>`;
+
+    if (data.errors && data.errors.length > 0) {
+        html += `<table class="error-table">
+            <thead><tr><th>Baris</th><th>Judul</th><th>Detail Error</th></tr></thead>
+            <tbody>`;
+        data.errors.forEach(e => {
+            const errList = Array.isArray(e.errors)
+                ? e.errors.map(msg => `<li>${escapeHtml(msg)}</li>`).join('')
+                : `<li>${escapeHtml(e.errors)}</li>`;
+            html += `<tr>
+                <td style="white-space:nowrap; font-weight:700;">Baris ${e.row}</td>
+                <td style="white-space:nowrap;">${escapeHtml(e.title || '—')}</td>
+                <td><ul class="error-list">${errList}</ul></td>
+            </tr>`;
+        });
+        html += `</tbody></table>`;
+    }
+
+    html += `<div class="retry-area">
+        <button class="btn-outline" onclick="resetUpload()">🔄 Upload Ulang</button>
+        <a href="{% url 'book:book_list' %}" class="btn-outline" style="text-decoration:none;">← Kembali ke Katalog</a>
+    </div></div>`;
+
+    resultArea.style.display = 'block';
+    resultArea.innerHTML = html;
+    resultArea.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function resetUpload() {
+    removeSelectedFile();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ── Download Template ─────────────────────────────────────────────────────────
+function downloadTemplate() {
+    const data = [
+        ['Title', 'Author(s)', 'ISBN Code', 'Length', 'Language', 'Total Copies', 'Shelf Location', 'Image(URL)', 'Category'],
+        ['Laskar Pelangi', 'Andrea Hirata', '9789792231991', '529', 'Indonesian', '3', 'Rak A-2', 'https://example.com/cover.jpg', 'Fiksi']
+    ];
+
+    // Buat worksheet
+    const worksheet = XLSX.utils.aoa_to_sheet(data);
+
+    // Buat workbook
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Template Buku');
+
+    // Optional: atur lebar kolom
+    worksheet['!cols'] = [
+        { wch: 30 }, // Title
+        { wch: 25 }, // Author
+        { wch: 18 }, // ISBN
+        { wch: 10 }, // Length
+        { wch: 15 }, // Language
+        { wch: 15 }, // Total Copies
+        { wch: 18 }, // Shelf Location
+        { wch: 40 }, // Image URL
+        { wch: 20 }  // Category
+    ];
+
+    // Download file
+    XLSX.writeFile(workbook, 'template_bulk_upload_buku.xlsx');
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function formatBytes(bytes) {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+}
+
+function escapeHtml(str) {
+    if (!str) return '';
+    return String(str)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        document.cookie.split(';').forEach(cookie => {
+            const c = cookie.trim();
+            if (c.startsWith(name + '=')) {
+                cookieValue = decodeURIComponent(c.substring(name.length + 1));
+            }
+        });
+    }
+    return cookieValue;
+}
+</script>
+{% endblock %}

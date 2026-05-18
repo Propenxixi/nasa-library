@@ -1,196 +1,360 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Leaderboard - NASA Library Literacy Program{% endblock %}
 
 {% block content %}
-<div class="min-h-screen bg-gradient-to-br from-white via-gray-50 to-white">
-    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        
-        <!-- Page Header -->
-        <div class="mb-12">
-            <h1 class="font-display text-4xl md:text-5xl font-bold text-gray-900">🏆 Leaderboard</h1>
-            <p class="font-sans text-gray-600 mt-2">Celebrate our top readers and most engaged students</p>
-        </div>
+<div class="min-h-screen bg-[#fcfcfc] pb-24 font-sans">
+    <!-- Premium Header & Stats -->
+    <div class="bg-gradient-to-br from-[#0d183a] via-[#1e3a8a] to-[#1b357e] text-white py-24 relative overflow-hidden">
+        <!-- Abstract Decoration -->
+        <div class="absolute top-0 right-0 w-[500px] h-[500px] bg-white/5 rounded-full -mr-32 -mt-32 blur-[100px]"></div>
+        <div class="absolute bottom-0 left-0 w-80 h-80 bg-blue-400/10 rounded-full -ml-20 -mb-20 blur-[80px]"></div>
 
-        <!-- Scope Filter Buttons -->
-        <div class="flex flex-wrap gap-2 mb-8">
-            <a href="?scope=school" class="flex-1 min-w-[100px] text-center px-3 py-2 rounded-lg font-sans font-semibold transition-colors text-sm {% if scope == 'school' %}bg-gray-900 text-white hover:bg-gray-800{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %}">
-                🏫 School-wide
-            </a>
-            <a href="?scope=grade" class="flex-1 min-w-[100px] text-center px-3 py-2 rounded-lg font-sans font-semibold transition-colors text-sm {% if scope == 'grade' %}bg-gray-900 text-white hover:bg-gray-800{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %}">
-                📚 By Grade
-            </a>
-            <a href="?scope=class" class="flex-1 min-w-[100px] text-center px-3 py-2 rounded-lg font-sans font-semibold transition-colors text-sm {% if scope == 'class' %}bg-gray-900 text-white hover:bg-gray-800{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %}">
-                👥 My Class
-            </a>
-        </div>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center lg:text-left">
+            <div class="flex flex-col lg:flex-row justify-between items-center gap-12">
+                <div class="animate-fade-in lg:max-w-2xl">
+                    <div class="inline-flex items-center gap-2 bg-blue-400/20 px-4 py-2 rounded-full text-blue-100 font-bold text-xs uppercase tracking-widest mb-8 border border-white/10">
+                        ✨ Top Readers of the Month
+                    </div>
+                    <h1 style="font-family: 'Playfair Display', serif; font-size: 3rem; font-weight: 700;" class="tracking-tight mb-6 leading-tight">Peringkat Literasi</h1>
+                    <p class="font-sans text-base md:text-base text-blue-100 max-w-xl font-medium leading-relaxed opacity-90 mx-auto lg:mx-0">Rayakan pencapaian literasi terbaik di NASA Library. Teruslah membaca dan jadilah bintang literasi sekolah!</p>
+                </div>
 
-        <!-- Current User Position Card -->
-        {% if user.profile.is_student %}
-            <div class="bg-white border border-gray-200 rounded-2xl p-4 md:p-8 mb-12 shadow-sm">
-                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                    <div class="text-center p-3 bg-gray-50 rounded-xl">
-                        <p class="font-sans text-xs text-gray-500 uppercase tracking-wide mb-1">Your Rank</p>
-                        <p class="font-display text-2xl md:text-3xl font-bold text-gray-900">
-                            {% if user_rank %}
-                                #{{ user_rank }}
-                            {% else %}
-                                —
-                            {% endif %}
-                        </p>
+                <!-- School Statistics Cards -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 w-full lg:w-auto">
+                    <div class="bg-white/10 backdrop-blur-2xl border border-white/20 p-6 md:p-8 rounded-[2rem] md:rounded-[2.5rem] hover:scale-105 transition-transform duration-300 group">
+                        <p class="text-blue-200 text-[10px] font-black uppercase tracking-[0.2em] mb-3">Total Partisipan</p>
+                        <p class="font-display text-4xl md:text-5xl font-black group-hover:text-white transition-colors">{{ stats.total_partisipan }}</p>
                     </div>
-                    <div class="text-center p-3 bg-gray-50 rounded-xl">
-                        <p class="font-sans text-xs text-gray-500 uppercase tracking-wide mb-1">Books Read</p>
-                        <p class="font-display text-2xl md:text-3xl font-bold text-gray-900">{{ user_stats.books_read }}</p>
+                    <div class="bg-white/10 backdrop-blur-2xl border border-white/20 p-6 md:p-8 rounded-[2rem] md:rounded-[2.5rem] hover:scale-105 transition-transform duration-300 group">
+                        <p class="text-blue-200 text-[10px] font-black uppercase tracking-[0.2em] mb-3">Rata-rata Skor</p>
+                        <p class="font-display text-4xl md:text-5xl font-black group-hover:text-white transition-colors">{{ stats.rata_rata_skor }}</p>
                     </div>
-                    <div class="text-center p-3 bg-gray-50 rounded-xl">
-                        <p class="font-sans text-xs text-gray-500 uppercase tracking-wide mb-1">Verified</p>
-                        <p class="font-display text-2xl md:text-3xl font-bold text-gray-900">{{ user_stats.verified_reviews }}</p>
-                    </div>
-                    <div class="text-center p-3 bg-gray-50 rounded-xl">
-                        <p class="font-sans text-xs text-gray-500 uppercase tracking-wide mb-1">Pending</p>
-                        <p class="font-display text-2xl md:text-3xl font-bold text-gray-900">{{ user_stats.pending_reviews }}</p>
+                    <div class="bg-white/10 backdrop-blur-2xl border border-white/20 p-6 md:p-8 rounded-[2rem] md:rounded-[2.5rem] hover:scale-105 transition-transform duration-300 group sm:col-span-2 lg:col-span-1">
+                        <p class="text-blue-200 text-[10px] font-black uppercase tracking-[0.2em] mb-3">Angkatan Teraktif</p>
+                        <p class="font-display text-4xl md:text-5xl font-black group-hover:text-white transition-colors">{{ stats.angkatan_teraktif }}</p>
                     </div>
                 </div>
-                <div class="mt-4 text-center">
-                    <a href="{% url 'literacy:submit_review' %}" class="inline-block px-6 py-2 bg-gray-900 text-white font-sans font-semibold rounded-lg hover:bg-gray-800 transition-colors text-sm">
-                        ✨ Submit a Review to Climb Higher
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-16 relative z-30">
+        <!-- Filter Section -->
+        <div class="bg-white rounded-[2rem] shadow-[0_20px_50px_rgba(13,24,58,0.06)] p-3 mb-12 md:mb-16 border border-blue-100/50">
+            <form method="GET" class="grid grid-cols-1 sm:grid-cols-2 lg:flex lg:flex-nowrap items-center gap-3">
+                <!-- Periode (Month & Year Group) -->
+                <div class="col-span-1 sm:col-span-2 lg:flex-1 flex gap-2">
+                    <div class="relative flex-1">
+                        <select name="month" class="w-full bg-white border-2 border-blue-100 rounded-xl px-4 py-4 font-semibold text-[#0d183a] focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 transition-all appearance-none cursor-pointer outline-none text-sm">
+                            {% for m_val, m_label in month_choices %}
+                            <option value="{{ m_val }}" {% if m_val == current_month %}selected{% endif %}>{{ m_label }}</option>
+                            {% endfor %}
+                        </select>
+                        <div class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-blue-300">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                        </div>
+                    </div>
+                    <div class="relative flex-1">
+                        <select name="year" class="w-full bg-white border-2 border-blue-100 rounded-xl px-4 py-4 font-semibold text-[#0d183a] focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 transition-all appearance-none cursor-pointer outline-none text-sm">
+                            {% for y_val in year_choices %}
+                            <option value="{{ y_val }}" {% if y_val == current_year %}selected{% endif %}>{{ y_val }}</option>
+                            {% endfor %}
+                        </select>
+                        <div class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-blue-300">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Angkatan Select -->
+                <div class="col-span-1 lg:flex-1">
+                    <div class="relative group">
+                        <select name="angkatan" class="w-full bg-white border-2 border-blue-100 rounded-xl px-5 py-4 font-semibold text-[#0d183a] focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 transition-all appearance-none cursor-pointer outline-none text-sm">
+                            <option value="">Semua Angkatan</option>
+                            {% for a in available_angkatan %}
+                            <option value="{{ a }}" {% if a == current_angkatan %}selected{% endif %}>Angkatan {{ a }}</option>
+                            {% endfor %}
+                        </select>
+                        <div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-blue-300">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Kelas Select -->
+                <div class="col-span-1 lg:flex-1">
+                    <div class="relative group">
+                        <select name="kelas" class="w-full bg-white border-2 border-blue-100 rounded-xl px-5 py-4 font-semibold text-[#0d183a] focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 transition-all appearance-none cursor-pointer outline-none text-sm">
+                            <option value="">Semua Kelas</option>
+                            {% for k in available_kelas %}
+                            <option value="{{ k }}" {% if k == current_kelas %}selected{% endif %}>Kelas {{ k }}</option>
+                            {% endfor %}
+                        </select>
+                        <div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-blue-300">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Buttons -->
+                <div class="col-span-1 sm:col-span-2 lg:flex lg:items-center lg:gap-2 pr-2">
+                    <button type="submit" class="w-full lg:w-auto bg-[#1e3a8a] hover:bg-[#1b357e] text-white font-bold py-4 px-8 rounded-xl shadow-lg shadow-blue-900/20 transition-all active:scale-95 whitespace-nowrap mb-2 lg:mb-0">
+                        Cari
+                    </button>
+                    <a href="?" class="block lg:inline-block w-full lg:w-auto bg-white hover:bg-gray-50 text-[#1e3a8a] font-bold py-4 px-8 rounded-xl border-2 border-[#1e3a8a] transition-all whitespace-nowrap text-center">
+                        Reset
                     </a>
                 </div>
-            </div>
-        {% endif %}
+            </form>
+        </div>
 
-        <!-- Monthly Ambassador Section -->
-        {% if ambassadors %}
-            <div class="bg-white border border-gray-200 rounded-2xl p-6 md:p-8 mb-12 shadow-sm">
-                <div class="sticky top-0 bg-gradient-to-r from-gray-50 to-white border-b border-gray-200 p-6 -m-6 mb-6">
-                    <h2 class="font-display text-2xl font-bold flex items-center gap-2 text-gray-900">
-                        <span class="text-3xl">👑</span> Monthly Ambassadors
-                    </h2>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {% for ambassador in ambassadors %}
-                        <div class="bg-gradient-to-br from-purple-50 to-pink-50 border-2 border-purple-300 rounded-2xl p-6 text-center shadow-sm hover:shadow-md transition-shadow">
-                            <div class="text-5xl mb-3">💫</div>
-                            <h3 class="font-display text-lg font-bold text-gray-900">{{ ambassador.student.get_full_name }}</h3>
-                            <p class="font-sans text-sm text-gray-600 mb-4">{{ ambassador.scope_value }}</p>
-                            <div class="font-display text-3xl font-bold text-purple-900">{{ ambassador.total_score }}</div>
-                            <p class="font-sans text-xs text-purple-700">points</p>
+        {% if hero_winner %}
+        <!-- Ranking Podium Display -->
+        <div class="bg-white rounded-[4rem] shadow-[0_30px_100px_rgba(13,24,58,0.05)] overflow-hidden mb-20 border border-gray-100 relative group/hero">
+            <div class="flex flex-col lg:flex-row">
+                <!-- Podium Visualization -->
+                <div class="lg:w-5/12 bg-[#e9ebf3]/40 p-8 md:p-16 flex items-end justify-center gap-3 md:gap-6 min-h-[350px] md:min-h-[450px] relative">
+                    <!-- Abstract glow -->
+                    <div class="absolute inset-0 bg-gradient-to-t from-white/80 to-transparent"></div>
+
+                    <!-- Rank 2 -->
+                    <div class="flex flex-col items-center z-10">
+                        <div class="user-avatar w-16 h-16 md:w-24 md:h-24 flex items-center justify-center overflow-hidden bg-white border-4 border-[#e9ebf3] shadow-xl mb-4 md:mb-6 rounded-full">
+                            {% if leaderboard.1.student.profile.profile_picture %}
+                            <img src="{{ leaderboard.1.student.profile.profile_picture.url }}" class="w-full h-full object-cover">
+                            {% else %}
+                            <span class="text-lg md:text-2xl font-black text-[#1e3a8a]">{{ leaderboard.1.student.first_name|first }}{{ leaderboard.1.student.last_name|first }}</span>
+                            {% endif %}
                         </div>
-                    {% endfor %}
+                        <div class="bg-gradient-to-b from-gray-100 to-gray-200 w-24 h-24 md:w-32 md:h-32 rounded-t-[1.5rem] md:rounded-t-[2.5rem] flex flex-col items-center justify-center shadow-lg border-t-2 border-white">
+                            <span class="font-display text-2xl md:text-4xl text-gray-400">2</span>
+                            <span class="text-gray-500 text-[8px] md:text-[10px] font-black uppercase tracking-widest">{{ leaderboard.1.total_score }} PTS</span>
+                        </div>
+                    </div>
+                    <!-- Rank 1 -->
+                    <div class="flex flex-col items-center z-10 -mb-4 md:-mb-6">
+                        <div class="relative group/crown">
+                            <div class="absolute -top-10 md:-top-14 inset-x-0 flex justify-center">
+                                    <span class="text-4xl md:text-6xl drop-shadow-xl animate-bounce leading-none">
+                                        👑
+                                    </span>
+                            </div>
+                            <div class="w-24 h-24 md:w-36 md:h-36 rounded-full bg-[#1e3a8a] border-[6px] md:border-[10px] border-white shadow-[0_20px_60px_rgba(245,158,11,0.6)] flex items-center justify-center mb-4 md:mb-6 relative overflow-hidden ring-4 ring-amber-400/20">
+                                <div class="absolute inset-0 bg-gradient-to-tr from-white/10 to-transparent"></div>
+                                {% if hero_winner.student.profile.profile_picture %}
+                                <img src="{{ hero_winner.student.profile.profile_picture.url }}" class="w-full h-full object-cover">
+                                {% else %}
+                                <span class="text-2xl md:text-4xl font-black text-white relative z-10">{{ hero_winner.student.first_name|first }}{{ hero_winner.student.last_name|first }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="bg-gradient-to-b from-[#f59e0b] to-[#d97706] w-28 h-40 md:w-40 md:h-56 rounded-t-[2.5rem] md:rounded-t-[3.5rem] shadow-2xl flex flex-col items-center justify-center border-t-4 border-white/30 relative overflow-hidden">
+                            <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10"></div>
+                            <span class="font-display text-5xl md:text-7xl text-white drop-shadow-lg">1</span>
+                            <span class="text-white/90 text-[9px] md:text-[11px] font-black uppercase tracking-[0.2em]">{{ hero_winner.total_score }} PTS</span>
+                        </div>
+                    </div>
+                    <!-- Rank 3 -->
+                    <div class="flex flex-col items-center z-10">
+                        <div class="user-avatar w-16 h-16 md:w-24 md:h-24 flex items-center justify-center overflow-hidden bg-white border-4 border-[#e9ebf3] shadow-xl mb-4 md:mb-6 rounded-full">
+                            {% if leaderboard.2.student.profile.profile_picture %}
+                            <img src="{{ leaderboard.2.student.profile.profile_picture.url }}" class="w-full h-full object-cover">
+                            {% else %}
+                            <span class="text-lg md:text-2xl font-black text-[#1e3a8a]">{{ leaderboard.2.student.first_name|first }}{{ leaderboard.2.student.last_name|first }}</span>
+                            {% endif %}
+                        </div>
+                        <div class="bg-gradient-to-b from-[#d97706]/20 to-[#d97706]/30 w-24 h-20 md:w-32 md:h-24 rounded-t-[1.5rem] md:rounded-t-[2.5rem] flex flex-col items-center justify-center shadow-lg border-t-2 border-white">
+                            <span class="font-display text-2xl md:text-4xl text-[#d97706]/60">3</span>
+                            <span class="text-[#d97706]/70 text-[8px] md:text-[10px] font-black uppercase tracking-widest">{{ leaderboard.2.total_score }} PTS</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Details of Rank 1 -->
+                <div class="lg:w-7/12 p-16 flex flex-col justify-center bg-white">
+                    <div class="inline-flex items-center gap-3 bg-[#fef5e7] text-[#f59e0b] px-6 py-2 rounded-full font-black text-xs uppercase tracking-widest mb-10 w-fit border border-[#fad28f]/50">
+                        <span class="animate-pulse">✨</span> Kandidat Duta Literasi
+                    </div>
+                    <h2 style="font-family: 'Playfair Display', serif; font-size: 3rem; font-weight: 700;" class="tracking-tight mb-6 leading-tight">
+                        {{ hero_winner.student.get_full_name }}
+                    </h2>
+                    <p class="font-sans text-xl text-gray-500 font-semibold mb-12 flex items-center gap-3">
+                        Kelas {{ hero_winner.student.profile.kelas }}
+                        <span class="w-2 h-2 rounded-full bg-blue-100"></span>
+                        Angkatan {{ hero_winner.grade }}
+                    </p>
+
+                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-8">
+                        <div class="group/stat">
+                            <p class="text-gray-500 text-[10px] font-black uppercase tracking-[0.2em] mb-3">Total Skor</p>
+                            <p class="font-display text-4xl font-black text-[#1e3a8a] group-hover/stat:scale-110 transition-transform origin-left">{{ hero_winner.total_score }}</p>
+                        </div>
+                        <div class="group/stat">
+                            <p class="text-gray-500 text-[10px] font-black uppercase tracking-[0.2em] mb-3">Partisipasi</p>
+                            <p class="font-display text-4xl font-black text-[#1e3a8a] group-hover/stat:scale-110 transition-transform origin-left">{{ hero_winner.books_read }}</p>
+                        </div>
+                        <div class="group/stat">
+                            <p class="text-gray-500 text-[10px] font-black uppercase tracking-[0.2em] mb-3">Streak</p>
+                            <p class="font-display text-4xl font-black text-[#1e3a8a] group-hover/stat:scale-110 transition-transform origin-left">{{ hero_winner.streak }}</p>
+                        </div>
+                        <div class="group/stat">
+                            <p class="text-gray-500 text-[10px] font-black uppercase tracking-[0.2em] mb-3">Bonus</p>
+                            <p class="font-display text-4xl font-black text-[#1e3a8a] group-hover/stat:scale-110 transition-transform origin-left">{{ hero_winner.quality_bonus_score }}</p>
+                        </div>
+                    </div>
                 </div>
             </div>
+        </div>
         {% endif %}
 
-        <!-- Main Leaderboard -->
-        <div class="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
-            <!-- Header -->
-            <div class="sticky top-0 bg-gradient-to-r from-gray-50 to-white border-b border-gray-200 p-6">
-                <h2 class="font-display text-2xl font-bold text-gray-900">Top Readers</h2>
-                <p class="font-sans text-sm text-gray-600 mt-1">Ranked by total literacy score</p>
+        <!-- Leaderboard Table Card -->
+        <div class="bg-white rounded-[3.5rem] shadow-[0_40px_120px_rgba(13,24,58,0.03)] overflow-hidden border border-gray-100">
+            <div class="px-6 md:px-12 py-8 md:py-12 border-b border-gray-50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-gray-50/20">
+                <div class="flex items-center gap-4">
+                    <div class="w-1.5 h-6 md:h-8 bg-[#1e3a8a] rounded-full"></div>
+                    <h3 class="font-display text-2xl md:text-3xl font-black text-[#0d183a]">Daftar Peringkat</h3>
+                </div>
+                <span class="bg-[#e9ebf3] text-[#1e3a8a] px-4 md:px-6 py-2 md:py-2.5 rounded-xl md:rounded-2xl text-[10px] md:text-[11px] font-black uppercase tracking-[0.2em] shadow-sm">Peserta Aktif</span>
             </div>
-            
-            <!-- Leaderboard Table -->
-            {% if leaderboard %}
-                <div class="overflow-x-auto">
-                    <table class="w-full">
-                        <tbody class="divide-y divide-gray-200">
-                            {% for entry in leaderboard %}
-                                <tr class="hover:bg-gray-50 transition-colors border-l-4 border-l-transparent {% if entry.student == user %}border-l-gray-900 bg-gray-100{% elif entry.rank == 1 %}border-l-yellow-500{% elif entry.rank == 2 %}border-l-gray-400{% elif entry.rank == 3 %}border-l-gray-500{% endif %}">
-                                    <!-- Rank Badge -->
-                                    <td class="px-6 py-4">
-                                        <div class="flex items-center justify-center w-12 h-12 rounded-full font-display font-bold text-white text-lg">
-                                            {% if entry.rank == 1 %}
-                                                <div class="text-2xl">🥇</div>
-                                            {% elif entry.rank == 2 %}
-                                                <div class="text-2xl">🥈</div>
-                                            {% elif entry.rank == 3 %}
-                                                <div class="text-2xl">🥉</div>
-                                            {% else %}
-                                                <div class="bg-gray-400">{{ entry.rank }}</div>
-                                            {% endif %}
-                                        </div>
-                                    </td>
-                                    
-                                    <!-- Student Info -->
-                                    <td class="px-6 py-4">
-                                        <div>
-                                            <h3 class="font-display font-semibold text-gray-900">{{ entry.student.get_full_name }}</h3>
-                                            <p class="font-sans text-sm text-gray-600">{{ entry.scope_value }}</p>
-                                        </div>
-                                    </td>
-                                    
-                                    <!-- Stats -->
-                                    <td class="px-6 py-4 text-center hidden sm:table-cell">
-                                        <div class="font-sans">
-                                            <div class="font-bold text-gray-900">📚 {{ entry.books_read }}</div>
-                                            <div class="text-xs text-gray-600">Books</div>
-                                        </div>
-                                    </td>
-                                    
-                                    <td class="px-6 py-4 text-center hidden sm:table-cell">
-                                        <div class="font-sans">
-                                            <div class="font-bold text-gray-900">✓ {{ entry.verified_reviews }}</div>
-                                            <div class="text-xs text-gray-500">Verified</div>
-                                        </div>
-                                    </td>
-                                    
-                                    <!-- Total Score -->
-                                    <td class="px-6 py-4 text-right">
-                                        <div class="font-display font-bold text-2xl text-gray-900">{{ entry.total_score }}</div>
-                                        <p class="font-sans text-xs text-gray-500">pts</p>
-                                    </td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            {% else %}
-                <div class="p-12 text-center">
-                    <div class="text-6xl mb-4">📊</div>
-                    <p class="font-sans text-gray-600">No leaderboard data yet. Be the first to submit a review!</p>
-                </div>
-            {% endif %}
-        </div>
 
-        <!-- How Scoring Works -->
-        <div class="mt-12 grid grid-cols-3 md:grid-cols-3 gap-3 md:gap-6">
-            <div class="bg-gradient-to-br from-blue-50 to-cyan-50 border-2 border-blue-300 rounded-2xl p-4 md:p-6 shadow-sm hover:shadow-md transition-shadow">
-                <h3 class="font-display text-base md:text-lg font-bold flex items-center gap-2 mb-3 md:mb-4 text-blue-900">
-                    <span class="text-xl md:text-2xl">📖</span> Books Read
-                </h3>
-                <p class="font-sans text-xs md:text-sm mb-2 md:mb-3 text-blue-700">Points for verified reviews</p>
-                <div class="font-display text-2xl md:text-3xl font-bold text-blue-900">+20 pts</div>
-                <div class="font-sans text-xs mt-1 md:mt-2 text-blue-700">per verified</div>
-            </div>
-            
-            <div class="bg-gradient-to-br from-purple-50 to-pink-50 border-2 border-purple-300 rounded-2xl p-4 md:p-6 shadow-sm hover:shadow-md transition-shadow">
-                <h3 class="font-display text-base md:text-lg font-bold flex items-center gap-2 mb-3 md:mb-4 text-purple-900">
-                    <span class="text-xl md:text-2xl">🔥</span> Consistency
-                </h3>
-                <p class="font-sans text-xs md:text-sm mb-2 md:mb-3 text-purple-700">Bonus for regular submissions</p>
-                <div class="font-display text-2xl md:text-3xl font-bold text-purple-900">Up to 100</div>
-                <div class="font-sans text-xs mt-1 md:mt-2 text-purple-700">points monthly</div>
-            </div>
-            
-            <div class="bg-gradient-to-br from-emerald-50 to-teal-50 border-2 border-emerald-300 rounded-2xl p-4 md:p-6 shadow-sm hover:shadow-md transition-shadow">
-                <h3 class="font-display text-base md:text-lg font-bold flex items-center gap-2 mb-3 md:mb-4 text-emerald-900">
-                    <span class="text-xl md:text-2xl">⭐</span> Recognition
-                </h3>
-                <p class="font-sans text-xs md:text-sm mb-2 md:mb-3 text-emerald-700">Top reader each month</p>
-                <div class="font-display text-2xl md:text-3xl font-bold text-emerald-900">👑</div>
-                <div class="font-sans text-xs mt-1 md:mt-2 text-emerald-700">Duta Literasi</div>
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead>
+                    <tr class="text-gray-500 text-[10px] font-black uppercase tracking-[0.25em] border-b border-gray-100">
+                        <th class="px-8 py-10 text-left">Rank</th>
+                        <th class="px-8 py-10 text-left">Nama</th>
+                        <th class="px-8 py-10 text-center">Kelas</th>
+                        <th class="px-8 py-10 text-center">Angkatan</th>
+                        <th class="px-8 py-10 text-center">Total Skor</th>
+                        <th class="px-8 py-10 text-center">Total Partisipasi</th>
+                        <th class="px-8 py-10 text-right">Konsistensi</th>
+                    </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-50/50">
+                    {% for entry in leaderboard %}
+                    <tr class="group hover:bg-[#e9ebf3]/10 transition-all {% if entry.student == user %}bg-blue-50/40{% endif %}">
+                        <td class="px-8 py-10">
+                            <div class="flex items-center">
+                                {% if entry.global_rank == 1 %}
+                                <div class="w-12 h-12 bg-[#f59e0b] text-white rounded-2xl flex items-center justify-center font-display text-2xl font-black shadow-lg shadow-orange-500/30">1</div>
+                                {% elif entry.global_rank >= 2 and entry.global_rank <= 5 %}
+                                <div class="w-12 h-12 bg-gray-200 text-gray-700 rounded-2xl flex items-center justify-center font-display text-2xl font-black shadow-lg shadow-gray-400/20 border-2 border-white ring-4 ring-gray-100">
+                                    {{ entry.global_rank }}
+                                </div>
+                                {% else %}
+                                <span class="text-gray-500 font-display text-2xl font-black ml-4 group-hover:text-[#1e3a8a] transition-colors">#{{ entry.global_rank }}</span>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td class="px-8 py-10">
+                            <div class="flex items-center gap-6">
+                                <div>
+                                    <p class="font-sans text-lg font-bold text-[#0d183a] group-hover:text-[#1e3a8a] transition-colors leading-none mb-1.5">{{ entry.student.get_full_name }}</p>
+                                    <p class="text-[10px] font-black text-gray-500 uppercase tracking-[0.15em]">Verified Reader</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-8 py-10 text-center">
+                            <p class="font-sans text-lg font-bold text-[#0d183a]">{{ entry.student.profile.kelas }}</p>
+                        </td>
+                        <td class="px-8 py-10 text-center">
+                            <p class="font-sans text-lg font-bold text-[#0d183a]">{{ entry.grade }}</p>
+                        </td>
+                        <td class="px-8 py-10 text-center">
+                            <p class="font-display text-3xl font-black text-[#1e3a8a] group-hover:scale-110 transition-transform">{{ entry.total_score }}</p>
+                        </td>
+                        <td class="px-8 py-10 text-center">
+                            <div class="inline-flex flex-col items-center">
+                                <span class="font-display text-2xl font-black text-[#0d183a]">{{ entry.books_read }}</span>
+                                <span class="text-[9px] font-black text-gray-500 uppercase tracking-widest">Partisipasi</span>
+                            </div>
+                        </td>
+                        <td class="px-8 py-10 text-right">
+                            {% if entry.streak > 0 %}
+                            <div class="flex flex-col items-end">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-2xl animate-pulse">🔥</span>
+                                    <span class="font-display text-xl font-black text-orange-500">{{ entry.streak }}</span>
+                                </div>
+                            </div>
+                            {% else %}
+                            <span class="text-gray-200 font-display text-3xl font-black">—</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="px-12 py-40 text-center">
+                            <div class="text-9xl mb-10 opacity-[0.1]">📋</div>
+                            <h3 class="font-display text-3xl font-black text-gray-400">Belum ada data peringkat.</h3>
+                            <p class="font-sans text-gray-500 mt-4 text-lg">Mulai aktivitas literasimu dan jadilah yang pertama!</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
             </div>
         </div>
 
-        <!-- Call to Action -->
-        <div class="bg-gradient-to-br from-blue-50 to-cyan-50 border-2 border-blue-300 rounded-2xl p-6 md:p-8 text-center mt-12 shadow-sm">
-            <h2 class="font-display text-2xl md:text-3xl font-bold text-blue-900 mb-2 md:mb-3">Ready to Join the Top Readers?</h2>
-            <p class="font-sans text-base md:text-lg text-blue-700 mb-4 md:mb-6">Start submitting your book reviews and climb the leaderboard!</p>
-            <a href="{% url 'literacy:submit_review' %}" class="inline-block px-6 md:px-8 py-2 md:py-3 bg-blue-100 text-blue-700 font-sans font-semibold rounded-lg hover:bg-blue-200 transition-colors text-sm md:text-base">
-                ✨ Submit Your Next Review
-            </a>
+        <!-- Scoring Rules Guide Section -->
+        <div class="mt-32">
+            <div class="text-center mb-16">
+                <span class="bg-[#fef5e7] text-[#f59e0b] px-5 py-2 rounded-full text-[11px] font-black uppercase tracking-[0.2em] border border-[#fad28f]">Panduan Literasi</span>
+                <h2 class="font-display text-5xl font-black text-[#0d183a] mt-6">Cara Mendapatkan Poin</h2>
+                <p class="font-sans text-gray-500 mt-4 max-w-2xl mx-auto">Tingkatkan peringkatmu dengan terus membaca dan menulis ulasan berkualitas di NASA Library.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- Rule 1: Verified Review -->
+                <div class="bg-white p-10 rounded-[2.5rem] shadow-xl border border-gray-100 flex flex-col group hover:-translate-y-2 transition-all duration-300">
+                    <div class="flex items-center gap-4 mb-6">
+                        <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-xl">📚</div>
+                        <h3 class="font-display text-xl font-black text-[#0d183a]">Ulasan Terverifikasi</h3>
+                    </div>
+                    <p class="text-gray-500 font-medium text-sm leading-relaxed mb-8">Poin diberikan untuk setiap partisipasi kegiatan literasi yang telah diverifikasi oleh petugas sekolah.</p>
+                    <div class="mt-auto bg-blue-50 text-blue-600 px-5 py-2.5 rounded-xl font-black text-xs w-fit">
+                        +10 Poin / Buku
+                    </div>
+                </div>
+
+                <!-- Rule 2: Quality Bonus -->
+                <div class="bg-white p-10 rounded-[2.5rem] shadow-xl border border-gray-100 flex flex-col group hover:-translate-y-2 transition-all duration-300">
+                    <div class="flex items-center gap-4 mb-6">
+                        <div class="w-10 h-10 rounded-xl bg-orange-50 text-[#f59e0b] flex items-center justify-center text-xl">✨</div>
+                        <h3 class="font-display text-xl font-black text-[#0d183a]">Bonus Kualitas</h3>
+                    </div>
+                    <p class="text-gray-500 font-medium text-sm leading-relaxed mb-8">Ulasan mendalam dengan minimal 500 karakter berhak mendapatkan bonus kualitas.</p>
+                    <div class="mt-auto bg-orange-50 text-[#f59e0b] px-5 py-2.5 rounded-xl font-black text-xs w-fit">
+                        +5 Poin / Ulasan
+                    </div>
+                </div>
+
+                <!-- Rule 3: Weekly Consistency -->
+                <div class="bg-white p-10 rounded-[2.5rem] shadow-xl border border-gray-100 flex flex-col group hover:-translate-y-2 transition-all duration-300">
+                    <div class="flex items-center gap-4 mb-6">
+                        <div class="w-10 h-10 rounded-xl bg-green-50 text-[#10b981] flex items-center justify-center text-xl">🔥</div>
+                        <h3 class="font-display text-xl font-black text-[#0d183a]">Konsistensi</h3>
+                    </div>
+                    <p class="text-gray-500 font-medium text-sm leading-relaxed mb-8">Dapatkan poin tambahan jika kamu mengirim ulasan minimal satu kali setiap minggu.</p>
+                    <div class="mt-auto bg-green-50 text-[#10b981] px-5 py-2.5 rounded-xl font-black text-xs w-fit">
+                        +5 Poin / Minggu
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
+
+<style>
+    @keyframes fade-in {
+        from { opacity: 0; transform: translateY(40px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fade-in {
+        animation: fade-in 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+</style>
+
 {% endblock %}

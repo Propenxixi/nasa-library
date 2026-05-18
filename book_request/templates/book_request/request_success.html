@@ -5,6 +5,7 @@
 {% block content %}
 
 <style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Work+Sans:wght@600&family=Inter:wght@400&display=swap');
   :root {
     --yellow:    #F8BE5C;
     --green:     #0FA875;
@@ -20,7 +21,7 @@
   .ss-page {
     min-height: 100vh;
     background: linear-gradient(135deg, #f0f4ff 0%, #ffffff 50%, #f0f4ff 100%);
-    font-family: 'Segoe UI', system-ui, sans-serif;
+    font-family: 'Inter', sans-serif;
     display: flex;
     align-items: flex-start;
     justify-content: center;
@@ -64,7 +65,9 @@
   /* ── Heading ── */
   .ss-title {
     font-size: 2rem;
-    font-weight: 800;
+    font-family: 'Playfair Display', serif;
+    font-weight: 700;
+    line-height: 1.2;
     color: #111827;
     margin: 0 0 .6rem;
     letter-spacing: -.02em;
@@ -73,7 +76,9 @@
   .ss-subtitle {
     font-size: .9rem;
     color: var(--gray-ui);
-    line-height: 1.65;
+    font-family: 'Work Sans', sans-serif;
+    font-weight: 600;
+    line-height: 1.2;
     margin: 0 0 1.75rem;
   }
 
@@ -98,7 +103,9 @@
 
   .ss-field__label {
     font-size: .95rem;
-    font-weight: 700;
+    font-family: 'Work Sans', sans-serif;
+    font-weight: 600;
+    line-height: 1.2; /* tambahkan ini */
     color: #111827;
     margin: 0 0 .25rem;
   }
@@ -108,6 +115,7 @@
     font-weight: 400;
     color: #6b7280;
     margin: 0;
+    line-height: 1.5;
   }
 
   /* ── Badge menunggu ── */
@@ -147,7 +155,7 @@
     font-size: .84rem;
     color: #0a6647;
     margin: 0;
-    line-height: 1.6;
+    line-height: 1.5;
   }
 
   .ss-banner__text strong { color: #0a5c3e; }

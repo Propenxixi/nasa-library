@@ -5,6 +5,7 @@
 {% block content %}
 
 <style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Work+Sans:wght@600&display=swap');
   :root {
     --yellow:    #F8BE5C;
     --green:     #0FA875;
@@ -21,14 +22,15 @@
     min-height: 100vh;
     background: linear-gradient(135deg, #f0f4ff 0%, #ffffff 50%, #f0f4ff 100%);
     font-family: 'Segoe UI', system-ui, sans-serif;
+    line-height: 1.5;
   }
 
   .sd-container { max-width: 1024px; margin: 0 auto; padding: 3rem 1.5rem; }
 
   /* ── Header ── */
   .sd-header { text-align: center; margin-bottom: 2rem; }
-  .sd-header h1 { font-size: 2.4rem; font-weight: 800; color: var(--blue); letter-spacing: -.03em; margin: 0 0 .3rem; }
-  .sd-header p  { font-size: .95rem; color: var(--gray-ui); margin: 0; }
+  .sd-header h1 { font-size: 2.4rem; font-family: 'Playfair Display', serif; font-weight: 700; line-height: 1.2; color: var(--blue); letter-spacing: -.03em; margin: 0 0 .3rem; }
+  .sd-header p  { font-size: .95rem; font-family: 'Work Sans', sans-serif; font-weight: 600; line-height: 1.2; color: var(--gray-ui); margin: 0; }
 
   /* ── Stats ── */
   .sd-stats { display: grid; grid-template-columns: repeat(4,1fr); gap: 1rem; margin-bottom: 1.75rem; }
@@ -81,8 +83,8 @@
   .sd-filter-btn--rejected { background: var(--blue); color: #fff; }
 
   /* ── Section title ── */
-  .sd-section-title { font-size: 1.3rem; font-weight: 800; color: var(--blue); margin: 0 0 .2rem; }
-  .sd-section-sub   { font-size: .82rem; color: var(--gray-ui); margin: 0 0 1.1rem; }
+  .sd-section-title { font-size: 1.3rem; font-family: 'Work Sans', sans-serif; font-weight: 600; line-height: 1.2; color: var(--blue); margin: 0 0 .2rem; }
+  .sd-section-sub   { font-size: .82rem; font-family: 'Work Sans', sans-serif; font-weight: 600; line-height: 1.2; color: var(--gray-ui); margin: 0 0 1.1rem; }
 
   /* ── Cards ── */
   .sd-card {

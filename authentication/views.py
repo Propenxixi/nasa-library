@@ -11,7 +11,7 @@ import tempfile
 import os
 import json
 from openpyxl import load_workbook
-from .forms import LoginForm, CustomPasswordChangeForm, ChangeUsernameForm, StudentBatchImportForm
+from .forms import LoginForm, CustomPasswordChangeForm, ChangeUsernameForm, StudentBatchImportForm, ProfileUpdateForm
 from .models import UserProfile
 
 
@@ -51,7 +51,7 @@ def user_login(request):
                 else:
                     messages.error(request, 'Password salah. Silahkan coba lagi.')
             except User.DoesNotExist:
-                messages.error(request, 'NIS tidak ditemukan di sistem.')
+                messages.error(request, 'Username atau NIS tidak ditemukan')
         else:
             messages.error(request, 'Silahkan isi semua field dengan benar.')
     else:
@@ -89,15 +89,15 @@ def change_password(request):
 @login_required(login_url='authentication:login')
 def change_username(request):
     """Change username view"""
-    
+
     if request.method == 'POST':
         form = ChangeUsernameForm(request.POST)
         if form.is_valid():
             new_username = form.cleaned_data['new_username']
             password = form.cleaned_data['password']
-            
+
             user = authenticate(request, username=request.user.username, password=password)
-            
+
             if user is not None:
                 user.username = new_username
                 user.save()
@@ -111,12 +111,48 @@ def change_username(request):
                     messages.error(request, f'{error}')
     else:
         form = ChangeUsernameForm()
-    
+
     context = {
         'form': form,
         'page_title': 'Ubah Username'
     }
     return render(request, 'change_username.html', context)
+
+
+@require_http_methods(["GET", "POST"])
+@login_required(login_url='authentication:login')
+def profile(request):
+    """User profile management view - edit username, password, and profile picture"""
+
+    user_profile = request.user.profile
+
+    form_errors = None
+    
+    if request.method == 'POST':
+        form = ProfileUpdateForm(request.user, request.POST, request.FILES, instance=user_profile)
+        if form.is_valid():
+            # Check if there are actual changes
+            if not form.has_changes():
+                form_errors = ['Tidak ada perubahan yang dibuat. Silakan isi minimal satu bidang untuk diubah.']
+            else:
+                form.save()
+                messages.success(request, 'Profil Anda berhasil diperbarui!')
+                return redirect('authentication:profile')
+        else:
+            form_errors = []
+            for field, errors in form.errors.items():
+                for error in errors:
+                    form_errors.append(str(error))
+    else:
+        form = ProfileUpdateForm(request.user, instance=user_profile)
+
+    context = {
+        'form': form,
+        'user_profile': user_profile,
+        'page_title': 'Kelola Profil',
+        'form_errors': json.dumps(form_errors) if form_errors else None
+    }
+    return render(request, 'profile.html', context)
 
 
 @require_http_methods(["POST"])

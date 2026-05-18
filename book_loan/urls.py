@@ -6,7 +6,9 @@ app_name = 'book_loan'
 urlpatterns = [
     # Pages
     path('history/', views.loan_history, name='loan_history'),
+    path('history-admin/', views.loan_history_admin, name='loan_history_admin'),
     path('waiting-list/', views.waiting_list_view, name='waiting_list'),
+    path('waiting-list-admin/', views.waiting_list_admin, name='waiting_list_admin'),
     path('management/', views.loan_management, name='loan_management'),
     path('notifications/', views.notifications, name='notifications'),
     
@@ -14,11 +16,13 @@ urlpatterns = [
     path('loans/<int:loan_id>/approve/', views.loan_approve, name='loan_approve'),
     path('loans/<int:loan_id>/reject/', views.loan_reject, name='loan_reject'),
     path('loans/<int:loan_id>/pickup/', views.loan_confirm_pickup, name='loan_confirm_pickup'),
+    path('loans/<int:loan_id>/cancel/', views.loan_cancel, name='loan_cancel'),
     path('loans/<int:loan_id>/return/', views.loan_process_return, name='loan_process_return'),
     
     # API - Loans
     path('api/loans/', views.api_list_loans, name='api_list_loans'),
     path('api/loans/create/', views.api_create_loan, name='api_create_loan'),
+    path('api/loans/<int:loan_id>/detail/', views.api_loan_detail, name='api_loan_detail'),
     path('api/loans/<int:loan_id>/approve/', views.api_approve_loan, name='api_approve_loan'),
     path('api/loans/<int:loan_id>/pickup/', views.api_pickup_loan, name='api_pickup_loan'),
     path('api/loans/<int:loan_id>/reject/', views.api_reject_loan, name='api_reject_loan'),
@@ -35,6 +39,7 @@ urlpatterns = [
     path('api/waitlist/check/<int:book_id>/', views.api_check_waiting_list, name='api_check_waiting_list'),
     path('api/waitlist/<int:waiting_id>/cancel/', views.api_cancel_waiting_list, name='api_cancel_waiting_list'),
     path('api/waitlist/<int:waiting_id>/claim/', views.api_claim_waiting_list, name='api_claim_waiting_list'),
+    path('api/waitlist/<int:waiting_id>/detail/', views.api_waiting_list_detail, name='api_waiting_list_detail'),
     path('api/waitlist/<int:waiting_id>/notify/', views.api_notify_waiting_list, name='api_notify_waiting_list'),
     
     # API - Notifications

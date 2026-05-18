@@ -71,67 +71,75 @@ def get_period_range(period, start_custom=None, end_custom=None):
     return start_date, end_date
 
 def get_attendance_data(start_date, end_date):
-    # Base query for attendance records in range
+    # Fetch detailed attendance records in range
     records = Attendance.objects.filter(
         check_in_time__date__range=(start_date, end_date)
-    ).values('check_in_time__date').annotate(
-        teacher_count=Count('id', filter=Q(user__profile__role='teacher')),
-        student_count=Count('id', filter=Q(user__profile__role='student')),
-        total_visits=Count('id')
-    ).order_by('check_in_time__date')
+    ).select_related('user__profile').prefetch_related('activities').order_by('check_in_time')
     
     data = []
     for r in records:
+        role = getattr(r.user.profile, 'role', '-') if hasattr(r.user, 'profile') else '-'
+        role_display = 'Guru' if role == 'teacher' else 'Siswa' if role == 'student' else role.capitalize()
+        
+        # Format activities
+        acts = [a.name for a in r.activities.all()]
+        if r.custom_activity:
+            acts.append(r.custom_activity)
+        activities_str = ", ".join(acts) if acts else "-"
+        
         data.append({
-            'date': r['check_in_time__date'].strftime('%Y-%m-%d'),
-            'teacher_count': r['teacher_count'],
-            'student_count': r['student_count'],
-            'total_visits': r['total_visits']
+            'date': r.check_in_time.strftime('%d %b %Y').lstrip('0'),
+            'nama': f"{r.user.first_name} {r.user.last_name}".strip() or r.user.username,
+            'role': role_display,
+            'aktivitas': activities_str
         })
     
     # Calculate summary metrics
-    total_all = sum(item['total_visits'] for item in data)
-    num_days = len(data) if len(data) > 0 else 1
-    daily_average = round(total_all / num_days)
+    total_all = records.count()
+    teacher_count = records.filter(user__profile__role='teacher').count()
+    student_count = records.filter(user__profile__role='student').count()
     
     # Busiest Day
+    date_counts = records.values('check_in_time__date').annotate(count=Count('id'))
     busiest_info = "—"
-    if data:
-        busiest_day_record = max(data, key=lambda x: x['total_visits'])
-        busiest_date = datetime.strptime(busiest_day_record['date'], '%Y-%m-%d')
+    if date_counts:
+        busiest_day_record = max(date_counts, key=lambda x: x['count'])
+        busiest_date = busiest_day_record['check_in_time__date']
         # Map weekday to Indonesian name as per Figma
         days_id = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu", "Minggu"]
         busiest_info = days_id[busiest_date.weekday()]
 
     summary = {
         'total': total_all,
-        'average': daily_average,
+        'teacher_count': teacher_count,
+        'student_count': student_count,
         'busiest_day': busiest_info
     }
     return data, summary
 
 def get_borrowing_data(start_date, end_date):
-    borrowed = Loan.objects.filter(loan_date__date__range=(start_date, end_date)).count()
+    today = timezone.now().date()
+    loans_in_period = Loan.objects.filter(loan_date__date__range=(start_date, end_date))
     
-    returned = Loan.objects.filter(
-        return_date__date__range=(start_date, end_date),
-        status='dikembalikan'
+    # 'Borrowed' here means currently active and NOT overdue
+    borrowed = loans_in_period.filter(status='sedang_dipinjam', due_date__gte=today).count()
+    returned = loans_in_period.filter(status='dikembalikan').count()
+    
+    # Overdue is either explicit status or active loan with past due date
+    overdue = loans_in_period.filter(
+        Q(status='terlambat') | 
+        Q(is_overdue=True) | 
+        Q(status='sedang_dipinjam', due_date__lt=today)
     ).count()
     
-    overdue = Loan.objects.filter(
-        Q(status='terlambat') | Q(is_overdue=True)
-    ).filter(due_date__range=(start_date, end_date)).count()
-    
-    table_loans = Loan.objects.filter(
-        loan_date__date__range=(start_date, end_date)
-    ).select_related('user__profile', 'book').order_by('-loan_date')
+    table_loans = loans_in_period.select_related('user__profile', 'book').order_by('-loan_date')
     
     data = []
     for l in table_loans:
         st = l.status
         if st == 'dikembalikan':
             display_status = 'Dikembalikan'
-        elif st == 'terlambat' or l.is_overdue:
+        elif st == 'terlambat' or l.is_overdue or (st == 'sedang_dipinjam' and l.due_date and l.due_date < today):
             display_status = 'Terlambat'
         else:
             display_status = 'Dipinjam'
@@ -244,9 +252,9 @@ def api_report_preview(request):
         data, summary = get_attendance_data(start_date, end_date)
         columns = [
             {'header': 'Tanggal', 'key': 'date'},
-            {'header': 'Guru', 'key': 'teacher_count'},
-            {'header': 'Siswa', 'key': 'student_count'},
-            {'header': 'Total Kunjungan', 'key': 'total_visits'}
+            {'header': 'Nama', 'key': 'nama'},
+            {'header': 'Role', 'key': 'role'},
+            {'header': 'Aktivitas', 'key': 'aktivitas'}
         ]
     elif report_type == 'borrowing':
         data, summary = get_borrowing_data(start_date, end_date)
@@ -297,8 +305,8 @@ def api_report_export(request):
     if report_type == 'attendance':
         data, _ = get_attendance_data(start_date, end_date)
         title = "Laporan Kehadiran Perpustakaan"
-        headers = ['Tanggal', 'Guru', 'Siswa', 'Total Kunjungan']
-        rows = [[item['date'], item['teacher_count'], item['student_count'], item['total_visits']] for item in data]
+        headers = ['Tanggal', 'Nama', 'Role', 'Aktivitas']
+        rows = [[item['date'], item['nama'], item['role'], item['aktivitas']] for item in data]
     elif report_type == 'borrowing':
         data, _ = get_borrowing_data(start_date, end_date)
         title = "Laporan Aktivitas Peminjaman"
@@ -316,13 +324,18 @@ def api_report_export(request):
 
     # --- Summary Row Calculation (Unified for Excel and PDF) ---
     if report_type == 'attendance':
-        t_guru = sum(int(row[1]) for row in rows)
-        t_siswa = sum(int(row[2]) for row in rows)
-        t_visits = sum(int(row[3]) for row in rows)
-        rows.append(['TOTAL', t_guru, t_siswa, t_visits])
+        t_siswa = sum(1 for item in data if item['role'] == 'Siswa')
+        t_guru = sum(1 for item in data if item['role'] == 'Guru')
+        t_total = len(data)
+        rows.append(['TOTAL SISWA', '', '', t_siswa])
+        rows.append(['TOTAL GURU', '', '', t_guru])
+        rows.append(['TOTAL KESELURUHAN', '', '', t_total])
+    elif report_type == 'borrowing':
+        t_dipinjam = sum(1 for item in data if item['status'] == 'Dipinjam')
+        t_terlambat = sum(1 for item in data if item['status'] == 'Terlambat')
+        rows.append(['TOTAL DIPINJAM', '', '', '', t_dipinjam, ''])
+        rows.append(['TOTAL TERLAMBAT', '', '', '', t_terlambat, ''])
     elif report_type == 'collection':
-        # Need to handle potential non-integer or percentage strings if they exist
-        # Category stats in collection: Total, Tersedia, Dipinjam are indices 1,2,3
         t_books = sum(int(row[1]) for row in rows)
         t_avl = sum(int(row[2]) for row in rows)
         t_brw = sum(int(row[3]) for row in rows)
@@ -337,44 +350,55 @@ def api_report_export(request):
         
         num_cols = len(headers)
         
-        # --- Formal Letterhead ---
-        text_start_col = 1
+        # --- Formal Letterhead Image ---
+        img_path = os.path.join(settings.BASE_DIR, 'static', 'assets', 'kop.png')
+        if os.path.exists(img_path):
+            from openpyxl.drawing.image import Image as XLImage
+            img = XLImage(img_path)
+            # Set scale to fit width (approx 7.5 inches / 19cm)
+            img.width = 700 
+            img.height = 140
+            ws.add_image(img, 'A1')
+            # Merge cells for the header
+            ws.merge_cells(start_row=1, start_column=1, end_row=7, end_column=num_cols)
+            # Add spacers to clear the merged area
+            for _ in range(8): ws.append([])
+        else:
+            # Fallback to text
+            def add_merge_header(row, text, size, bold=True):
+                ws.merge_cells(start_row=row, start_column=1, end_row=row, end_column=num_cols)
+                cell = ws.cell(row=row, column=1)
+                cell.value = text
+                cell.font = Font(name='Arial', size=size, bold=bold)
+                cell.alignment = Alignment(horizontal='center')
+            add_merge_header(1, "PEMERINTAH PROVINSI D.K.I JAKARTA", 12)
+            add_merge_header(2, "SMA NEGERI 61 JAKARTA", 14)
+            add_merge_header(3, "Jl. Taruna Jl. Pahlawan Revolusi, Pd. Bambu, Kec. Duren Sawit, Jakarta Timur", 10, False)
+            for _ in range(5): ws.append([])
         
-        # Merged Header Rows
-        def add_merge_header(row, text, size, bold=True):
-            ws.merge_cells(start_row=row, start_column=text_start_col, end_row=row, end_column=num_cols)
-            cell = ws.cell(row=row, column=text_start_col)
-            cell.value = text
-            cell.font = Font(name='Arial', size=size, bold=bold)
-            cell.alignment = Alignment(horizontal='center')
-
-        add_merge_header(1, "PEMERINTAH PROVINSI D.K.I JAKARTA", 12)
-        add_merge_header(2, "SMA NEGERI 61 JAKARTA", 14)
-        add_merge_header(3, "Jl. Taruna Jl. Pahlawan Revolusi, Pd. Bambu, Kec. Duren Sawit, Jakarta Timur", 10, False)
-        
-        # Report Title Row
-        ws.merge_cells(start_row=5, start_column=1, end_row=5, end_column=num_cols)
-        ws['A5'] = title.upper()
-        ws['A5'].font = Font(name='Arial', size=14, bold=True)
-        ws['A5'].alignment = Alignment(horizontal='center')
+        # Report Title Row (shifted to row 9 to give a small gap)
+        ws.merge_cells(start_row=9, start_column=1, end_row=9, end_column=num_cols)
+        ws['A9'] = title.upper()
+        ws['A9'].font = Font(name='Arial', size=14, bold=True)
+        ws['A9'].alignment = Alignment(horizontal='center')
         
         ws.append([]) # spacer
         ws.append([f"Periode: {period_str}"])
         ws.append([f"Tanggal Cetak: {datetime.now().strftime('%d %B %Y %H:%M:%S')}"])
-        ws.append([]) # spacer
-        
         # Table Headers
+        ws.append([]) # spacer
         header_row_idx = ws.max_row + 1
         ws.append(headers)
         
-        header_fill = PatternFill(start_color="D3D3D3", end_color="D3D3D3", fill_type="solid")
+        # Use a more standard grey hex with FF alpha prefix
+        header_fill = PatternFill(start_color="FFD9D9D9", end_color="FFD9D9D9", fill_type="solid")
         header_font = Font(bold=True)
         header_border = Border(left=Side(style='thin'), right=Side(style='thin'), top=Side(style='thin'), bottom=Side(style='thin'))
         
         for cell in ws[header_row_idx]:
             cell.fill = header_fill
             cell.font = header_font
-            cell.alignment = Alignment(horizontal='center')
+            cell.alignment = Alignment(horizontal='center', vertical='center')
             cell.border = header_border
             
         # Data
@@ -384,7 +408,8 @@ def api_report_export(request):
         # Borders and Total Row Styling
         thin_border = Border(left=Side(style='thin'), right=Side(style='thin'), top=Side(style='thin'), bottom=Side(style='thin'))
         for r_idx in range(header_row_idx + 1, ws.max_row + 1):
-            is_total = (ws.cell(row=r_idx, column=1).value == 'TOTAL')
+            cell_val = str(ws.cell(row=r_idx, column=1).value or "")
+            is_total = 'TOTAL' in cell_val
             for cell in ws[r_idx]:
                 cell.border = thin_border
                 if is_total:
@@ -396,39 +421,29 @@ def api_report_export(request):
             max_length = 0
             column_letter = get_column_letter(col_idx)
             for cell in col:
-                try:
-                    # MergedCells have no value, so we only measure normal cells
+                if not isinstance(cell, openpyxl.cell.cell.MergedCell):
                     if cell.value and len(str(cell.value)) > max_length:
                         max_length = len(str(cell.value))
-                except:
-                    pass
-            adjusted_width = (max_length + 5) * 1.1
-            ws.column_dimensions[column_letter].width = min(adjusted_width, 50) # Cap width at 50
+            adjusted_width = (max_length + 4) * 1.2
+            ws.column_dimensions[column_letter].width = min(adjusted_width, 60)
 
         output = BytesIO()
         wb.save(output)
         
         filename = f"report_{report_type}_{period}_{datetime.now().strftime('%Y%m%d')}.xlsx"
-        response = HttpResponse(
-            output.getvalue(),
-            content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        )
+        response = HttpResponse(output.getvalue(), content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
         response['Content-Disposition'] = f'attachment; filename="{filename}"'
         return response
 
     elif export_format == 'pdf':
         buffer = BytesIO()
-        
-        # --- Total Page Numbering Logic ---
         class NumberedCanvas(canvas.Canvas):
             def __init__(self, *args, **kwargs):
                 canvas.Canvas.__init__(self, *args, **kwargs)
                 self.pages = []
-
             def showPage(self):
                 self.pages.append(dict(self.__dict__))
                 self._startPage()
-
             def save(self):
                 page_count = len(self.pages)
                 for page in self.pages:
@@ -436,29 +451,21 @@ def api_report_export(request):
                     self.draw_page_number(page_count)
                     canvas.Canvas.showPage(self)
                 canvas.Canvas.save(self)
-
             def draw_page_number(self, page_count):
                 self.setFont("Times-Roman", 10)
                 self.drawRightString(200 * mm, 15 * mm, f"Halaman {self._pageNumber} dari {page_count}")
-        
-        # Class for page numbering
         
         doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=20*mm, leftMargin=20*mm, topMargin=20*mm, bottomMargin=30*mm)
         elements = []
         styles = getSampleStyleSheet()
         
-        # Formal Styles
         title_style = ParagraphStyle('TitleStyle', parent=styles['Normal'], fontName='Times-Bold', fontSize=14, alignment=TA_CENTER, spaceAfter=2)
         address_style = ParagraphStyle('AddressStyle', parent=styles['Normal'], fontName='Times-Roman', fontSize=10, alignment=TA_CENTER, spaceAfter=2)
         report_title_style = ParagraphStyle('ReportTitle', parent=styles['Normal'], fontName='Times-Bold', fontSize=16, alignment=TA_CENTER, spaceBefore=20, spaceAfter=25)
         info_style = ParagraphStyle('InfoStyle', parent=styles['Normal'], fontName='Times-Roman', fontSize=11, spaceAfter=4)
 
-        # --- Kop Surat (Letterhead) ---
         logo_path = os.path.join(settings.BASE_DIR, 'static', 'assets', 'logoSMAN61.png')
-        if os.path.exists(logo_path):
-            img = Image(logo_path, width=25*mm, height=25*mm)
-        else:
-            img = Paragraph("", styles['Normal'])
+        img = Image(logo_path, width=25*mm, height=25*mm) if os.path.exists(logo_path) else Paragraph("", styles['Normal'])
 
         header_text = [
             Paragraph("PEMERINTAH PROVINSI D.K.I JAKARTA", title_style),
@@ -467,68 +474,68 @@ def api_report_export(request):
             Paragraph("Daerah Khusus Ibukota Jakarta 13430", address_style),
         ]
 
-        header_table_data = [[img, header_text]]
-        header_table = Table(header_table_data, colWidths=[30*mm, 140*mm])
-        header_table.setStyle(TableStyle([
-            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-            ('ALIGN', (0, 0), (0, 0), 'LEFT'),
-            ('ALIGN', (1, 0), (1, 0), 'CENTER'),
-            ('LEFTPADDING', (1, 0), (1, 0), 10),
-        ]))
+        header_table = Table([[img, header_text]], colWidths=[30*mm, 140*mm])
+        header_table.setStyle(TableStyle([('VALIGN', (0, 0), (-1, -1), 'MIDDLE'), ('ALIGN', (1, 0), (1, 0), 'CENTER'), ('LEFTPADDING', (1, 0), (1, 0), 10)]))
         elements.append(header_table)
         
-        # Horizontal line separator
         from reportlab.platypus import HRFlowable
         elements.append(HRFlowable(width="100%", thickness=1.5, color=colors.black, spaceBefore=5, spaceAfter=1))
         elements.append(HRFlowable(width="100%", thickness=0.5, color=colors.black, spaceBefore=1, spaceAfter=10))
 
-        # Report Header
         elements.append(Paragraph(title.upper(), report_title_style))
         elements.append(Paragraph(f"Periode: {period_str}", info_style))
         elements.append(Paragraph(f"Tanggal Cetak: {datetime.now().strftime('%d %B %Y %H:%M:%S')}", info_style))
         elements.append(Spacer(1, 10))
 
-        # --- Table Implementation ---
-        table_data = [headers] + rows
+        # --- Table Implementation with Wrapping ---
+        cell_style = ParagraphStyle('CellStyle', parent=styles['Normal'], fontName='Times-Roman', fontSize=10, leading=12)
+        header_p_style = ParagraphStyle('HeaderStyle', parent=styles['Normal'], fontName='Times-Bold', fontSize=10, alignment=TA_CENTER)
         
-        # Adjusted col widths based on report type
+        formatted_headers = [Paragraph(h, header_p_style) for h in headers]
+        formatted_rows = []
+        for row in rows:
+            f_row = []
+            for i, val in enumerate(row):
+                # Apply wrapping to columns that might be long
+                if i in [1, 3] or (report_type == 'borrowing' and i == 1):
+                    f_row.append(Paragraph(str(val), cell_style))
+                else:
+                    f_row.append(val)
+            formatted_rows.append(f_row)
+
+        table_data = [formatted_headers] + formatted_rows
+        
         if report_type == 'collection':
-            col_widths = [60*mm, 25*mm, 25*mm, 25*mm, 35*mm]
+            col_widths = [55*mm, 25*mm, 25*mm, 25*mm, 40*mm]
         elif report_type == 'attendance':
-            col_widths = [40*mm, 40*mm, 40*mm, 50*mm]
+            col_widths = [25*mm, 45*mm, 25*mm, 75*mm]
         else:
-            col_widths = None # Auto
+            col_widths = None
 
         t = Table(table_data, repeatRows=1, colWidths=col_widths)
-        
         table_style = [
             ('FONTNAME', (0, 0), (-1, -1), 'Times-Roman'),
             ('FONTSIZE', (0, 0), (-1, -1), 10),
             ('INNERGRID', (0, 0), (-1, -1), 0.5, colors.black),
             ('BOX', (0, 0), (-1, -1), 0.5, colors.black),
-            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-            # Heading Style
+            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
             ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
-            ('FONTNAME', (0, 0), (-1, 0), 'Times-Bold'),
-            ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
-            ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
-            ('TOPPADDING', (0, 0), (-1, 0), 8),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+            ('TOPPADDING', (0, 0), (-1, -1), 6),
         ]
         
-        # Add bold style to the TOTAL row if it exists
-        if report_type in ['attendance', 'collection']:
-            last_row_idx = len(table_data) - 1
-            table_style.append(('FONTNAME', (0, last_row_idx), (-1, last_row_idx), 'Times-Bold'))
-            table_style.append(('BACKGROUND', (0, last_row_idx), (-1, last_row_idx), colors.lightgrey))
-
-        # Alignment for borrowing status column
-        if report_type == 'borrowing':
-            table_style.append(('ALIGN', (4, 1), (4, -1), 'CENTER'))
+        # Style TOTAL rows
+        for idx, row in enumerate(table_data):
+            if idx > 0 and 'TOTAL' in str(row[0]):
+                table_style.append(('FONTNAME', (0, idx), (-1, idx), 'Times-Bold'))
+                table_style.append(('BACKGROUND', (0, idx), (-1, idx), colors.lightgrey))
+                # Adjust span based on column count
+                span_end = 3 if report_type == 'borrowing' else 2
+                table_style.append(('SPAN', (0, idx), (span_end, idx))) 
+                table_style.append(('ALIGN', (0, idx), (0, idx), 'LEFT'))
 
         t.setStyle(TableStyle(table_style))
         elements.append(t)
-        
-        # Build document with page numbering
         doc.build(elements, canvasmaker=NumberedCanvas)
         
         filename = f"report_{report_type}_{period}_{datetime.now().strftime('%Y%m%d')}.pdf"

@@ -15,6 +15,7 @@ class Loan(models.Model):
         ('terlambat', 'Terlambat'),
         ('dikembalikan', 'Dikembalikan'),
         ('ditolak', 'Ditolak'),
+        ('dibatalkan', 'Dibatalkan'),
     ]
 
     BOOK_CONDITION_CHOICES = [
@@ -112,6 +113,18 @@ class Loan(models.Model):
         self.rejection_reason = reason
         self.save()
 
+    def cancel(self):
+        """Cancel a ready-for-pickup loan - revert status without adding to history"""
+        # Simply mark as cancelled without processing any stock changes
+        # (available_copies property will automatically recalculate as stock becomes available again)
+        self.status = 'dibatalkan'
+        self.save()
+        
+        # Update book status based on available copies
+        if self.book.available_copies > 0:
+            self.book.status = 'tersedia'
+        self.book.save()
+
     def process_return(self, condition):
         """Process book return - tracks condition of returned copy"""
         self.status = 'dikembalikan'
@@ -193,12 +206,15 @@ class WaitingList(models.Model):
     STATUS_CHOICES = [
         ('menunggu', 'Menunggu'),
         ('siap_dipinjam', 'Siap Dipinjam'),
+        ('menunggu_konfirmasi_dari_admin', 'Menunggu Konfirmasi dari Admin'),
+        ('siap_diambil_di_perpustakaan', 'Siap Diambil di Perpustakaan'),
+        ('selesai', 'Selesai Diklaim'),
         ('dibatalkan', 'Dibatalkan'),
     ]
 
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='waiting_lists')
     book = models.ForeignKey('book.Book', on_delete=models.CASCADE, related_name='waiting_lists')
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='menunggu')
+    status = models.CharField(max_length=30, choices=STATUS_CHOICES, default='menunggu')
     
     position = models.PositiveIntegerField()
     registered_date = models.DateTimeField(auto_now_add=True)
@@ -206,6 +222,8 @@ class WaitingList(models.Model):
     ready_date = models.DateTimeField(null=True, blank=True)
     claim_deadline = models.DateTimeField(null=True, blank=True)
     is_claimed = models.BooleanField(default=False)
+    claimed_date = models.DateTimeField(null=True, blank=True)
+    approved_by_admin_date = models.DateTimeField(null=True, blank=True)
     
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -223,6 +241,14 @@ class WaitingList(models.Model):
         if self.claim_deadline and self.status == 'siap_dipinjam' and not self.is_claimed:
             return timezone.now() > self.claim_deadline
         return False
+
+    @property
+    def current_position(self):
+        """Get current position in the queue"""
+        # Position is already managed correctly by the backend
+        if self.status in ['menunggu', 'siap_dipinjam']:
+            return self.position
+        return None
 
     def mark_ready(self):
         """Mark as ready to be claimed"""

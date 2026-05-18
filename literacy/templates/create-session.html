@@ -1,0 +1,398 @@
+{% extends 'base.html' %}
+
+{% block title %}Buat Sesi Literasi - NASA Library{% endblock %}
+
+{% block content %}
+<style>.main-content { visibility: hidden; }</style>
+<div class="main-content">
+
+    <!-- Breadcrumb -->
+    <div class="breadcrumb">
+        <a href="{% url 'literacy:forum' %}" class="breadcrumb-link">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M19 12H5M12 5l-7 7 7 7"/>
+            </svg>
+            Kembali ke Forum
+        </a>
+    </div>
+
+    <!-- Page Header -->
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Buat Sesi Literasi</h1>
+            <p class="page-subtitle">Buat sesi baru agar siswa dapat menyubmit entri literasi mereka</p>
+        </div>
+    </div>
+
+    <div class="form-layout">
+
+        <!-- Form Card -->
+        <div class="form-card">
+            <form method="POST" id="session-form">
+                {% csrf_token %}
+
+                <!-- Judul Sesi -->
+                <div class="field-group">
+                    <label class="field-label" for="id_title">
+                        Judul Sesi <span class="field-required">*</span>
+                    </label>
+                    <div class="field-hint">Contoh: Forum Literasi #{{ next_number }}</div>
+                    <input
+                            type="text"
+                            name="title"
+                            id="id_title"
+                            class="field-input {% if form.title.errors %}field-input--error{% endif %}"
+                            placeholder="Contoh: Forum Literasi #{{ next_number }}"
+                            maxlength="200"
+                            value="{{ form.title.value|default:'' }}"
+                            required
+                    >
+                    {% if form.title.errors %}
+                    <div class="field-error">{{ form.title.errors.0 }}</div>
+                    {% endif %}
+                </div>
+
+                <!-- Topik -->
+                <div class="field-group">
+                    <label class="field-label" for="id_topic">
+                        Topik <span class="field-required">*</span>
+                    </label>
+                    <div class="field-hint">Pilih topik yang sesuai dengan sesi literasi ini</div>
+                    <select
+                            name="topic"
+                            id="id_topic"
+                            class="field-select {% if form.topic.errors %}field-input--error{% endif %}"
+                            required
+                    >
+                        {% for value, label in form.fields.topic.choices %}
+                        <option value="{{ value }}" {% if form.topic.value == value %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                    {% if form.topic.errors %}
+                    <div class="field-error">{{ form.topic.errors.0 }}</div>
+                    {% endif %}
+                </div>
+
+                <!-- Tanggal -->
+                <div class="field-group">
+                    <label class="field-label" for="id_date">
+                        Tanggal Sesi <span class="field-required">*</span>
+                    </label>
+                    <div class="field-hint">Tanggal pelaksanaan sesi literasi</div>
+                    <input
+                            type="date"
+                            name="date"
+                            id="id_date"
+                            class="field-input {% if form.date.errors %}field-input--error{% endif %}"
+                            value="{{ form.date.value|default:'' }}"
+                            required
+                    >
+                    {% if form.date.errors %}
+                    <div class="field-error">{{ form.date.errors.0 }}</div>
+                    {% endif %}
+                </div>
+
+                <!-- Is Open -->
+                <div class="field-group field-group--checkbox">
+                    <div class="status-info">
+                        <span class="status-dot">●</span>
+                        <span class="status-info-text">
+                            Sesi akan langsung terbuka untuk siswa
+                            <span class="checkbox-hint">Siswa dapat langsung menyubmit posting setelah sesi dibuat</span>
+                        </span>
+                    </div>
+                </div>
+
+                {% if form.non_field_errors %}
+                <div class="form-errors">
+                    {% for error in form.non_field_errors %}
+                    <div class="form-error-item">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <!-- Actions -->
+                <div class="form-actions">
+                    <a href="{% url 'literacy:forum' %}" class="btn btn-ghost">Batal</a>
+                    <button type="submit" class="btn btn-primary" id="submit-btn">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path d="M12 5v14M5 12h14"/>
+                        </svg>
+                        Buat Sesi
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="sidebar">
+
+            <!-- Preview Card -->
+            <div class="sidebar-card sidebar-card--preview">
+                <div class="sidebar-card-header">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                    </svg>
+                    <span>Preview Sesi</span>
+                </div>
+                <div class="preview-box">
+                    <div class="preview-topic" id="preview-topic">—</div>
+                    <div class="preview-title" id="preview-title">Judul sesi akan muncul di sini</div>
+                    <div class="preview-date" id="preview-date">
+                        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                            <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
+                            <line x1="3" y1="10" x2="21" y2="10"/>
+                        </svg>
+                        Pilih tanggal
+                    </div>
+                    <div class="preview-status" id="preview-status">
+                        <span class="status-open">● Terbuka</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tips Card -->
+            <div class="sidebar-card">
+                <div class="sidebar-card-header">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                    </svg>
+                    <span>Panduan Sesi</span>
+                </div>
+                <ul class="tips-list">
+                    <li>Beri judul yang jelas dan mudah dikenali siswa</li>
+                    <li>Pilih topik yang sesuai buku yang sedang dibaca kelas</li>
+                    <li>Atur tanggal sesuai jadwal literasi kelas</li>
+                    <li>Centang "Buka untuk Siswa" agar langsung aktif</li>
+                    <li>Posting siswa perlu diverifikasi sebelum tampil di forum</li>
+                </ul>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+<script>
+    const titleInput  = document.getElementById('id_title');
+    const topicSelect = document.getElementById('id_topic');
+    const dateInput   = document.getElementById('id_date');
+    // PERBAIKAN: id_is_open sudah tidak ada di HTML (diganti info statis),
+    // sehingga referensinya dihapus agar tidak menyebabkan JS error
+    // yang mencegah .main-content mendapat class 'ready'.
+
+    const previewTitle  = document.getElementById('preview-title');
+    const previewTopic  = document.getElementById('preview-topic');
+    const previewDate   = document.getElementById('preview-date');
+    const previewStatus = document.getElementById('preview-status');
+
+    const TOPIC_LABELS = {
+        'kepemimpinan_motivasi': 'Kepemimpinan & Motivasi',
+        'sains_teknologi':       'Sains & Teknologi',
+        'sejarah_kebudayaan':    'Sejarah & Kebudayaan',
+        'fiksi_sastra':          'Fiksi & Sastra',
+        'kesehatan_gaya_hidup':  'Kesehatan & Gaya Hidup',
+        'ekonomi_bisnis':        'Ekonomi & Bisnis',
+        'lainnya':               'Lainnya',
+    };
+
+    const CAL_SVG = `<svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`;
+
+    function updatePreview() {
+        previewTitle.textContent = titleInput.value.trim() || 'Judul sesi akan muncul di sini';
+        previewTopic.textContent = TOPIC_LABELS[topicSelect.value] || '—';
+
+        if (dateInput.value) {
+            const d = new Date(dateInput.value + 'T00:00:00');
+            previewDate.innerHTML = CAL_SVG + ' ' +
+                d.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+        } else {
+            previewDate.innerHTML = CAL_SVG + ' Pilih tanggal';
+        }
+
+        // Sesi selalu terbuka (status statis), tidak perlu cek checkbox
+        previewStatus.innerHTML = '<span class="status-open">● Terbuka</span>';
+    }
+
+    titleInput.addEventListener('input', updatePreview);
+    topicSelect.addEventListener('change', updatePreview);
+    dateInput.addEventListener('change', updatePreview);
+    updatePreview();
+
+    document.getElementById('session-form').addEventListener('submit', function() {
+        const btn = document.getElementById('submit-btn');
+        btn.disabled = true;
+        btn.innerHTML = `<svg width="16" height="16" class="spin" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> Menyimpan...`;
+    });
+
+    document.querySelector('.main-content').classList.add('ready');
+</script>
+
+<style>
+    /* ── Breadcrumb ─────────────────────────────────────── */
+    .breadcrumb { margin-bottom: 20px; animation: fadeSlideDown .4s ease both; }
+    .breadcrumb-link {
+        display: inline-flex; align-items: center; gap: 6px;
+        font-size: .85rem; font-weight: 600; color: var(--primary-700);
+        text-decoration: none; transition: color .2s, gap .2s;
+    }
+    .breadcrumb-link:hover { color: var(--primary-900); gap: 10px; }
+
+    /* ── Page Header ────────────────────────────────────── */
+    .page-header { margin-bottom: 28px; animation: fadeSlideDown .5s ease both; }
+    .page-title {
+        font-family: 'Playfair Display', serif; font-size: 2rem; font-weight: 700;
+        color: var(--primary-900); line-height: 1.2;
+    }
+    .page-subtitle { font-size: .9rem; color: var(--neutral-500); margin-top: 6px; }
+
+    /* ── Layout ─────────────────────────────────────────── */
+    .form-layout {
+        display: grid; grid-template-columns: 1fr 300px; gap: 24px; align-items: start;
+    }
+    @media (max-width: 900px) {
+        .form-layout { grid-template-columns: 1fr; }
+        .sidebar { order: -1; }
+    }
+
+    /* ── Form Card ──────────────────────────────────────── */
+    .form-card {
+        background: var(--neutral-50); border: 1.5px solid #1e3a8a;
+        border-radius: var(--radius-md); padding: 32px;
+        box-shadow: var(--shadow-sm); animation: fadeSlideUp .5s .05s ease both;
+    }
+
+    /* ── Fields ─────────────────────────────────────────── */
+    .field-group { margin-bottom: 22px; }
+    .field-group--checkbox { margin-bottom: 28px; }
+    .field-label {
+        display: block; font-size: .88rem; font-weight: 700;
+        color: var(--primary-900); margin-bottom: 4px;
+    }
+    .field-required { color: var(--error-400); }
+    .field-hint { font-size: .78rem; color: var(--neutral-400); margin-bottom: 8px; }
+    .field-input, .field-select {
+        width: 100%; padding: 11px 14px;
+        border: 1.5px solid #1e3a8a; border-radius: var(--radius-sm);
+        font-family: 'Work Sans', sans-serif; font-size: .9rem;
+        color: var(--primary-900); background: #fff; outline: none;
+        transition: box-shadow .2s, border-color .2s;
+        box-sizing: border-box;
+    }
+    .field-input:focus, .field-select:focus {
+        box-shadow: 0 0 0 3px rgba(30,58,138,.1); border-color: var(--primary-700);
+    }
+    .field-input--error { border-color: var(--error-400) !important; }
+    .field-error { font-size: .78rem; color: var(--error-400); margin-top: 5px; }
+    .field-select {
+        appearance: none; cursor: pointer;
+        background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%231e3a8a' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 14px center;
+        padding-right: 36px;
+    }
+
+    /* ── Status Info (replaces checkbox) ───────────────── */
+    .status-info { display: flex; align-items: flex-start; gap: 10px; }
+    .status-dot { font-size: 1rem; color: #16a34a; line-height: 1.4; }
+    .status-info-text { font-size: .9rem; font-weight: 600; color: var(--primary-900); line-height: 1.4; }
+
+    /* ── Checkbox (kept for potential reuse) ────────────── */
+    .checkbox-label { display: flex; align-items: flex-start; gap: 12px; cursor: pointer; }
+    .checkbox-input { position: absolute; opacity: 0; width: 0; height: 0; }
+    .checkbox-custom {
+        width: 20px; height: 20px; flex-shrink: 0; margin-top: 2px;
+        border: 2px solid #1e3a8a; border-radius: 5px; background: #fff;
+        display: flex; align-items: center; justify-content: center;
+        transition: background .2s, border-color .2s;
+    }
+    .checkbox-input:checked ~ .checkbox-custom {
+        background: var(--primary-700); border-color: var(--primary-700);
+    }
+    .checkbox-input:checked ~ .checkbox-custom::after {
+        content: '';
+        width: 10px; height: 6px;
+        border-left: 2px solid #fff; border-bottom: 2px solid #fff;
+        transform: rotate(-45deg) translateY(-1px); display: block;
+    }
+    .checkbox-text { font-size: .9rem; font-weight: 600; color: var(--primary-900); line-height: 1.4; }
+    .checkbox-hint { display: block; font-size: .78rem; color: var(--neutral-500); font-weight: 400; margin-top: 3px; }
+
+    /* ── Form errors ────────────────────────────────────── */
+    .form-errors {
+        background: var(--error-50); border: 1px solid var(--error-200);
+        border-radius: var(--radius-sm); padding: 12px 16px; margin-bottom: 20px;
+    }
+    .form-error-item { font-size: .85rem; color: var(--error-400); }
+
+    /* ── Actions ────────────────────────────────────────── */
+    .form-actions {
+        display: flex; justify-content: flex-end; gap: 12px; margin-top: 8px;
+        padding-top: 20px; border-top: 1px solid var(--neutral-200);
+    }
+    .btn {
+        display: inline-flex; align-items: center; gap: 7px; padding: 10px 20px;
+        border-radius: var(--radius-sm); font-family: 'Work Sans', sans-serif;
+        font-size: .88rem; font-weight: 600; text-decoration: none;
+        cursor: pointer; border: none; transition: background .2s, transform .15s, box-shadow .2s;
+    }
+    .btn-primary { background: var(--primary-700); color: #fff; }
+    .btn-primary:hover { background: var(--primary-900); transform: translateY(-1px); box-shadow: 0 4px 14px rgba(30,58,138,.25); }
+    .btn-primary:disabled { opacity: .6; cursor: not-allowed; transform: none; box-shadow: none; }
+    .btn-ghost { background: transparent; color: var(--neutral-600); border: 1.5px solid var(--neutral-300); }
+    .btn-ghost:hover { background: var(--neutral-100); color: var(--primary-900); }
+
+    /* ── Sidebar ────────────────────────────────────────── */
+    .sidebar { display: flex; flex-direction: column; gap: 16px; }
+    .sidebar-card {
+        background: var(--neutral-50); border: 1.5px solid #1e3a8a;
+        border-radius: var(--radius-md); padding: 20px; box-shadow: var(--shadow-sm);
+        animation: fadeSlideUp .5s .15s ease both;
+    }
+    .sidebar-card--preview { animation-delay: .1s; }
+    .sidebar-card-header {
+        display: flex; align-items: center; gap: 8px;
+        font-size: .78rem; font-weight: 700; color: var(--primary-700);
+        text-transform: uppercase; letter-spacing: .05em; margin-bottom: 14px;
+    }
+
+    /* Preview */
+    .preview-box {
+        background: #fff; border: 1px solid rgba(30,58,138,.2);
+        border-radius: var(--radius-sm); padding: 16px;
+        display: flex; flex-direction: column; gap: 8px;
+    }
+    .preview-topic {
+        font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em;
+        color: var(--primary-700); background: var(--primary-50);
+        border: 1px solid rgba(30,58,138,.3); border-radius: 100px;
+        padding: 3px 10px; align-self: flex-start;
+    }
+    .preview-title {
+        font-family: 'Playfair Display', serif; font-size: .95rem; font-weight: 700;
+        color: var(--primary-900); line-height: 1.3;
+    }
+    .preview-date { display: flex; align-items: center; gap: 5px; font-size: .75rem; color: var(--neutral-500); }
+    .status-open   { font-size: .75rem; font-weight: 600; color: #16a34a; }
+    .status-closed { font-size: .75rem; font-weight: 600; color: var(--error-400); }
+
+    /* Tips */
+    .tips-list { list-style: none; display: flex; flex-direction: column; gap: 9px; }
+    .tips-list li {
+        font-size: .82rem; color: var(--neutral-600);
+        padding-left: 18px; position: relative; line-height: 1.45;
+    }
+    .tips-list li::before {
+        content: ""; position: absolute; left: 0; top: 5px; width: 9px; height: 9px;
+        background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' stroke='%2310b981' stroke-width='3' viewBox='0 0 24 24'%3E%3Cpath d='M20 6L9 17l-5-5'/%3E%3C/svg%3E") center/contain no-repeat;
+    }
+
+    /* ── Keyframes ───────────────────────────────────────── */
+    @keyframes fadeSlideDown { from { opacity: 0; transform: translateY(-14px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes fadeSlideUp   { from { opacity: 0; transform: translateY(14px);  } to { opacity: 1; transform: translateY(0); } }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spin { animation: spin 1s linear infinite; }
+    .main-content.ready { visibility: visible; }
+</style>
+{% endblock %}

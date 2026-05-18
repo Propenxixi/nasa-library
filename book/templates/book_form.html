@@ -5,82 +5,89 @@
 {% block extra_css %}
 <style>
     :root {
-        --foundation-primary-900: #0d183a;
-        --foundation-neutral-800: #1f1f1f;
-        --foundation-neutral-500: #595959;
-        --foundation-primary-500: #1e3a8a;
-        --foundation-neutral-400: #8c8c8c;
-        --foundation-neutral-200: #f0f0f0;
-        --foundation-primary-50: #e9ebf3;
-        --foundation-neutral-100: #fcfcfc;
-        --foundation-primary-400: #4b61a1;
+        --primary-900: #0d183a;
+        --primary-800: #11204c;
+        --primary-700: #152962;
+        --primary-600: #1b357e;
+        --primary-500: #1e3a8a;
+        --primary-400: #4b61a1;
+        --primary-100: #b9c2db;
+        --primary-50:  #e9ebf3;
+        --neutral-800: #1f1f1f;
+        --neutral-500: #595959;
+        --neutral-400: #8c8c8c;
+        --neutral-200: #f0f0f0;
+        --neutral-100: #fcfcfc;
+        --accent-500: #f59e0b;
     }
 
     body {
-        background-color: var(--foundation-neutral-100);
+        background-color: #f8fafc;
     }
 
     .form-section {
-        background-color: var(--foundation-primary-50);
-        border-radius: 10px;
-        padding: 24px;
-        margin-bottom: 24px;
+        background-color: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 32px;
+        margin-bottom: 32px;
         position: relative;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
     }
 
     .section-title {
         font-family: 'Work Sans', sans-serif;
-        font-weight: 600;
+        font-weight: 700;
         font-size: 20px;
-        color: var(--foundation-neutral-800);
-        margin-bottom: 20px;
+        color: var(--primary-900);
+        margin-bottom: 16px;
         display: block;
     }
 
     .section-divider {
         height: 1px;
-        background-color: #cbd5e1;
-        margin-top: -10px;
-        margin-bottom: 25px;
+        background-color: #f1f5f9;
+        margin-bottom: 24px;
         width: 100%;
     }
 
     .form-group label {
         display: block;
-        font-family: 'Work Sans-SemiBold', sans-serif;
-        font-weight: 600;
-        font-size: 12px;
-        color: var(--foundation-primary-500);
+        font-family: 'Work Sans', sans-serif;
+        font-weight: 700;
+        font-size: 14px;
+        color: var(--primary-500);
         text-transform: uppercase;
-        margin-bottom: 6px;
+        letter-spacing: 0.02em;
+        margin-bottom: 10px;
     }
 
     .form-group label span.required {
-        color: #d84040;
+        color: #ef4444;
     }
 
     .form-input {
         width: 100%;
-        padding: 10px 18px;
-        border: 1.5px solid var(--foundation-primary-500) !important;
+        padding: 12px 16px;
+        border: 1.5px solid #e2e8f0 !important;
         border-radius: 10px;
         background-color: #ffffff !important;
-        font-family: 'Sans Serif Collection', sans-serif;
-        font-size: 12px;
-        color: var(--foundation-primary-500);
-        transition: border-color 0.2s, box-shadow 0.2s;
-        height: 44px;
+        font-family: 'Work Sans', sans-serif;
+        font-size: 13px;
+        color: var(--primary-900);
+        transition: all 0.2s;
+        height: 48px;
     }
 
     .form-input::placeholder {
-        color: var(--foundation-primary-500);
-        opacity: 0.6;
+        color: #94a3b8;
+        opacity: 1;
     }
 
     .form-input:focus {
         outline: none;
-        border-color: var(--foundation-primary-900);
-        box-shadow: 0 0 0 3px rgba(13, 24, 58, 0.1);
+        border-color: var(--primary-500) !important;
+        box-shadow: 0 0 0 4px rgba(30, 58, 138, 0.1);
     }
 
     textarea.form-input {
@@ -89,57 +96,70 @@
     }
 
     .btn-autofill {
-        background-color: var(--foundation-primary-400);
+        background-color: var(--primary-500);
         color: #ffffff;
-        padding: 12px 32px;
+        padding: 12px 24px;
         border-radius: 10px;
-        font-weight: 600;
+        font-weight: 700;
         font-size: 14px;
-        height: 44px;
+        height: 48px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        transition: opacity 0.2s;
+        transition: all 0.2s;
+        box-shadow: 0 4px 6px -1px rgba(30, 58, 138, 0.2);
     }
 
     .btn-autofill:hover {
-        opacity: 0.9;
+        background-color: var(--primary-700);
+        transform: translateY(-1px);
+        box-shadow: 0 6px 12px -2px rgba(30, 58, 138, 0.3);
     }
 
     .btn-action-primary {
-        background-color: var(--foundation-primary-500);
+        background-color: var(--primary-500);
         color: #ffffff;
-        padding: 12px 32px;
-        border-radius: 10px;
-        font-weight: 600;
-        font-size: 16px;
-        transition: background-color 0.2s;
+        padding: 14px 40px;
+        border-radius: 12px;
+        font-weight: 700;
+        font-size: 15px;
+        transition: all 0.2s;
+        box-shadow: 0 4px 6px -1px rgba(30, 58, 138, 0.2);
     }
 
     .btn-action-primary:hover {
-        background-color: var(--foundation-primary-900);
+        background-color: var(--primary-900);
+        transform: translateY(-1px);
+        box-shadow: 0 10px 15px -3px rgba(30, 58, 138, 0.3);
     }
 
     .btn-action-outline {
-        border: 1px solid var(--foundation-primary-500);
-        color: var(--foundation-primary-500);
-        padding: 12px 32px;
-        border-radius: 10px;
-        font-weight: 600;
-        font-size: 16px;
-        transition: background-color 0.2s;
+        background-color: #ffffff;
+        border: 1.5px solid var(--primary-500);
+        color: var(--primary-500);
+        padding: 14px 40px;
+        border-radius: 12px;
+        font-weight: 700;
+        font-size: 15px;
+        transition: all 0.2s;
+    }
+
+    .btn-action-outline:hover {
+        background-color: var(--primary-50);
+        border-color: var(--primary-700);
+        color: var(--primary-700);
     }
 
     .cover-preview {
         width: 98px;
         height: 140px;
         background-color: #f0f0f0;
-        border: 1px solid var(--foundation-neutral-400);
+        border: 1px solid var(--neutral-400);
         border-radius: 10px;
         display: flex;
         align-items: center;
         justify-content: center;
-        color: var(--foundation-neutral-400);
+        color: var(--neutral-400);
         font-size: 12px;
         font-weight: 600;
         text-align: center;
@@ -147,20 +167,142 @@
     }
 
     .info-box {
-        background-color: var(--foundation-neutral-200);
-        border-left: 3px solid var(--foundation-primary-500);
-        padding: 10px 15px;
-        border-radius: 10px;
-        margin-bottom: 25px;
+        background-color: #eff6ff;
+        border-radius: 12px;
+        padding: 16px 20px;
+        margin-bottom: 32px;
         display: flex;
         align-items: center;
         gap: 12px;
+        border: 1px solid #dbeafe;
     }
 
     .info-box p {
-        color: var(--foundation-primary-500);
+        color: #1e40af;
         font-size: 14px;
-        font-weight: 500;
+        font-weight: 600;
+    }
+
+    /* Bulk Upload Banner */
+    .bulk-upload-banner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        background: linear-gradient(135deg, var(--primary-500) 0%, var(--primary-900) 100%);
+        border-radius: 16px;
+        padding: 24px;
+        margin-bottom: 32px;
+        text-decoration: none;
+        position: relative;
+        overflow: hidden;
+        transition: transform 0.2s, box-shadow 0.2s;
+        box-shadow: 0 10px 15px -3px rgba(30, 58, 138, 0.2);
+    }
+
+    .bulk-upload-banner::before {
+        content: "";
+        position: absolute;
+        top: -30px;
+        right: -30px;
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.06);
+        pointer-events: none;
+    }
+
+    .bulk-upload-banner::after {
+        content: "";
+        position: absolute;
+        bottom: -50px;
+        right: 80px;
+        width: 160px;
+        height: 160px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.04);
+        pointer-events: none;
+    }
+
+    .bulk-upload-banner:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(30, 58, 138, 0.35);
+    }
+
+    .bulk-banner-left {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        flex: 1;
+        min-width: 0;
+    }
+
+    .bulk-banner-icon {
+        flex-shrink: 0;
+        width: 48px;
+        height: 48px;
+        background: rgba(255,255,255,0.15);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #ffffff;
+    }
+
+    .bulk-banner-text {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        min-width: 0;
+    }
+
+    .bulk-banner-title {
+        font-family: 'Work Sans', sans-serif;
+        font-weight: 700;
+        font-size: 15px;
+        color: #ffffff;
+        line-height: 1.3;
+    }
+
+    .bulk-banner-subtitle {
+        font-family: 'Work Sans', sans-serif;
+        font-weight: 400;
+        font-size: 13px;
+        color: rgba(255,255,255,0.75);
+        line-height: 1.4;
+    }
+
+    .bulk-banner-cta {
+        flex-shrink: 0;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(255,255,255,0.18);
+        border: 1.5px solid rgba(255,255,255,0.35);
+        color: #ffffff;
+        font-family: 'Work Sans', sans-serif;
+        font-weight: 600;
+        font-size: 13px;
+        padding: 9px 18px;
+        border-radius: 8px;
+        white-space: nowrap;
+        transition: background 0.2s, border-color 0.2s;
+    }
+
+    .bulk-upload-banner:hover .bulk-banner-cta {
+        background: rgba(255,255,255,0.28);
+        border-color: rgba(255,255,255,0.6);
+    }
+
+    @media (max-width: 640px) {
+        .bulk-upload-banner {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        .bulk-banner-cta {
+            align-self: stretch;
+            justify-content: center;
+        }
     }
 
     .field-error {
@@ -256,7 +398,7 @@
         align-self: stretch;
         font-family: 'Playfair Display', serif;
         font-weight: 700;
-        color: var(--foundation-neutral-800);
+        color: var(--neutral-800);
         font-size: 24px;
         text-align: center;
         line-height: 1.2;
@@ -267,7 +409,7 @@
         align-self: stretch;
         font-family: 'Work Sans', sans-serif;
         font-weight: 400;
-        color: var(--foundation-neutral-500);
+        color: var(--neutral-500);
         font-size: 14px;
         text-align: center;
         line-height: 1.5;
@@ -285,7 +427,7 @@
         position: relative;
         align-self: stretch;
         width: 100%;
-        background-color: var(--foundation-primary-500);
+        background-color: var(--primary-500);
         border-radius: 10px;
         color: #ffffff;
         font-weight: 600;
@@ -295,7 +437,7 @@
     }
 
     .modal .button-ok:hover {
-        background-color: var(--foundation-primary-900);
+        background-color: var(--primary-900);
     }
 
     .modal::before {
@@ -325,15 +467,40 @@
     {% if action == 'add' %}
     <!-- Info Alert -->
     <div class="info-box">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1e3a8a" stroke-width="2"
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1e40af" stroke-width="2.5"
             stroke-linecap="round" stroke-linejoin="round">
             <circle cx="12" cy="12" r="10" />
             <line x1="12" y1="16" x2="12" y2="12" />
             <line x1="12" y1="8" x2="12.01" y2="8" />
         </svg>
-        <p class="text-[14px] text-[#1e3a8a] font-medium">Masukkan ISBN lalu klik Auto-Fill untuk mengisi data otomatis.
-        </p>
+        <p>Masukkan ISBN lalu klik Auto-Fill untuk mengisi data otomatis.</p>
     </div>
+    {% endif %}
+
+    {% if action == 'add' %}
+    <!-- Bulk Upload Banner -->
+    <a href="{% url 'book:book_bulk_upload' %}" class="bulk-upload-banner">
+        <div class="bulk-banner-left">
+            <div class="bulk-banner-icon">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                    <polyline points="17 8 12 3 7 8"/>
+                    <line x1="12" y1="3" x2="12" y2="15"/>
+                </svg>
+            </div>
+            <div class="bulk-banner-text">
+                <span class="bulk-banner-title">Ingin menambahkan banyak buku sekaligus?</span>
+                <span class="bulk-banner-subtitle">Gunakan fitur Bulk Upload — impor ratusan buku dalam sekali upload via file CSV atau Excel.</span>
+            </div>
+        </div>
+        <div class="bulk-banner-cta">
+            Coba Bulk Upload
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="5" y1="12" x2="19" y2="12"/>
+                <polyline points="12 5 19 12 12 19"/>
+            </svg>
+        </div>
+    </a>
     {% endif %}
 
     <form method="post" id="bookForm" novalidate>
@@ -345,18 +512,19 @@
             <div class="section-divider"></div>
 
             <!-- ISBN with Auto-Fill -->
-            <div class="flex gap-4 mb-6">
+            <div class="flex flex-col md:flex-row gap-4 mb-8">
                 <div class="flex-grow">
                     <div class="form-group">
-                        <label>ISBN <span class="required">*</span></label>
+                        <label>ISBN <span class="required">*</span> <span class="text-[12px] lowercase opacity-70 ml-1 font-medium">(JIKA TIDAK PUNYA ISBN, MAKA HARAP MASUKKAN NILAI '0')</span></label>
                         <input type="text" name="isbn" id="id_isbn" value="{{ form.isbn.value|default:'' }}"
                             class="form-input" placeholder="Contoh: 9781234567890">
                         {% if form.isbn.errors %}<p class="field-error">{{ form.isbn.errors.0 }}</p>{% endif %}
+                        <p class="field-error" id="err_isbn" style="display:none"></p>
                     </div>
                 </div>
                 {% if action == 'add' %}
-                <div class="self-end">
-                    <button type="button" id="autofillBtn" class="btn-autofill">
+                <div class="md:self-end">
+                    <button type="button" id="autofillBtn" class="btn-autofill w-full md:w-auto">
                         <span id="autofillLabel">Auto-Fill</span>
                     </button>
                 </div>
@@ -537,10 +705,10 @@
 
     // ── Client-side validation ────────────────────────────────────────────────
     const REQUIRED_FIELDS = [
-        { id: 'id_isbn', errId: null, label: 'ISBN wajib diisi.' },
-        { id: 'id_title', errId: 'err_title', label: 'This field is required.' },
-        { id: 'id_author', errId: 'err_author', label: 'This field is required.' },
-        { id: 'id_total_copies', errId: 'err_total_copies', label: 'This field is required.' },
+        { id: 'id_isbn', errId: 'err_isbn', label: 'ISBN wajib diisi.' },
+        { id: 'id_title', errId: 'err_title', label: 'Judul buku wajib diisi.' },
+        { id: 'id_author', errId: 'err_author', label: 'Nama penulis wajib diisi.' },
+        { id: 'id_total_copies', errId: 'err_total_copies', label: 'Total stok wajib diisi.' },
     ];
 
     const bookForm = document.getElementById('bookForm');

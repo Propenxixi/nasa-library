@@ -1,10 +1,10 @@
 from django import forms
-from .models import BookReview, LiteracyPost, LiteracyComment
+from .models import BookReview, LiteracyPost, LiteracyComment, LiteracySession
 
 
 class BookReviewForm(forms.ModelForm):
     """Form for students to submit book reviews"""
-    
+
     year_published = forms.IntegerField(
         min_value=1900,
         widget=forms.NumberInput(attrs={
@@ -12,7 +12,7 @@ class BookReviewForm(forms.ModelForm):
             'placeholder': 'e.g., 2024'
         })
     )
-    
+
     class Meta:
         model = BookReview
         fields = ['title', 'author', 'publisher', 'year_published', 'summary']
@@ -52,7 +52,7 @@ class BookReviewForm(forms.ModelForm):
 
 class LiteracyPostForm(forms.ModelForm):
     """Form for students to create forum posts"""
-    
+
     class Meta:
         model = LiteracyPost
         fields = ['title', 'content', 'book_review']
@@ -80,7 +80,7 @@ class LiteracyPostForm(forms.ModelForm):
 
 class CommentForm(forms.ModelForm):
     """Form for students to comment on posts"""
-    
+
     class Meta:
         model = LiteracyComment
         fields = ['content']
@@ -98,7 +98,7 @@ class CommentForm(forms.ModelForm):
 
 class ReviewVerificationForm(forms.Form):
     """Form for teachers to verify or reject reviews"""
-    
+
     action = forms.ChoiceField(
         choices=[
             ('verify', 'Approve Review'),
@@ -108,7 +108,7 @@ class ReviewVerificationForm(forms.Form):
             'class': 'w-4 h-4'
         })
     )
-    
+
     rejection_reason = forms.CharField(
         max_length=500,
         required=False,
@@ -119,3 +119,31 @@ class ReviewVerificationForm(forms.Form):
         }),
         label='Reason for Rejection (if applicable)'
     )
+
+
+class LiteracySessionForm(forms.ModelForm):
+    """Form untuk guru membuat sesi literasi baru"""
+
+    date = forms.DateField(
+        widget=forms.DateInput(attrs={'type': 'date'}),
+        label='Tanggal Sesi',
+    )
+
+    class Meta:
+        model  = LiteracySession
+        fields = ['title', 'topic', 'date', 'is_open']
+        labels = {
+            'title':   'Judul Sesi',
+            'topic':   'Topik',
+            'date':    'Tanggal Sesi',
+            'is_open': 'Buka untuk Siswa',
+        }
+        help_texts = {
+            'title':   'Contoh: Forum Literasi #4',
+            'is_open': 'Centang agar siswa bisa langsung submit posting di sesi ini.',
+        }
+        widgets = {
+            'title':   forms.TextInput(attrs={'placeholder': 'Contoh: Forum Literasi #4', 'maxlength': '200'}),
+            'topic':   forms.Select(),
+            'is_open': forms.CheckboxInput(),
+        }

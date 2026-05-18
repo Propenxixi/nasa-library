@@ -208,6 +208,11 @@
         font-size: .88rem;
         display: flex; align-items: center; justify-content: center;
         flex-shrink: 0;
+        overflow: hidden;
+    }
+    .um-avatar img {
+        width: 100%; height: 100%;
+        object-fit: cover;
     }
     .um-user-cell { display: flex; align-items: center; gap: 12px; }
     .um-user-name {
@@ -516,7 +521,13 @@
                 <td class="um-num">{{ forloop.counter|add:page_obj.start_index|add:"-1" }}</td>
                 <td>
                     <div class="um-user-cell">
-                        <div class="um-avatar">{{ u.first_name|make_list|first|upper }}</div>
+                        <div class="um-avatar">
+                            {% if u.profile.profile_picture %}
+                                <img src="{{ u.profile.get_profile_picture_url }}" alt="Profile Picture">
+                            {% else %}
+                                {{ u.first_name|make_list|first|upper }}
+                            {% endif %}
+                        </div>
                         <div>
                             <div class="um-user-name">
                                 {{ u.first_name }} {{ u.last_name }}
@@ -584,7 +595,13 @@
         <div class="um-card {% if not u.is_active %}um-card--inactive{% endif %}">
             <div class="um-card-header">
                 <div class="um-card-no">{{ forloop.counter }}</div>
-                <div class="um-avatar">{{ u.first_name|make_list|first|upper }}</div>
+                <div class="um-avatar">
+                    {% if u.profile.profile_picture %}
+                        <img src="{{ u.profile.get_profile_picture_url }}" alt="Profile Picture">
+                    {% else %}
+                        {{ u.first_name|make_list|first|upper }}
+                    {% endif %}
+                </div>
                 <div class="um-card-identity">
                     <div class="um-card-name">{{ u.first_name }} {{ u.last_name }}</div>
                     <div class="um-card-email">{{ u.username }}{% if u.email %} · {{ u.email }}{% endif %}</div>

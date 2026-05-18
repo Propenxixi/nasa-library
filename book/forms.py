@@ -37,11 +37,19 @@ class BookForm(forms.ModelForm):
             self.instance.status = 'tersedia'
 
     def clean_isbn(self):
-        isbn = self.cleaned_data['isbn'].strip()
-        qs   = Book.objects.filter(isbn=isbn)
+        isbn_raw = self.cleaned_data.get('isbn')
+        if not isbn_raw or isbn_raw.strip() == '0':
+            return None
+        
+        isbn = isbn_raw.strip()
+        qs = Book.objects.filter(isbn=isbn)
         if self.instance.pk:
             qs = qs.exclude(pk=self.instance.pk)
-        if qs.exists():
+        
+        existing = qs.first()
+        if existing:
+            if existing.status == 'tidak_aktif':
+                raise forms.ValidationError('Buku ini sudah ada di sistem tapi berstatus tidak aktif. Silakan aktifkan kembali buku tersebut melalui daftar katalog.')
             raise forms.ValidationError('ISBN ini sudah terdaftar di sistem.')
         return isbn
 

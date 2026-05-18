@@ -1,129 +1,642 @@
 {% extends 'base.html' %}
 
-{% block title %}{{ post.title }} - NASA Library Forum{% endblock %}
+{% block title %}{{ post.title }} — Forum Literasi{% endblock %}
 
 {% block content %}
-<div class="min-h-screen bg-gradient-to-br from-white via-green-50 to-white">
-    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        
-        <!-- Back Button -->
-        <a href="{% url 'literacy:forum' %}" class="inline-flex items-center gap-2 text-green-600 hover:text-green-700 font-semibold mb-6">
-            ← Back to Forum
-        </a>
+<style>.detail-page { visibility: hidden; }</style>
+<div class="detail-page">
+    <div class="detail-container">
 
-        <!-- Main Post Card -->
-        <div class="bg-white border-2 border-gray-200 rounded-2xl p-6 md:p-8 mb-8 shadow-sm">
-            <!-- Header -->
-            <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6 pb-6 border-b border-gray-200">
-                <div>
-                    <h1 class="font-display text-3xl md:text-4xl font-bold text-gray-900 mb-3">{{ post.title }}</h1>
-                    <div class="flex items-center gap-4 text-gray-600">
-                        <div class="flex items-center gap-2">
-                            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-green-400 to-blue-500 flex items-center justify-center text-white font-bold">
-                                {{ post.student.first_name|first|upper }}
-                            </div>
-                            <div>
-                                <p class="font-semibold text-gray-900">{{ post.student.get_full_name }}</p>
-                                <p class="font-sans text-xs text-gray-500">{{ post.created_at|date:"d M Y \a\t H:i" }}</p>
-                            </div>
-                        </div>
+        <!-- ── Breadcrumb / Back ── -->
+        <nav class="breadcrumb" style="--d:0">
+            <a href="{% url 'literacy:forum' %}" class="breadcrumb-link">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+                Forum
+            </a>
+            <span class="breadcrumb-sep">›</span>
+            <span class="breadcrumb-current">Detail Postingan</span>
+        </nav>
+
+        <!-- ── Main Post Card ── -->
+        <article class="post-card" style="--d:1">
+
+            <!-- Author + Meta bar -->
+            <header class="post-header">
+                <div class="author-block">
+                    <div class="avatar avatar--lg">{{ post.student.first_name|first|upper }}</div>
+                    <div class="author-info">
+                        <p class="author-name">{{ post.student.get_full_name }}</p>
+                        <p class="author-date">{{ post.created_at|date:"d M Y \p\u\k\u\l H:i" }}</p>
                     </div>
                 </div>
 
-                <!-- Related Book -->
-                {% if post.book_review %}
-                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 flex-shrink-0">
-                        <p class="font-sans text-xs text-blue-600 mb-1">📚 Related Review</p>
-                        <p class="font-semibold text-blue-900">{{ post.book_review.title }}</p>
-                        <p class="font-sans text-xs text-blue-700">by {{ post.book_review.author }}</p>
+                {% if book_info %}
+                <div class="book-card">
+                    <div class="book-cover">
+                        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
                     </div>
+                    <div class="book-card-body">
+                        <span class="book-card-label">
+                            <svg width="10" height="10" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                            Buku Terkait
+                        </span>
+                        <p class="book-card-title">{{ book_info.title }}</p>
+                        <p class="book-card-author">{% if book_info.author %}{{ book_info.author }}{% endif %}{% if book_info.publisher %} &middot; {{ book_info.publisher }}{% endif %}</p>
+                    </div>
+                </div>
                 {% endif %}
-            </div>
+            </header>
 
-            <!-- Content -->
-            <div class="prose prose-sm max-w-none mb-6">
-                <p class="font-sans text-lg text-gray-700 whitespace-pre-wrap">{{ post.content }}</p>
-            </div>
+            <div class="post-divider"></div>
 
-            <!-- Engagement Footer -->
-            <div class="flex gap-6 pt-6 border-t border-gray-200">
-                <form method="POST" class="inline">
-                    {% csrf_token %}
-                    <button type="submit" name="like" class="flex items-center gap-2 font-sans font-semibold transition-colors
-                        {% if post.user_liked %}text-red-600 hover:text-red-700{% else %}text-gray-600 hover:text-red-600{% endif %}">
-                        {% if post.user_liked %}❤️{% else %}🤍{% endif %} {{ post.like_count }} Like{{ post.like_count|pluralize }}
-                    </button>
-                </form>
-                <span class="flex items-center gap-2 text-gray-600 font-sans font-semibold">
-                    💬 {{ post.comment_count }} Comment{{ post.comment_count|pluralize }}
-                </span>
+            <!-- Title + Content -->
+            <h1 class="post-title">{{ post.title }}</h1>
+            <div class="post-content">{{ display_content }}</div>
 
-                {% if post.student == user %}
-                    <a href="{% url 'literacy:delete_post' post.pk %}" class="ml-auto text-red-600 hover:text-red-700 font-sans font-semibold">
-                        🗑️ Delete
-                    </a>
+            <div class="post-divider"></div>
+
+            <!-- Engagement Row -->
+            <footer class="post-footer">
+                <div class="engage-group">
+                    {% if interactions_allowed %}
+                    <form method="POST" class="inline-form">
+                        {% csrf_token %}
+                        <button type="submit" name="like" class="engage-btn {% if post.user_liked %}engage-btn--liked{% endif %}">
+                            <span class="engage-icon">{% if post.user_liked %}❤️{% else %}🤍{% endif %}</span>
+                            <span>{{ post.like_count }} Suka</span>
+                        </button>
+                    </form>
+                    <div class="engage-btn engage-btn--static">
+                        <span class="engage-icon">💬</span>
+                        <span>{{ post.comment_count }} Komentar</span>
+                    </div>
+                    {% elif is_pending %}
+                    <div class="engage-btn engage-btn--disabled" title="Postingan belum disetujui">
+                        <span class="engage-icon">🤍</span>
+                        <span>{{ post.like_count }} Suka</span>
+                    </div>
+                    <div class="engage-btn engage-btn--static engage-btn--disabled" title="Postingan belum disetujui">
+                        <span class="engage-icon">💬</span>
+                        <span>{{ post.comment_count }} Komentar</span>
+                    </div>
+                    {% else %}
+                    <div class="engage-btn engage-btn--disabled" title="Postingan ditolak">
+                        <span class="engage-icon">🤍</span>
+                        <span>{{ post.like_count }} Suka</span>
+                    </div>
+                    <div class="engage-btn engage-btn--static engage-btn--disabled" title="Postingan ditolak">
+                        <span class="engage-icon">💬</span>
+                        <span>{{ post.comment_count }} Komentar</span>
+                    </div>
+                    {% endif %}
+                </div>
+
+                {% if is_pending %}
+                <span class="status-badge status-badge--pending">⏳ Menunggu Persetujuan</span>
+                {% elif is_rejected %}
+                <span class="status-badge status-badge--rejected">🚫 Ditolak</span>
                 {% endif %}
+            </footer>
+        </article>
+
+        <!-- ── Comments Section ── -->
+        <section class="comments-card" style="--d:2">
+
+            <div class="comments-heading">
+                <h2 class="comments-title">
+                    <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+                    Komentar
+                </h2>
+                <span class="count-pill">{{ post.comment_count }}</span>
             </div>
-        </div>
 
-        <!-- Comments Section -->
-        <div class="bg-white border-2 border-gray-200 rounded-2xl p-6 md:p-8">
-            <h2 class="font-display text-2xl font-bold text-gray-900 mb-6">Comments</h2>
+            {% if is_pending %}
+            <!-- Pending Notice -->
+            <div class="rejection-notice rejection-notice--pending">
+                <div class="rejection-header">
+                    <span class="rejection-icon">⏳</span>
+                    <span class="rejection-label rejection-label--pending">Menunggu Persetujuan Guru</span>
+                </div>
+                <p class="rejection-desc">Komentar dan suka akan aktif setelah postingan disetujui oleh guru.</p>
+            </div>
 
+            {% elif is_rejected %}
+            <!-- Rejection Notice -->
+            <div class="rejection-notice">
+                <div class="rejection-header">
+                    <span class="rejection-icon">🚫</span>
+                    <span class="rejection-label">Postingan Ditolak</span>
+                </div>
+                <p class="rejection-desc">Komentar dan suka dinonaktifkan karena postingan ini telah ditolak oleh guru.</p>
+            </div>
+
+            {% if rejection_reason %}
+            <!-- Teacher's Rejection Comment -->
+            <div class="teacher-comment">
+                <div class="teacher-comment-header">
+                    <div class="avatar avatar--sm avatar--teacher">👨‍🏫</div>
+                    <div>
+                        <span class="teacher-comment-label">Catatan Guru</span>
+                        <span class="teacher-comment-sublabel">Alasan penolakan</span>
+                    </div>
+                </div>
+                <p class="teacher-comment-text">{{ rejection_reason }}</p>
+            </div>
+            {% endif %}
+
+            {% else %}
             <!-- Comment Form -->
-            <form method="POST" class="mb-8 p-6 bg-gray-50 border border-gray-200 rounded-xl">
-                {% csrf_token %}
-                <label class="block font-sans font-semibold text-gray-900 mb-3">Add Your Comment</label>
-                {% if form.content.errors %}
-                    <div class="text-red-600 text-sm mb-2">{{ form.content.errors }}</div>
-                {% endif %}
-                {{ form.content }}
-                <button type="submit" name="comment" class="mt-3 px-6 py-2 bg-green-600 text-white font-sans font-semibold rounded-lg hover:bg-green-700 transition-colors">
-                    Post Comment
-                </button>
-            </form>
+            <div class="comment-form-wrap">
+                <div class="avatar avatar--sm">{{ user.first_name|first|upper }}</div>
+                <form method="POST" class="comment-form">
+                    {% csrf_token %}
+                    <label class="visually-hidden">Tulis Komentarmu</label>
+                    {% if form.content.errors %}
+                    <div class="form-error">{{ form.content.errors }}</div>
+                    {% endif %}
+                    {{ form.content }}
+                    <div class="comment-form-footer">
+                        <button type="submit" name="comment" class="btn-primary-sm">
+                            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M22 2L11 13"/><path d="M22 2L15 22 11 13 2 9l20-7z"/></svg>
+                            Kirim
+                        </button>
+                    </div>
+                </form>
+            </div>
 
             <!-- Comments List -->
             {% if comments %}
-                <div class="space-y-4">
-                    {% for comment in comments %}
-                        <div class="p-4 bg-gray-50 border border-gray-200 rounded-lg">
-                            <div class="flex items-start gap-3 mb-2">
-                                <div class="w-8 h-8 rounded-full bg-gradient-to-br from-purple-400 to-pink-500 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
-                                    {{ comment.student.first_name|first|upper }}
-                                </div>
-                                <div class="flex-1 min-w-0">
-                                    <p class="font-semibold text-gray-900">{{ comment.student.get_full_name }}</p>
-                                    <p class="font-sans text-xs text-gray-500">{{ comment.created_at|date:"d M Y \a\t H:i" }}</p>
-                                </div>
-                            </div>
-                            <p class="font-sans text-gray-700 text-sm ml-11">{{ comment.content }}</p>
+            <div class="comments-list">
+                {% for comment in comments %}
+                <div class="comment-item" style="--ci:{{ forloop.counter }}">
+                    <div class="avatar avatar--sm avatar--violet">{{ comment.student.first_name|first|upper }}</div>
+                    <div class="comment-body">
+                        <div class="comment-meta">
+                            <span class="comment-author">{{ comment.student.get_full_name }}</span>
+                            <span class="comment-date">{{ comment.created_at|date:"d M Y · H:i" }}</span>
                         </div>
-                    {% endfor %}
+                        <p class="comment-text">{{ comment.content }}</p>
+                    </div>
                 </div>
+                {% endfor %}
+            </div>
             {% else %}
-                <div class="text-center py-8">
-                    <p class="font-sans text-gray-600">No comments yet. Be the first to share your thoughts!</p>
-                </div>
+            <div class="comments-empty">
+                <span class="comments-empty-icon">💬</span>
+                <p class="comments-empty-title">Belum ada komentar</p>
+                <p class="comments-empty-desc">Jadilah yang pertama berbagi pendapatmu!</p>
+            </div>
             {% endif %}
-        </div>
+            {% endif %}
 
-        <!-- Related Resources -->
-        <div class="mt-12 grid grid-cols-1 md:grid-cols-2 gap-6">
-            <a href="{% url 'literacy:forum' %}" class="bg-gradient-to-br from-green-50 to-emerald-50 border border-green-300 rounded-xl p-6 hover:shadow-lg transition-shadow">
-                <h3 class="font-display text-lg font-bold text-green-900 flex items-center gap-2 mb-2">
-                    <span class="text-2xl">💬</span> More Posts
-                </h3>
-                <p class="font-sans text-sm text-green-700">Read other students' literacy discussions</p>
+        </section>
+
+        <!-- ── Bottom Nav ── -->
+        <nav class="nav-grid" style="--d:3">
+            <a href="{% url 'literacy:forum' %}" class="nav-card nav-card--blue">
+                <div class="nav-card-icon nav-card-icon--blue">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+                </div>
+                <div class="nav-card-text">
+                    <p class="nav-card-title">Postingan Lainnya</p>
+                    <p class="nav-card-desc">Baca diskusi literasi lainnya</p>
+                </div>
+                <svg class="nav-card-chevron" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
             </a>
-            
-            <a href="{% url 'literacy:leaderboard' %}" class="bg-gradient-to-br from-purple-50 to-pink-50 border-2 border-purple-300 rounded-xl p-6 hover:shadow-lg transition-shadow">
-                <h3 class="font-display text-lg font-bold text-purple-900 flex items-center gap-2 mb-2">
-                    <span class="text-2xl">🏆</span> Leaderboard
-                </h3>
-                <p class="font-sans text-sm text-purple-700">See how you rank among top readers</p>
+            <a href="{% url 'literacy:leaderboard' %}" class="nav-card nav-card--purple">
+                <div class="nav-card-icon nav-card-icon--purple">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                </div>
+                <div class="nav-card-text">
+                    <p class="nav-card-title">Papan Peringkat</p>
+                    <p class="nav-card-desc">Lihat posisimu di antara pembaca terbaik</p>
+                </div>
+                <svg class="nav-card-chevron" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
             </a>
-        </div>
+        </nav>
+
     </div>
 </div>
+
+<style>
+    /* ── Reveal system ─────────────────────────────────────────── */
+    .detail-page { animation: fadeIn .3s ease both; }
+    .detail-page.ready { visibility: visible; }
+
+    /* Each direct child uses --d (delay index) for staggered entry */
+    [style*="--d"] { animation: slideUp .42s calc(var(--d,0) * 80ms) cubic-bezier(.22,.68,0,1.2) both; }
+
+    /* ── Layout ────────────────────────────────────────────────── */
+    .detail-container {
+        max-width: 760px; margin: 0 auto;
+        padding: 28px 20px 64px;
+        display: flex; flex-direction: column; gap: 20px;
+    }
+
+    /* ── Breadcrumb ────────────────────────────────────────────── */
+    .breadcrumb {
+        display: inline-flex; align-items: center; gap: 6px;
+        font-family: 'Work Sans', sans-serif; font-size: .8rem;
+        align-self: flex-start;
+    }
+    .breadcrumb-link {
+        display: inline-flex; align-items: center; gap: 5px;
+        color: var(--primary-700); text-decoration: none; font-weight: 700;
+        padding: 6px 12px 6px 9px;
+        border: 1.5px solid rgba(30,58,138,.22);
+        border-radius: var(--radius-sm);
+        background: var(--neutral-50);
+        transition: background .2s, border-color .2s, transform .2s;
+    }
+    .breadcrumb-link:hover { background: var(--primary-50); border-color: #1e3a8a; transform: translateX(-2px); }
+    .breadcrumb-sep { color: var(--neutral-400); }
+    .breadcrumb-current { color: var(--neutral-500); font-weight: 600; }
+
+    /* ── Post Card ─────────────────────────────────────────────── */
+    .post-card {
+        background: var(--neutral-50);
+        border: 1.5px solid #1e3a8a;
+        border-radius: var(--radius-md);
+        padding: 32px;
+        box-shadow: var(--shadow-sm);
+    }
+
+    /* ── Post Header ───────────────────────────────────────────── */
+    .post-header {
+        display: flex; align-items: center;
+        justify-content: space-between; gap: 20px; flex-wrap: wrap;
+        margin-bottom: 4px;
+    }
+    .author-block { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0; }
+    .author-info { display: flex; flex-direction: column; gap: 3px; }
+    .author-name {
+        font-family: 'Work Sans', sans-serif; font-weight: 700;
+        font-size: .95rem; color: var(--primary-900); margin: 0;
+    }
+    .author-date {
+        font-family: 'Work Sans', sans-serif; font-size: .74rem;
+        color: var(--neutral-500); margin: 0;
+    }
+
+    /* ── Avatars ───────────────────────────────────────────────── */
+    .avatar {
+        border-radius: 50%; display: flex; align-items: center; justify-content: center;
+        font-family: 'Playfair Display', serif; font-weight: 700; color: #fff;
+        flex-shrink: 0; line-height: 1;
+    }
+    .avatar--lg {
+        width: 46px; height: 46px; font-size: 1.1rem;
+        background: linear-gradient(135deg, #1e3a8a, #2563eb);
+        border: 2px solid rgba(30,58,138,.25);
+    }
+    .avatar--sm {
+        width: 34px; height: 34px; font-size: .85rem;
+        background: linear-gradient(135deg, #1e3a8a, #2563eb);
+        border: 2px solid rgba(30,58,138,.2);
+        flex-shrink: 0; align-self: flex-start; margin-top: 3px;
+    }
+    .avatar--violet {
+        background: linear-gradient(135deg, #6d28d9, #db2777);
+        border-color: rgba(109,40,217,.22);
+    }
+
+    /* ── Book Card ─────────────────────────────────────────────── */
+    .book-card {
+        display: flex; align-items: center; gap: 12px;
+        background: linear-gradient(135deg, #eef2ff 0%, #dbeafe 100%);
+        border: 1.5px solid rgba(30,58,138,.25);
+        border-radius: var(--radius-md);
+        padding: 12px 16px;
+        flex-shrink: 0;
+        max-width: 260px;
+        min-width: 200px;
+        box-shadow: 0 2px 10px rgba(30,58,138,.08);
+        transition: box-shadow .2s, transform .2s;
+        align-self: center;
+    }
+    .book-card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(30,58,138,.14); }
+    .book-cover {
+        flex-shrink: 0;
+        width: 48px; height: 64px;
+        background: linear-gradient(145deg, #1e3a8a, #2563eb);
+        border-radius: 5px;
+        display: flex; align-items: center; justify-content: center;
+        color: rgba(255,255,255,.8);
+        box-shadow: 3px 3px 0 rgba(0,0,0,.12), inset -2px 0 0 rgba(0,0,0,.1);
+        position: relative;
+    }
+    .book-cover::before {
+        content: '';
+        position: absolute; left: 5px; top: 0; bottom: 0;
+        width: 3px;
+        background: rgba(255,255,255,.12);
+        border-radius: 2px;
+    }
+    .book-card-body { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+    .book-card-label {
+        display: inline-flex; align-items: center; gap: 4px;
+        font-family: 'Work Sans', sans-serif; font-size: .62rem; font-weight: 700;
+        text-transform: uppercase; letter-spacing: .08em;
+        color: var(--primary-600);
+    }
+    .book-card-title {
+        font-family: 'Playfair Display', serif; font-size: 1rem; font-weight: 700;
+        color: var(--primary-900); margin: 0; line-height: 1.3;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .book-card-author {
+        font-family: 'Work Sans', sans-serif; font-size: .78rem;
+        color: var(--primary-700); margin: 0; font-style: italic;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+
+    /* ── Divider ───────────────────────────────────────────────── */
+    .post-divider { height: 1px; background: rgba(30,58,138,.1); margin: 22px 0; }
+
+    /* ── Post Title / Content ──────────────────────────────────── */
+    .post-title {
+        font-family: 'Playfair Display', serif; font-size: 1.75rem; font-weight: 700;
+        color: var(--primary-900); line-height: 1.3; margin: 0 0 16px;
+    }
+    .post-content {
+        font-family: 'Work Sans', sans-serif; font-size: .97rem;
+        color: var(--neutral-700); line-height: 1.85; white-space: pre-wrap; margin: 0;
+        word-break: break-word; overflow-wrap: anywhere;
+    }
+
+    /* ── Post Footer / Engagement ──────────────────────────────── */
+    .post-footer {
+        display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;
+    }
+    .engage-group { display: flex; align-items: center; gap: 8px; }
+    .inline-form { display: inline; }
+
+    .engage-btn {
+        display: inline-flex; align-items: center; gap: 7px;
+        font-family: 'Work Sans', sans-serif; font-size: .84rem; font-weight: 600;
+        padding: 8px 16px; border-radius: var(--radius-sm); cursor: pointer;
+        border: 1.5px solid rgba(30,58,138,.2); background: var(--neutral-50);
+        color: var(--neutral-600); text-decoration: none;
+        transition: background .2s, border-color .2s, color .2s, transform .2s;
+    }
+    .engage-btn:hover { background: var(--primary-50); border-color: #1e3a8a; color: var(--primary-700); transform: translateY(-1px); }
+    .engage-btn--liked { border-color: #fca5a5; background: #fff5f5; color: #dc2626; }
+    .engage-btn--liked:hover { background: #fee2e2; border-color: #f87171; transform: translateY(-1px); }
+    .engage-btn--static { cursor: default; }
+    .engage-btn--static:hover { transform: none; background: var(--neutral-50); border-color: rgba(30,58,138,.2); color: var(--neutral-600); }
+    .engage-btn--delete { border-color: rgba(220,38,38,.2); color: #dc2626; background: #fff8f8; }
+    .engage-btn--delete:hover { background: #fee2e2; border-color: #fca5a5; transform: translateY(-1px); }
+    .engage-icon { font-size: .95rem; line-height: 1; }
+
+    /* ── Disabled engage (rejected posts) ─────────────────────── */
+    .engage-btn--disabled {
+        opacity: .45; cursor: not-allowed; pointer-events: none;
+    }
+
+    /* ── Status Badge (pending / rejected in footer) ──────────── */
+    .status-badge {
+        font-family: 'Work Sans', sans-serif; font-size: .75rem; font-weight: 700;
+        padding: 5px 12px; border-radius: 100px;
+        display: inline-flex; align-items: center; gap: 5px;
+    }
+    .status-badge--pending {
+        background: #fffbeb; color: #92400e;
+        border: 1.5px solid #fcd34d;
+    }
+    .status-badge--rejected {
+        background: #fff7f7; color: #b91c1c;
+        border: 1.5px solid #fca5a5;
+    }
+
+    /* ── Pending Notice (variant of rejection-notice) ──────────── */
+    .rejection-notice--pending {
+        background: #fffbeb;
+        border-color: #fcd34d;
+    }
+    .rejection-label--pending { color: #92400e; }
+
+    /* ── Rejection Notice ──────────────────────────────────────── */
+    .rejection-notice {
+        background: #fff7f7;
+        border: 1.5px solid #fca5a5;
+        border-radius: var(--radius-sm);
+        padding: 14px 18px;
+        margin-bottom: 18px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+    .rejection-header {
+        display: flex; align-items: center; gap: 8px;
+    }
+    .rejection-icon { font-size: 1rem; }
+    .rejection-label {
+        font-family: 'Work Sans', sans-serif; font-size: .85rem; font-weight: 700;
+        color: #b91c1c;
+    }
+    .rejection-desc {
+        font-family: 'Work Sans', sans-serif; font-size: .8rem;
+        color: #6b7280; margin: 0;
+    }
+
+    /* ── Teacher Rejection Comment ─────────────────────────────── */
+    .teacher-comment {
+        background: #fffbeb;
+        border: 1.5px solid #fcd34d;
+        border-radius: var(--radius-sm);
+        padding: 16px 18px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+    .teacher-comment-header {
+        display: flex; align-items: center; gap: 10px;
+    }
+    .avatar--teacher {
+        background: #fef3c7; font-size: 1rem;
+        display: flex; align-items: center; justify-content: center;
+        border: 1.5px solid #fcd34d;
+    }
+    .teacher-comment-label {
+        display: block;
+        font-family: 'Work Sans', sans-serif; font-size: .84rem; font-weight: 700;
+        color: #92400e;
+    }
+    .teacher-comment-sublabel {
+        display: block;
+        font-family: 'Work Sans', sans-serif; font-size: .72rem;
+        color: #b45309;
+    }
+    .teacher-comment-text {
+        font-family: 'Work Sans', sans-serif; font-size: .9rem;
+        color: #78350f; line-height: 1.65; margin: 0;
+        padding: 10px 14px;
+        background: rgba(253,230,138,.35);
+        border-radius: var(--radius-sm);
+        border-left: 3px solid #f59e0b;
+    }
+
+    /* ── Comments Card ─────────────────────────────────────────── */
+    .comments-card {
+        background: var(--neutral-50);
+        border: 1.5px solid #1e3a8a;
+        border-radius: var(--radius-md);
+        padding: 28px 32px;
+        box-shadow: var(--shadow-sm);
+    }
+    .comments-heading {
+        display: flex; align-items: center; gap: 10px; margin-bottom: 22px;
+    }
+    .comments-title {
+        font-family: 'Playfair Display', serif; font-size: 1.15rem; font-weight: 700;
+        color: var(--primary-900); margin: 0;
+        display: flex; align-items: center; gap: 9px;
+    }
+    .count-pill {
+        font-family: 'Work Sans', sans-serif; font-size: .72rem; font-weight: 700;
+        background: var(--primary-50); color: var(--primary-700);
+        border: 1px solid rgba(30,58,138,.2); border-radius: 100px;
+        padding: 3px 11px;
+    }
+
+    /* ── Comment Form ──────────────────────────────────────────── */
+    .comment-form-wrap {
+        display: flex; gap: 12px; align-items: flex-start;
+        background: rgba(30,58,138,.03);
+        border: 1.5px solid rgba(30,58,138,.14);
+        border-radius: var(--radius-sm);
+        padding: 16px;
+        margin-bottom: 24px;
+        transition: border-color .2s, box-shadow .2s;
+    }
+    .comment-form-wrap:focus-within {
+        border-color: rgba(30,58,138,.4);
+        box-shadow: 0 0 0 3px rgba(30,58,138,.06);
+    }
+    .comment-form { flex: 1; display: flex; flex-direction: column; gap: 10px; }
+    .form-error { color: #dc2626; font-size: .78rem; font-family: 'Work Sans', sans-serif; }
+    .comment-form textarea,
+    .comment-form input[type="text"] {
+        width: 100%; box-sizing: border-box;
+        padding: 10px 13px; border: 1.5px solid rgba(30,58,138,.22);
+        border-radius: var(--radius-sm);
+        font-family: 'Work Sans', sans-serif; font-size: .9rem;
+        color: var(--primary-900); background: var(--neutral-50);
+        outline: none; resize: vertical; min-height: 88px;
+        transition: border-color .2s, box-shadow .2s;
+    }
+    .comment-form textarea:focus,
+    .comment-form input[type="text"]:focus {
+        border-color: #1e3a8a;
+        box-shadow: 0 0 0 3px rgba(30,58,138,.08);
+    }
+    .comment-form-footer { display: flex; justify-content: flex-end; }
+    .btn-primary-sm {
+        display: inline-flex; align-items: center; gap: 7px;
+        font-family: 'Work Sans', sans-serif; font-size: .84rem; font-weight: 700;
+        color: #fff; background: #1e3a8a;
+        padding: 9px 18px; border: none;
+        border-radius: var(--radius-sm); cursor: pointer;
+        transition: background .2s, transform .2s, box-shadow .2s;
+        box-shadow: 0 2px 8px rgba(30,58,138,.2);
+    }
+    .btn-primary-sm:hover { background: var(--primary-700); transform: translateY(-1px); box-shadow: 0 4px 14px rgba(30,58,138,.25); }
+    .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; }
+
+    /* ── Comments List ─────────────────────────────────────────── */
+    .comments-list { display: flex; flex-direction: column; gap: 12px; }
+    .comment-item {
+        display: flex; gap: 11px;
+        animation: slideIn .35s calc(var(--ci, 1) * 55ms) cubic-bezier(.22,.68,0,1.1) both;
+    }
+    .comment-body {
+        flex: 1; min-width: 0;
+        background: rgba(30,58,138,.025);
+        border: 1px solid rgba(30,58,138,.1);
+        border-radius: var(--radius-sm);
+        padding: 11px 15px;
+        transition: background .2s, border-color .2s;
+    }
+    .comment-body:hover { background: var(--primary-50); border-color: rgba(30,58,138,.2); }
+    .comment-meta {
+        display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 5px;
+    }
+    .comment-author {
+        font-family: 'Work Sans', sans-serif; font-weight: 700;
+        font-size: .84rem; color: var(--primary-900);
+    }
+    .comment-date {
+        font-family: 'Work Sans', sans-serif; font-size: .7rem; color: var(--neutral-400);
+    }
+    .comment-text {
+        font-family: 'Work Sans', sans-serif; font-size: .875rem;
+        color: var(--neutral-700); line-height: 1.65; margin: 0;
+    }
+
+    /* ── Comments Empty ────────────────────────────────────────── */
+    .comments-empty {
+        display: flex; flex-direction: column; align-items: center;
+        padding: 36px 20px; gap: 6px; text-align: center;
+    }
+    .comments-empty-icon { font-size: 2rem; opacity: .4; margin-bottom: 4px; }
+    .comments-empty-title {
+        font-family: 'Playfair Display', serif; font-size: .98rem; font-weight: 700;
+        color: var(--primary-900); margin: 0;
+    }
+    .comments-empty-desc {
+        font-family: 'Work Sans', sans-serif; font-size: .82rem; color: var(--neutral-500); margin: 0;
+    }
+
+    /* ── Nav Grid ──────────────────────────────────────────────── */
+    .nav-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .nav-card {
+        display: flex; align-items: center; gap: 14px;
+        border: 1.5px solid; border-radius: var(--radius-md);
+        padding: 18px 20px; text-decoration: none;
+        transition: transform .25s cubic-bezier(.22,.68,0,1.2), box-shadow .25s ease;
+    }
+    .nav-card:hover { transform: translateY(-3px); box-shadow: 0 8px 28px rgba(30,58,138,.11); }
+    .nav-card--blue  { background: linear-gradient(135deg, #eff6ff, #dbeafe); border-color: #93c5fd; }
+    .nav-card--purple { background: linear-gradient(135deg, #f5f3ff, #ede9fe); border-color: #c4b5fd; }
+
+    .nav-card-icon {
+        flex-shrink: 0; width: 40px; height: 40px;
+        border-radius: 10px; display: flex; align-items: center; justify-content: center;
+    }
+    .nav-card-icon--blue   { background: #bfdbfe; color: #1d4ed8; }
+    .nav-card-icon--purple { background: #ddd6fe; color: #6d28d9; }
+
+    .nav-card-text { flex: 1; }
+    .nav-card-title {
+        font-family: 'Work Sans', sans-serif; font-size: .88rem; font-weight: 700;
+        color: var(--primary-900); margin: 0 0 2px;
+    }
+    .nav-card-desc {
+        font-family: 'Work Sans', sans-serif; font-size: .76rem; color: var(--neutral-500); margin: 0;
+    }
+    .nav-card-chevron {
+        flex-shrink: 0; color: var(--neutral-400);
+        transition: transform .25s cubic-bezier(.22,.68,0,1.2), color .2s;
+    }
+    .nav-card:hover .nav-card-chevron { transform: translateX(4px); color: var(--primary-600); }
+
+    /* ── Keyframes ─────────────────────────────────────────────── */
+    @keyframes fadeIn  { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes slideIn { from { opacity: 0; transform: translateX(-8px); } to { opacity: 1; transform: translateX(0); } }
+
+    /* ── Responsive ────────────────────────────────────────────── */
+    @media (max-width: 640px) {
+        .post-card, .comments-card { padding: 20px; }
+        .post-title { font-size: 1.35rem; }
+        .nav-grid { grid-template-columns: 1fr; }
+        .post-header { flex-direction: column; align-items: flex-start; gap: 14px; }
+        .book-card { max-width: 100%; min-width: unset; width: 100%; }
+        .book-card-title, .book-card-author { white-space: normal; }
+    }
+</style>
+
+<script>
+    document.querySelector('.detail-page').classList.add('ready');
+</script>
 {% endblock %}

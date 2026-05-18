@@ -1,0 +1,626 @@
+{% extends 'base.html' %}
+
+{% block title %}Riwayat Literasi - NASA Library{% endblock %}
+
+{% block content %}
+<style>.main-content { visibility: hidden; }</style>
+<div class="main-content">
+
+    <!-- Page Header -->
+    <div class="page-header">
+        <div class="page-header-left">
+            <h1 class="page-title">Riwayat Literasi</h1>
+            <p class="page-subtitle">Pantau status verifikasi dan progres literasimu</p>
+        </div>
+    </div>
+
+    <!-- Stats Row -->
+    <div class="stats-row">
+        <div class="stat-card" data-filter="">
+            <div class="stat-icon stat-icon--primary">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/>
+                </svg>
+            </div>
+            <div class="stat-value" data-count="{{ stats.total_reviews }}">{{ stats.total_reviews }}</div>
+            <div class="stat-label">Total Review</div>
+        </div>
+        <div class="stat-card" data-filter="verified">
+            <div class="stat-icon stat-icon--verified">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+            </div>
+            <div class="stat-value stat-value--verified" data-count="{{ stats.verified_reviews }}">{{ stats.verified_reviews }}</div>
+            <div class="stat-label">Disetujui</div>
+        </div>
+        <div class="stat-card" data-filter="pending">
+            <div class="stat-icon stat-icon--accent">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                </svg>
+            </div>
+            <div class="stat-value stat-value--accent" data-count="{{ stats.pending_reviews }}">{{ stats.pending_reviews }}</div>
+            <div class="stat-label">Menunggu</div>
+        </div>
+        <div class="stat-card" data-filter="rejected">
+            <div class="stat-icon stat-icon--error">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
+                </svg>
+            </div>
+            <div class="stat-value stat-value--error" data-count="{{ stats.rejected_reviews }}">{{ stats.rejected_reviews }}</div>
+            <div class="stat-label">Ditolak</div>
+        </div>
+    </div>
+
+    <!-- Filter Pills -->
+    <div class="filter-bar">
+        <div class="filter-pills">
+            <a href="{% url 'literacy:history' %}" class="filter-pill {% if not current_filter %}filter-pill--active{% endif %}">
+                Semua
+            </a>
+            <a href="?status=pending" class="filter-pill filter-pill--pending {% if current_filter == 'pending' %}filter-pill--active-pending{% endif %}">
+                <span class="pill-dot pill-dot--pending"></span>Menunggu
+            </a>
+            <a href="?status=verified" class="filter-pill filter-pill--verified {% if current_filter == 'verified' %}filter-pill--active-verified{% endif %}">
+                <span class="pill-dot pill-dot--verified"></span>Disetujui
+            </a>
+            <a href="?status=rejected" class="filter-pill filter-pill--rejected {% if current_filter == 'rejected' %}filter-pill--active-rejected{% endif %}">
+                <span class="pill-dot pill-dot--rejected"></span>Ditolak
+            </a>
+        </div>
+        <span class="section-count">{{ items|length }} entri</span>
+    </div>
+
+    <!-- Reviews List -->
+    <div class="reviews-list">
+        {% if items %}
+        {% for item in items %}
+        <div class="review-card" style="--i: {{ forloop.counter }}">
+
+            <!-- Left accent bar via ::before -->
+            <div class="review-card-icon">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/>
+                </svg>
+            </div>
+
+            <div class="review-card-body">
+                <div class="review-card-top">
+                    <div class="review-card-info">
+                        <div class="review-card-title">
+                            {{ item.title }}
+                            {% if item.type == 'literacy_post' %}
+                            <span class="type-badge type-badge--post">📝 Posting Sesi</span>
+                            {% else %}
+                            <span class="type-badge type-badge--book">📖 Review Literasi</span>
+                            {% endif %}
+                        </div>
+                        <div class="review-card-meta">
+                            {% if item.author %}<span class="meta-author">{{ item.author }}</span>{% endif %}
+                            {% if item.publisher %}<span class="meta-sep">·</span><span>{{ item.publisher }}</span>{% endif %}
+                            {% if item.year_published %}<span class="meta-sep">·</span><span>{{ item.year_published }}</span>{% endif %}
+                        </div>
+                    </div>
+
+                    <div class="review-card-right">
+                        {% if item.status == 'verified' %}
+                        <span class="status-badge badge--verified">
+                                    <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>
+                                    Disetujui
+                                </span>
+                        {% elif item.status == 'pending' %}
+                        <span class="status-badge badge--pending badge--pulse">
+                                    <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                                    Menunggu
+                                </span>
+                        {% else %}
+                        <span class="status-badge badge--rejected">
+                                    <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                                    Ditolak
+                                </span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Summary preview -->
+                {% if item.summary %}
+                <p class="review-summary">{{ item.summary|truncatechars:160 }}</p>
+                {% endif %}
+
+                <!-- Footer -->
+                <div class="review-card-footer">
+                    <div class="review-footer-meta">
+                            <span class="footer-chip">
+                                <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                                {{ item.created_at|date:"d M Y" }}
+                            </span>
+                        {% if item.verified_by %}
+                        <span class="footer-chip footer-chip--teacher">
+                                <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                                {{ item.verified_by.first_name }}
+                            </span>
+                        {% endif %}
+                        {% if item.status == 'rejected' and item.rejection_reason %}
+                        <span class="rejection-tooltip-wrap">
+                                <span class="footer-chip footer-chip--rejected" tabindex="0">
+                                    <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                                    Lihat Catatan
+                                </span>
+                                <span class="rejection-tooltip">{{ item.rejection_reason }}</span>
+                            </span>
+                        {% endif %}
+                    </div>
+
+                    <div class="review-card-actions">
+                        {% if item.type == 'literacy_post' %}
+                        <a href="{% url 'literacy:post_detail' item.pk %}" class="btn-action btn-action--view">
+                            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                            Lihat Detail
+                        </a>
+                        {% else %}
+                        <a href="{% url 'literacy:review_detail' item.pk %}" class="btn-action btn-action--view">
+                            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                            Lihat Detail
+                        </a>
+                        {% if item.status == 'rejected' %}
+                        <a href="{% url 'literacy:submit_review' %}" class="btn-action btn-action--retry">
+                            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>
+                            Coba Lagi
+                        </a>
+                        {% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Rejection reason expandable banner -->
+                {% if item.status == 'rejected' and item.rejection_reason %}
+                <div class="rejection-banner">
+                    <div class="rejection-banner-header">
+                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                        Catatan dari Wali Kelas
+                    </div>
+                    <p class="rejection-banner-text">{{ item.rejection_reason }}</p>
+                </div>
+                {% endif %}
+
+            </div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">
+                <svg width="52" height="52" fill="none" stroke="currentColor" stroke-width="1.3" viewBox="0 0 24 24">
+                    <path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/>
+                </svg>
+            </div>
+            {% if current_filter %}
+            <h3 class="empty-title">Tidak ada review dengan status ini</h3>
+            <p class="empty-desc">Belum ada review dengan status "{{ current_filter }}".</p>
+            <a href="{% url 'literacy:history' %}" class="btn btn-ghost btn-sm">Lihat Semua</a>
+            {% else %}
+            <h3 class="empty-title">Anda belum memiliki review literasi</h3>
+            <p class="empty-desc">Mulai perjalanan literasimu dengan mengirimkan review buku pertamamu!</p>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Quick Nav -->
+    <div class="quicknav-grid">
+        <a href="{% url 'literacy:leaderboard' %}" class="quicknav-card quicknav-card--blue">
+            <div class="quicknav-icon">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                </svg>
+            </div>
+            <div>
+                <div class="quicknav-title">Leaderboard</div>
+                <div class="quicknav-desc">Lihat peringkatmu di antara siswa lain</div>
+            </div>
+            <svg class="quicknav-chevron" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+        </a>
+
+        <a href="{% url 'literacy:forum' %}" class="quicknav-card quicknav-card--green">
+            <div class="quicknav-icon quicknav-icon--green">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+                </svg>
+            </div>
+            <div>
+                <div class="quicknav-title">Forum Literasi</div>
+                <div class="quicknav-desc">Diskusi buku dengan sesama siswa</div>
+            </div>
+            <svg class="quicknav-chevron" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+        </a>
+
+        <a href="{% url 'literacy:submit_review' %}" class="quicknav-card quicknav-card--accent">
+            <div class="quicknav-icon quicknav-icon--accent">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/>
+                </svg>
+            </div>
+            <div>
+                <div class="quicknav-title">Review Baru</div>
+                <div class="quicknav-desc">Bagikan buku yang baru kamu selesaikan</div>
+            </div>
+            <svg class="quicknav-chevron" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+        </a>
+    </div>
+
+</div>
+
+<script>
+    // Stat card clickable filter shortcut
+    document.querySelectorAll('.stat-card[data-filter]').forEach(card => {
+        card.style.cursor = 'pointer';
+        card.addEventListener('click', () => {
+            const f = card.dataset.filter;
+            window.location.href = f ? `?status=${f}` : window.location.pathname;
+        });
+    });
+
+    // Animated counters
+    function animateCount(el) {
+        const target = parseInt(el.dataset.count) || 0;
+        if (target === 0) return;
+        let start = 0;
+        const step = ts => {
+            if (!start) start = ts;
+            const p = Math.min((ts - start) / 700, 1);
+            const ease = 1 - Math.pow(1 - p, 3);
+            el.textContent = Math.floor(ease * target);
+            if (p < 1) requestAnimationFrame(step);
+            else el.textContent = target;
+        };
+        requestAnimationFrame(step);
+    }
+    const obs = new IntersectionObserver(entries => {
+        entries.forEach(e => { if (e.isIntersecting) { animateCount(e.target); obs.unobserve(e.target); } });
+    }, { threshold: .5 });
+    document.querySelectorAll('.stat-value[data-count]').forEach(el => obs.observe(el));
+
+    // Rejection tooltip (touch / keyboard)
+    document.querySelectorAll('.rejection-tooltip-wrap').forEach(wrap => {
+        const chip = wrap.querySelector('.footer-chip--rejected');
+        chip.addEventListener('click', e => {
+            e.stopPropagation();
+            wrap.classList.toggle('is-open');
+        });
+        chip.addEventListener('keydown', e => {
+            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); wrap.classList.toggle('is-open'); }
+        });
+    });
+    document.addEventListener('click', () => {
+        document.querySelectorAll('.rejection-tooltip-wrap.is-open').forEach(w => w.classList.remove('is-open'));
+    });
+
+    document.querySelector('.main-content').classList.add('ready');
+</script>
+
+<style>
+    /* ── Base reveal ─────────────────────────────────────── */
+    .main-content.ready { visibility: visible; }
+
+    /* ── Page Header ─────────────────────────────────────── */
+    .page-header {
+        display: flex; align-items: flex-start; justify-content: space-between;
+        margin-bottom: 28px; gap: 16px;
+        animation: fadeSlideDown .5s ease both;
+    }
+    .page-title {
+        font-family: 'Playfair Display', serif; font-size: 2rem; font-weight: 700;
+        color: var(--primary-900); line-height: 1.2;
+    }
+    .page-subtitle { font-size: .9rem; color: var(--neutral-500); margin-top: 6px; }
+    .btn-primary {
+        display: inline-flex; align-items: center; gap: 7px;
+        transition: transform .2s ease, box-shadow .2s ease;
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(30,58,138,.2); }
+
+    /* ── Stats Row ───────────────────────────────────────── */
+    .stats-row {
+        display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 24px;
+    }
+    .stat-card {
+        background: var(--neutral-50); border: 1.5px solid #1e3a8a;
+        border-radius: var(--radius-md); padding: 18px 20px;
+        box-shadow: var(--shadow-sm); display: flex; flex-direction: column; gap: 8px;
+        transition: transform .25s ease, box-shadow .25s ease, border-color .2s;
+        animation: fadeSlideUp .5s ease both;
+        position: relative; overflow: hidden;
+    }
+    .stat-card::after {
+        content: ''; position: absolute; inset: 0;
+        background: var(--primary-50); opacity: 0;
+        transition: opacity .2s;
+    }
+    .stat-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(30,58,138,.12); }
+    .stat-card:hover::after { opacity: 1; }
+    .stat-card:nth-child(1) { animation-delay: .05s; }
+    .stat-card:nth-child(2) { animation-delay: .12s; }
+    .stat-card:nth-child(3) { animation-delay: .19s; }
+    .stat-card:nth-child(4) { animation-delay: .26s; }
+    .stat-icon {
+        width: 38px; height: 38px; border-radius: var(--radius-sm);
+        display: flex; align-items: center; justify-content: center;
+        transition: transform .3s ease; position: relative; z-index: 1;
+    }
+    .stat-card:hover .stat-icon { transform: scale(1.12) rotate(-5deg); }
+    .stat-icon--primary  { background: var(--primary-50);   color: var(--primary-700); }
+    .stat-icon--verified { background: #f0fdf4;             color: #15803d; }
+    .stat-icon--accent   { background: var(--accent-50);    color: var(--accent-700); }
+    .stat-icon--error    { background: var(--error-50);     color: var(--error-400); }
+    .stat-value {
+        font-family: 'Playfair Display', serif; font-size: 1.9rem; font-weight: 700;
+        color: var(--primary-900); line-height: 1; position: relative; z-index: 1;
+    }
+    .stat-value--verified { color: #15803d; }
+    .stat-value--accent   { color: var(--accent-700); }
+    .stat-value--error    { color: var(--error-400); }
+    .stat-label {
+        font-size: .75rem; color: var(--neutral-500); font-weight: 600;
+        text-transform: uppercase; letter-spacing: .05em; position: relative; z-index: 1;
+    }
+
+    /* ── Filter Pills ────────────────────────────────────── */
+    .filter-bar {
+        display: flex; align-items: center; justify-content: space-between;
+        gap: 12px; margin-bottom: 20px; flex-wrap: wrap;
+        animation: fadeSlideUp .5s .22s ease both;
+    }
+    .filter-pills { display: flex; gap: 8px; flex-wrap: wrap; }
+    .filter-pill {
+        display: inline-flex; align-items: center; gap: 6px;
+        padding: 7px 16px; border-radius: 100px; font-size: .82rem;
+        font-weight: 600; font-family: 'Work Sans', sans-serif;
+        border: 1.5px solid transparent; transition: all .18s ease;
+        text-decoration: none; color: var(--neutral-600);
+        background: var(--neutral-100);
+    }
+    .filter-pill:hover { border-color: #1e3a8a; color: var(--primary-700); background: var(--primary-50); }
+    .filter-pill--active {
+        background: var(--primary-700); color: #fff; border-color: var(--primary-700);
+    }
+    .filter-pill--active:hover { background: var(--primary-800); border-color: var(--primary-800); color: #fff; }
+    .filter-pill--active-pending  { background: var(--accent-50);  color: var(--accent-700);  border-color: var(--accent-700); }
+    .filter-pill--active-verified { background: #f0fdf4;           color: #15803d;             border-color: #16a34a; }
+    .filter-pill--active-rejected { background: var(--error-50);   color: var(--error-400);   border-color: var(--error-400); }
+    .pill-dot {
+        width: 7px; height: 7px; border-radius: 50%; display: inline-block;
+    }
+    .pill-dot--pending  { background: var(--accent-700); }
+    .pill-dot--verified { background: #16a34a; }
+    .pill-dot--rejected { background: var(--error-400); }
+    .section-count { font-size: .78rem; font-weight: 600; color: var(--neutral-400); }
+
+    /* ── Reviews List ────────────────────────────────────── */
+    .reviews-list {
+        display: flex; flex-direction: column;
+        border: 1.5px solid #1e3a8a; border-radius: var(--radius-md);
+        overflow: hidden; margin-bottom: 28px; box-shadow: var(--shadow-sm);
+        animation: fadeSlideUp .5s .3s ease both;
+    }
+
+    /* ── Review Card ─────────────────────────────────────── */
+    .review-card {
+        display: flex; align-items: flex-start; gap: 16px;
+        padding: 20px; background: var(--neutral-50);
+        border-bottom: 1px solid rgba(30,58,138,.12);
+        transition: background .2s, padding-left .2s;
+        animation: fadeSlideIn .4s calc(var(--i, 1) * 60ms) ease both;
+        position: relative;
+    }
+    .review-card::before {
+        content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+        background: var(--primary-700); transform: scaleY(0); transform-origin: center;
+        transition: transform .2s ease;
+    }
+    .review-card:last-child { border-bottom: none; }
+    .review-card:hover { background: var(--primary-50); padding-left: 26px; }
+    .review-card:hover::before { transform: scaleY(1); }
+
+    .review-card-icon {
+        width: 44px; height: 44px; background: var(--neutral-100);
+        border: 1.5px solid #1e3a8a; border-radius: var(--radius-sm);
+        display: flex; align-items: center; justify-content: center;
+        color: var(--primary-700); flex-shrink: 0;
+        transition: background .2s, transform .2s;
+    }
+    .review-card:hover .review-card-icon { background: var(--primary-100); transform: rotate(-4deg) scale(1.05); }
+
+    .review-card-body { flex: 1; min-width: 0; }
+
+    .review-card-top {
+        display: flex; align-items: flex-start; justify-content: space-between;
+        gap: 14px; margin-bottom: 8px;
+    }
+    .review-card-info { flex: 1; min-width: 0; }
+    .review-card-title {
+        font-weight: 700; font-size: .97rem; color: var(--primary-900);
+        line-height: 1.35; margin-bottom: 4px;
+    }
+    .review-card-meta {
+        font-size: .78rem; color: var(--neutral-500); display: flex;
+        align-items: center; gap: 4px; flex-wrap: wrap;
+    }
+    .meta-author { font-weight: 600; color: var(--neutral-600); }
+    .meta-sep    { color: var(--neutral-300); }
+
+    .review-card-right { flex-shrink: 0; padding-top: 2px; }
+
+    /* Status badges */
+    .status-badge {
+        display: inline-flex; align-items: center; gap: 5px;
+        padding: 4px 11px; border-radius: 100px;
+        font-size: .72rem; font-weight: 700; letter-spacing: .04em; border: 1.5px solid;
+    }
+    .badge--verified { background: #f0fdf4; border-color: #16a34a; color: #15803d; }
+    .badge--pending  { background: var(--accent-50); border-color: var(--accent-700); color: var(--accent-700); }
+    .badge--rejected { background: var(--error-50);  border-color: var(--error-400); color: var(--error-400); }
+    .badge--pulse    { animation: badgePulse 2s ease-in-out infinite; }
+
+    /* Type badges */
+    .type-badge {
+        display: inline-flex; align-items: center; gap: 4px;
+        font-size: .68rem; font-weight: 600; padding: 2px 8px;
+        border-radius: 100px; border: 1px solid; margin-left: 8px;
+        vertical-align: middle; letter-spacing: .03em;
+    }
+    .type-badge--book { background: var(--primary-50); border-color: #1e3a8a; color: var(--primary-700); }
+    .type-badge--post { background: #f0fdf4; border-color: #16a34a; color: #15803d; }
+    @keyframes badgePulse { 0%, 100% { opacity: 1; } 50% { opacity: .55; } }
+
+    /* Summary */
+    .review-summary {
+        font-size: .84rem; color: var(--neutral-600); line-height: 1.6;
+        margin-bottom: 12px;
+        display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    }
+
+    /* Footer */
+    .review-card-footer {
+        display: flex; align-items: center; justify-content: space-between;
+        gap: 12px; flex-wrap: wrap;
+    }
+    .review-footer-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .footer-chip {
+        display: inline-flex; align-items: center; gap: 5px;
+        font-size: .75rem; font-weight: 500; color: var(--neutral-500);
+        background: var(--neutral-100); border-radius: 100px; padding: 3px 9px;
+        border: 1px solid var(--neutral-200);
+    }
+    .footer-chip--teacher { color: var(--primary-700); background: var(--primary-50); border-color: rgba(30,58,138,.2); }
+    .footer-chip--rejected {
+        color: var(--error-400); background: var(--error-50);
+        border-color: rgba(239,68,68,.25); cursor: pointer;
+        transition: background .18s, color .18s;
+    }
+    .footer-chip--rejected:hover { background: var(--error-400); color: #fff; }
+
+    /* Inline tooltip for rejection chip */
+    .rejection-tooltip-wrap { position: relative; }
+    .rejection-tooltip {
+        position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%);
+        background: #1e293b; color: #f8fafc; font-size: .78rem; line-height: 1.55;
+        padding: 8px 12px; border-radius: 8px; max-width: 240px;
+        white-space: normal; text-align: left; z-index: 100;
+        pointer-events: none; opacity: 0; transition: opacity .18s ease;
+        box-shadow: 0 4px 16px rgba(0,0,0,.25);
+    }
+    .rejection-tooltip::after {
+        content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
+        border: 5px solid transparent; border-top-color: #1e293b;
+    }
+    .rejection-tooltip-wrap:hover .rejection-tooltip,
+    .rejection-tooltip-wrap.is-open .rejection-tooltip { opacity: 1; pointer-events: auto; }
+
+    /* Action buttons */
+    .review-card-actions { display: flex; gap: 8px; align-items: center; }
+    .btn-action {
+        display: inline-flex; align-items: center; gap: 5px;
+        padding: 6px 12px; font-size: .78rem; font-weight: 600;
+        border-radius: var(--radius-sm); border: 1.5px solid;
+        font-family: 'Work Sans', sans-serif; text-decoration: none;
+        cursor: pointer; transition: background .18s, color .18s, transform .18s;
+        white-space: nowrap;
+    }
+    .btn-action--view {
+        color: var(--primary-700); border-color: #1e3a8a;
+        background: var(--neutral-50);
+    }
+    .btn-action--view:hover { background: var(--primary-700); color: #fff; transform: translateY(-1px); }
+    .btn-action--retry {
+        color: var(--error-400); border-color: var(--error-400);
+        background: var(--neutral-50);
+    }
+    .btn-action--retry:hover { background: var(--error-400); color: #fff; transform: translateY(-1px); }
+
+    /* Rejection banner (inside card) */
+    .rejection-banner {
+        margin-top: 14px; padding: 12px 14px;
+        background: var(--error-50); border: 1.5px solid var(--error-400);
+        border-radius: var(--radius-sm);
+        animation: fadeSlideUp .3s ease both;
+    }
+    .rejection-banner-header {
+        display: flex; align-items: center; gap: 6px;
+        font-size: .72rem; font-weight: 700; color: var(--error-400);
+        text-transform: uppercase; letter-spacing: .06em; margin-bottom: 5px;
+    }
+    .rejection-banner-text { font-size: .84rem; color: var(--neutral-700); line-height: 1.6; margin: 0; }
+
+    /* ── Empty State ─────────────────────────────────────── */
+    .empty-state {
+        display: flex; flex-direction: column; align-items: center;
+        padding: 60px 24px; background: var(--neutral-50); text-align: center; gap: 10px;
+        animation: fadeSlideUp .5s ease;
+    }
+    .empty-icon { color: var(--neutral-300); margin-bottom: 4px; animation: float 3s ease-in-out infinite; }
+    .empty-title { font-family: 'Playfair Display', serif; font-size: 1.2rem; font-weight: 700; color: var(--primary-900); }
+    .empty-desc  { font-size: .88rem; color: var(--neutral-500); max-width: 340px; }
+    .btn-ghost {
+        display: inline-flex; align-items: center; gap: 6px;
+        padding: 8px 16px; border-radius: var(--radius-sm);
+        font-size: .84rem; font-weight: 600;
+        border: 1.5px solid #1e3a8a; color: var(--primary-700);
+        background: var(--neutral-50); text-decoration: none;
+        transition: background .18s, color .18s;
+    }
+    .btn-ghost:hover { background: var(--primary-700); color: #fff; }
+    .btn-sm { padding: 8px 16px; font-size: .84rem; }
+
+    /* ── Quick Nav ───────────────────────────────────────── */
+    .quicknav-grid {
+        display: grid; grid-template-columns: repeat(3, 1fr);
+        gap: 14px; animation: fadeSlideUp .5s .5s ease both;
+    }
+    .quicknav-card {
+        display: flex; align-items: center; gap: 14px;
+        padding: 18px; border-radius: var(--radius-md);
+        border: 1.5px solid #1e3a8a; background: var(--neutral-50);
+        text-decoration: none; color: inherit;
+        transition: transform .22s ease, box-shadow .22s ease, background .2s;
+        box-shadow: var(--shadow-sm);
+    }
+    .quicknav-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(30,58,138,.12); }
+    .quicknav-card--blue:hover  { background: var(--primary-50); }
+    .quicknav-card--green:hover { background: #f0fdf4; }
+    .quicknav-card--accent:hover{ background: var(--accent-50); }
+    .quicknav-icon {
+        width: 42px; height: 42px; border-radius: var(--radius-sm);
+        background: var(--primary-50); border: 1.5px solid #1e3a8a;
+        color: var(--primary-700); display: flex; align-items: center;
+        justify-content: center; flex-shrink: 0;
+        transition: transform .25s ease;
+    }
+    .quicknav-card:hover .quicknav-icon { transform: rotate(-6deg) scale(1.08); }
+    .quicknav-icon--green  { background: #f0fdf4; border-color: #16a34a; color: #15803d; }
+    .quicknav-icon--accent { background: var(--accent-50); border-color: var(--accent-700); color: var(--accent-700); }
+    .quicknav-title { font-weight: 700; font-size: .9rem; color: var(--primary-900); }
+    .quicknav-desc  { font-size: .76rem; color: var(--neutral-500); margin-top: 2px; }
+    .quicknav-chevron { color: var(--neutral-300); margin-left: auto; flex-shrink: 0; transition: transform .22s ease, color .2s; }
+    .quicknav-card:hover .quicknav-chevron { transform: translateX(5px); color: var(--primary-700); }
+
+    /* ── Keyframes ───────────────────────────────────────── */
+    @keyframes fadeSlideDown { from { opacity: 0; transform: translateY(-14px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes fadeSlideUp   { from { opacity: 0; transform: translateY(14px);  } to { opacity: 1; transform: translateY(0); } }
+    @keyframes fadeSlideIn   { from { opacity: 0; transform: translateX(-8px);  } to { opacity: 1; transform: translateX(0); } }
+    @keyframes float         { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+
+    /* ── Responsive ──────────────────────────────────────── */
+    @media (max-width: 768px) {
+        .stats-row     { grid-template-columns: repeat(2, 1fr); }
+        .quicknav-grid { grid-template-columns: 1fr; }
+        .page-header   { flex-direction: column; align-items: flex-start; }
+        .review-card-footer { flex-direction: column; align-items: flex-start; }
+        .review-card-actions { width: 100%; }
+        .btn-action { flex: 1; justify-content: center; }
+    }
+    @media (max-width: 480px) {
+        .review-card-top { flex-direction: column; gap: 8px; }
+    }
+</style>
+{% endblock %}
