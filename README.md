@@ -81,6 +81,5 @@ Finish a feature:
 
 ```bash
 git push origin feature/<feature-name>
-# then create MR to develop
 ```
 
