@@ -800,6 +800,9 @@
         }
     });
 
+    // Store params of the currently displayed report
+    let lastGeneratedParams = null;
+
     filterForm.addEventListener('submit', async (e) => {
         e.preventDefault();
 
@@ -833,7 +836,9 @@
                     document.getElementById('emptyStateTitle').textContent = "Data Tidak Ditemukan";
                     document.getElementById('emptyStateDesc').textContent = "Belum ada data pada periode yang dipilih.";
                     showSection('initial');
+                    lastGeneratedParams = null;
                 } else {
+                    lastGeneratedParams = { type, period, startDate, endDate };
                     renderReport(result);
                     showSection('content');
                     if (type === 'attendance' || type === 'collection' || type === 'borrowing') {
@@ -889,12 +894,12 @@
                     <div class="card-label">Total Kunjungan</div>
                 </div>
                 <div class="summary-card">
-                    <div class="card-value">${result.summary.average.toLocaleString("id-ID")}</div>
-                    <div class="card-label">Rata-rata Kunjungan</div>
+                    <div class="card-value">${result.summary.teacher_count.toLocaleString("id-ID")}</div>
+                    <div class="card-label">Kunjungan Guru</div>
                 </div>
                 <div class="summary-card">
-                    <div class="card-value">${result.summary.busiest_day}</div>
-                    <div class="card-label">Hari Paling Ramai</div>
+                    <div class="card-value">${result.summary.student_count.toLocaleString("id-ID")}</div>
+                    <div class="card-label">Kunjungan Siswa</div>
                 </div>
             `;
         } else if (type === 'collection') {
@@ -1033,15 +1038,12 @@
     }
 
     function exportReport(format) {
-        const type = document.getElementById('reportType').value;
-        const period = document.getElementById('reportPeriod').value;
-        const startDate = document.getElementById('startDate').value;
-        const endDate = document.getElementById('endDate').value;
-
-        if (!type || !period) {
-            alert('Mohon pilih jenis laporan dan periode terlebih dahulu.');
+        if (!lastGeneratedParams) {
+            alert('Silakan buat laporan terlebih dahulu sebelum melakukan export.');
             return;
         }
+
+        const { type, period, startDate, endDate } = lastGeneratedParams;
 
         const form = document.createElement('form');
         form.method = 'POST';

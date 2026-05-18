@@ -4,166 +4,343 @@
 {% block title %}Dashboard — NASA Library{% endblock %}
 
 {% block extra_css %}
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Josefin+Sans:wght@400;600&family=Work+Sans:wght@400;600&display=swap" rel="stylesheet"/>
 <style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
   :root {
-    --navy:   #0D183A;
-    --blue:   #1E3A8A;
-    --green:  #10B981;
-    --amber:  #F59E0B;
-    --red:    #EF4444;
-    --gray50: #F9FAFB;
-    --gray100:#F3F4F6;
-    --gray200:#E5E7EB;
-    --gray500:#6B7280;
-    --gray700:#374151;
-    --gray900:#111827;
-    --white:  #FFFFFF;
-    --shadow-sm: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.04);
-    --shadow-md: 0 4px 12px rgba(0,0,0,.10);
+    --yellow:     #FAD28F;
+    --green:      #40C79A;
+    --red:        #F26969;
+    --blue:       #1E3A8A;
+    --black:      #000000;
+    --gray-table: #E9EBF3;
+    --gray-cat:   #BFBFBF;
+    --white:      #FFFFFF;
+    --bg:         #F5F6FA;
+    --radius:     16px;
+    --shadow:     0 2px 16px rgba(30,58,138,.07);
   }
 
-  .dash-wrap { max-width:1280px; margin:0 auto; padding:2rem 1.5rem 4rem; }
-
-  /* ── Header ── */
-  .dash-header {
-    display:flex; justify-content:space-between; align-items:center;
-    margin-bottom:1.75rem; flex-wrap:wrap; gap:1rem;
+  body {
+    background: var(--bg);
+    font-family: 'Work Sans', sans-serif;
+    color: var(--black);
   }
+
+  /* ── WRAPPER ── */
+  .dash-wrap { max-width: 1280px; margin: 0 auto; padding: 2.5rem 2rem 4rem; }
+
+  /* ── HEADER ── */
+  .dash-header { margin-bottom: 2rem; text-align: center; }
   .dash-header h1 {
-    font-family:'Playfair Display',serif; font-size:1.75rem; font-weight:700;
-    color:var(--gray900); margin:0;
+    font-family: 'Playfair Display', serif;
+    font-weight: 600;
+    font-size: 2.1rem;
+    color: var(--black);
+    line-height: 1.15;
+    margin-bottom: .3rem;
   }
-  .dash-header p { font-size:.875rem; color:var(--gray500); margin:.25rem 0 0; }
+  .dash-header .subtitle {
+    font-family: 'Work Sans', sans-serif;
+    font-weight: 600;
+    font-size: .9rem;
+    color: #6b7280;
+    margin-bottom: 1rem;
+  }
+  .period-select-wrap { justify-content: center; }
 
-  /* ── Dropdown Filter ── */
-  .period-select-wrap { display:flex; align-items:center; gap:.75rem; flex-wrap:wrap; }
-  .period-select-wrap label { font-size:.8125rem; font-weight:600; color:var(--gray700); }
-  .period-select {
-    padding:.45rem 2.25rem .45rem .875rem;
-    border:1.5px solid var(--gray200); border-radius:10px;
-    font-size:.8125rem; font-weight:500; color:var(--gray700);
-    background:var(--white) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236B7280' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right .75rem center;
-    appearance:none; cursor:pointer; transition:border-color .15s;
+  /* ── FILTER ── */
+  .period-select-wrap { display: flex; align-items: center; gap: .75rem; flex-wrap: wrap; }
+  .period-select-wrap label {
+    font-family: 'Work Sans', sans-serif;
+    font-size: .82rem;
+    font-weight: 600;
+    color: #6b7280;
   }
-  .period-select:focus { outline:none; border-color:var(--blue); }
-  .custom-dates { display:none; align-items:center; gap:.5rem; flex-wrap:wrap; }
-  .custom-dates.visible { display:flex; }
+  .period-select {
+    padding: .45rem 2.2rem .45rem .9rem;
+    border: 1.5px solid #d1d5db;
+    border-radius: 10px;
+    font-family: 'Work Sans', sans-serif;
+    font-size: .82rem;
+    font-weight: 600;
+    color: var(--black);
+    background: var(--white) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236B7280' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right .75rem center;
+    appearance: none;
+    cursor: pointer;
+    transition: border-color .15s;
+  }
+  .period-select:focus { outline: none; border-color: var(--blue); }
+  .custom-dates { display: none; align-items: center; gap: .5rem; flex-wrap: wrap; }
+  .custom-dates.visible { display: flex; }
   .custom-dates input {
-    padding:.4rem .75rem; border:1.5px solid var(--gray200); border-radius:8px;
-    font-size:.8125rem; color:var(--gray700);
+    padding: .4rem .75rem;
+    border: 1.5px solid #d1d5db;
+    border-radius: 8px;
+    font-family: 'Work Sans', sans-serif;
+    font-size: .82rem;
+    color: var(--black);
   }
   .btn-apply {
-    padding:.4rem .9rem; background:var(--blue); color:var(--white);
-    border-radius:8px; font-size:.8125rem; font-weight:600; border:none; cursor:pointer;
+    padding: .4rem .9rem;
+    background: var(--blue);
+    color: var(--white);
+    border-radius: 8px;
+    font-family: 'Work Sans', sans-serif;
+    font-size: .82rem;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: background .15s;
   }
-  .btn-apply:hover { background:var(--navy); }
+  .btn-apply:hover { background: #162d6e; }
 
-  /* ── Stat Cards ── */
+  /* ── STAT CARDS ── */
   .stat-grid {
-    display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr));
-    gap:1rem; margin-bottom:1.5rem;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.1rem;
+    margin-bottom: 1.75rem;
   }
+  @media (max-width: 900px) { .stat-grid { grid-template-columns: repeat(2,1fr); } }
+  @media (max-width: 520px) { .stat-grid { grid-template-columns: 1fr; } }
+
   .stat-card {
-    background:var(--white); border-radius:12px; padding:1.25rem 1.5rem;
-    box-shadow:var(--shadow-sm); border:1px solid var(--gray100);
-    display:flex; align-items:center; gap:1rem;
-    position:relative; overflow:hidden; transition:box-shadow .2s,transform .2s;
+    border-radius: var(--radius);
+    padding: 1.5rem 1.2rem 1.35rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    min-height: 145px;
+    position: relative;
+    overflow: hidden;
+    transition: transform .2s, box-shadow .2s;
+    box-shadow: 0 4px 18px rgba(0,0,0,.10);
   }
-  .stat-card:hover { box-shadow:var(--shadow-md); transform:translateY(-2px); }
-  .stat-card::after {
-    content:''; position:absolute; left:0; top:0; bottom:0; width:4px; border-radius:12px 0 0 12px;
+  .stat-card:hover { transform: translateY(-3px); box-shadow: 0 8px 28px rgba(0,0,0,.15); }
+
+  .stat-card.visitors { background: var(--blue); }
+  .stat-card.loans    { background: var(--yellow); }
+  .stat-card.returned { background: var(--green); }
+  .stat-card.overdue  { background: var(--red); }
+
+  .stat-label {
+    font-family: 'Playfair Display', serif;
+    font-weight: 700;
+    font-size: .82rem;
+    color: var(--white);
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    margin-bottom: .45rem;
   }
-  .stat-card.visitors::after { background:var(--blue); }
-  .stat-card.loans::after    { background:var(--amber); }
-  .stat-card.returned::after { background:var(--green); }
-  .stat-card.overdue::after  { background:var(--red); }
+  .stat-card.loans .stat-label { color: var(--white); }
 
-  .stat-icon {
-    width:44px; height:44px; border-radius:10px; flex-shrink:0;
-    display:flex; align-items:center; justify-content:center; font-size:1.25rem;
+  .stat-value {
+    font-family: 'Playfair Display', serif;
+    font-weight: 700;
+    font-size: 3.4rem;
+    line-height: 1;
+    color: var(--white);
   }
-  .stat-card.visitors .stat-icon { background:#DBEAFE; }
-  .stat-card.loans    .stat-icon { background:#FEF3C7; }
-  .stat-card.returned .stat-icon { background:#D1FAE5; }
-  .stat-card.overdue  .stat-icon { background:#FEE2E2; }
+  .stat-card.loans .stat-value { color: var(--white); }
 
-  .stat-info { flex:1; min-width:0; }
-  .stat-label { font-size:.7rem; font-weight:600; color:var(--gray500); text-transform:uppercase; letter-spacing:.05em; }
-  .stat-value { font-size:1.875rem; font-weight:700; color:var(--gray900); line-height:1.1; font-family:'Playfair Display',serif; }
-  .stat-sub   { font-size:.7rem; color:var(--gray500); margin-top:.1rem; }
+  /* skeleton inside cards */
+  .stat-card .sk-label { width: 80px; height: 12px; border-radius: 6px; margin-bottom: .5rem; }
+  .stat-card .sk-value { width: 60px; height: 40px; border-radius: 8px; }
 
-  /* ── Middle grid: chart + categories ── */
+  /* ── MID GRID ── */
   .mid-grid {
-    display:grid; grid-template-columns:1fr; gap:1.5rem; margin-bottom:1.5rem;
+    display: grid;
+    grid-template-columns: 3fr 2fr;
+    gap: 1.25rem;
+    margin-bottom: 1.5rem;
   }
-  @media(min-width:768px) {
-    .mid-grid { grid-template-columns:3fr 2fr; }
-  }
+  @media (max-width: 800px) { .mid-grid { grid-template-columns: 1fr; } }
 
-  /* ── Section Card ── */
+  /* ── SECTION CARD ── */
   .section-card {
-    background:var(--white); border-radius:12px; padding:1.5rem;
-    box-shadow:var(--shadow-sm); border:1px solid var(--gray100);
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 1.6rem 1.75rem;
+    box-shadow: var(--shadow);
   }
   .section-title {
-    font-size:1rem; font-weight:700; color:var(--gray900);
-    margin:0 0 1rem; display:flex; align-items:center; gap:.5rem;
+    font-family: 'Playfair Display', serif;
+    font-weight: 600;
+    font-size: 1.2rem;
+    color: var(--black);
+    margin-bottom: 1rem;
   }
 
-  /* ── Chart ── */
-  .chart-legend { display:flex; gap:1rem; margin-bottom:.75rem; }
-  .legend-dot   { width:9px; height:9px; border-radius:50%; display:inline-block; margin-right:.35rem; }
-  .legend-item  { font-size:.8rem; color:var(--gray500); display:flex; align-items:center; }
-  .chart-wrap   { position:relative; height:240px; }
-  .chart-totals { display:flex; gap:1.5rem; margin-top:.875rem; }
-  .chart-total-item span:first-child { font-size:.7rem; color:var(--gray500); display:block; }
-  .chart-total-item span:last-child  { font-size:.9375rem; font-weight:700; }
+  /* ── CHART ── */
+  .chart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: .25rem; }
+  .chart-legend { display: flex; gap: 1.25rem; margin-bottom: .75rem; }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+    font-family: 'Josefin Sans', sans-serif;
+    font-size: .82rem;
+    color: #4b5563;
+  }
+  .legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .chart-wrap { position: relative; height: 220px; }
+  .chart-totals { display: flex; gap: 2rem; margin-top: 1rem; padding-top: .75rem; border-top: 1px solid var(--gray-table); }
+  .chart-total-item .ct-label {
+    font-family: 'Josefin Sans', sans-serif;
+    font-size: .75rem;
+    color: #6b7280;
+    display: block;
+    margin-bottom: .2rem;
+  }
+  .chart-total-item .ct-value {
+    font-family: 'Josefin Sans', sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+  }
 
-  /* ── Category list ── */
-  .cat-item { display:flex; align-items:center; gap:.75rem; margin-bottom:.875rem; }
-  .cat-item:last-child { margin-bottom:0; }
-  .cat-rank  { font-size:.7rem; font-weight:700; color:var(--gray500); width:16px; flex-shrink:0; text-align:center; }
-  .cat-name  { font-size:.8125rem; font-weight:500; color:var(--gray700); min-width:100px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; flex-shrink:0; }
-  .cat-bar-wrap { flex:1; height:7px; background:var(--gray100); border-radius:999px; overflow:hidden; }
-  .cat-bar-fill { height:7px; border-radius:999px; background:linear-gradient(90deg,var(--blue),#3B82F6); transition:width .6s ease; }
-  .cat-count { font-size:.8rem; font-weight:600; color:var(--gray700); min-width:2.25rem; text-align:right; flex-shrink:0; }
-  .cat-loans-label { font-size:.65rem; color:var(--gray500); }
+  /* ── CATEGORY LIST ── */
+  .cat-list { display: flex; flex-direction: column; gap: .95rem; }
+  .cat-item-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: .3rem;
+  }
+  .cat-name-wrap { display: flex; align-items: center; gap: .5rem; }
+  .cat-rank {
+    font-family: 'Josefin Sans', sans-serif;
+    font-size: .72rem;
+    font-weight: 600;
+    color: #9ca3af;
+    width: 16px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+  .cat-name {
+    font-family: 'Josefin Sans', sans-serif;
+    font-size: .85rem;
+    font-weight: 400;
+    color: var(--black);
+  }
+  .cat-count {
+    font-family: 'Josefin Sans', sans-serif;
+    font-size: .8rem;
+    font-weight: 600;
+    color: #4b5563;
+    white-space: nowrap;
+  }
+  .cat-loans-label { font-size: .65rem; color: #9ca3af; font-weight: 400; }
+  .cat-bar-wrap {
+    height: 7px;
+    background: var(--gray-cat);
+    border-radius: 999px;
+    overflow: hidden;
+  }
+  .cat-bar-fill {
+    height: 7px;
+    border-radius: 999px;
+    background: var(--blue);
+    transition: width .7s cubic-bezier(.4,0,.2,1);
+  }
 
-  /* ── Activity table (bottom full width) ── */
-  .activity-table { width:100%; border-collapse:collapse; }
+  /* ── ACTIVITY TABLE ── */
+  .activity-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+  }
+  .activity-header a {
+    font-family: 'Work Sans', sans-serif;
+    font-size: .82rem;
+    font-weight: 600;
+    color: var(--blue);
+    text-decoration: none;
+  }
+  .tbl-wrap { overflow-x: auto; }
+  .activity-table { width: 100%; border-collapse: collapse; }
+  .activity-table thead tr { background: var(--gray-table); }
   .activity-table th {
-    font-size:.7rem; font-weight:600; color:var(--gray500); text-transform:uppercase;
-    letter-spacing:.05em; padding:.5rem .75rem; text-align:left;
-    border-bottom:1.5px solid var(--gray100);
+    font-family: 'Work Sans', sans-serif;
+    font-weight: 600;
+    font-size: .78rem;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    padding: .75rem 1rem;
+    text-align: center;
   }
+  .activity-table th:first-child { border-radius: 10px 0 0 10px; }
+  .activity-table th:last-child  { border-radius: 0 10px 10px 0; }
   .activity-table td {
-    padding:.75rem; font-size:.8125rem; color:var(--gray700);
-    border-bottom:1px solid var(--gray100); vertical-align:middle;
+    font-family: 'Work Sans', sans-serif;
+    font-weight: 600;
+    font-size: .82rem;
+    color: var(--black);
+    padding: .85rem 1rem;
+    border-bottom: 1px solid var(--gray-table);
+    vertical-align: middle;
+    text-align: center;
   }
-  .activity-table tr:last-child td { border-bottom:none; }
-  .activity-table tr:hover td { background:var(--gray50); }
-  .act-badge-sm {
-    width:30px; height:30px; border-radius:8px;
-    display:inline-flex; align-items:center; justify-content:center; font-size:.875rem;
-  }
-  .act-badge-sm.borrowed { background:#DBEAFE; }
-  .act-badge-sm.returned { background:#D1FAE5; }
-  .act-badge-sm.overdue  { background:#FEE2E2; }
+  .activity-table tr:last-child td { border-bottom: none; }
+  .activity-table tr:hover td { background: #fafbfd; }
+  .td-muted { color: #6b7280 !important; font-weight: 400 !important; }
+  .td-no    { color: #9ca3af !important; }
+
   .act-pill {
-    font-size:.65rem; font-weight:600; padding:.2rem .6rem; border-radius:999px; white-space:nowrap;
+    display: inline-block;
+    font-family: 'Work Sans', sans-serif;
+    font-weight: 600;
+    font-size: .68rem;
+    padding: .28rem .85rem;
+    border-radius: 999px;
+    text-align: center;
+    min-width: 90px;
+    white-space: nowrap;
   }
-  .act-pill.borrowed { background:#DBEAFE; color:#1D4ED8; }
-  .act-pill.returned { background:#D1FAE5; color:#065F46; }
-  .act-pill.overdue  { background:#FEE2E2; color:#991B1B; }
+  .act-pill.borrowed { background: #FAD28F; color: #7c5300; }
+  .act-pill.returned { background: #D1FAE5; color: #065f46; }
+  .act-pill.overdue  { background: #FEE2E2; color: #991b1b; }
 
-  /* ── No data ── */
-  .no-data-msg { text-align:center; color:var(--gray500); font-size:.875rem; padding:2.5rem 0; }
+  .act-date-pill {
+    display: inline-block;
+    font-family: 'Work Sans', sans-serif;
+    font-size: .72rem;
+    font-weight: 600;
+    background: var(--blue);
+    color: var(--white);
+    border-radius: 6px;
+    padding: .25rem .65rem;
+    white-space: nowrap;
+  }
 
-  /* ── Skeleton ── */
+  /* ── NO DATA ── */
+  .no-data-msg {
+    text-align: center;
+    color: #9ca3af;
+    font-family: 'Work Sans', sans-serif;
+    font-size: .875rem;
+    padding: 2.5rem 0;
+  }
+
+  /* ── SKELETON ── */
   @keyframes shimmer { 0%{background-position:-400px 0} 100%{background-position:400px 0} }
   .skeleton {
-    background:linear-gradient(90deg,#f0f0f0 25%,#e8e8e8 50%,#f0f0f0 75%);
-    background-size:800px 100%; animation:shimmer 1.5s infinite; border-radius:6px;
+    background: linear-gradient(90deg,#f0f0f0 25%,#e8e8e8 50%,#f0f0f0 75%);
+    background-size: 800px 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: 6px;
+  }
+  /* skeleton inside coloured cards needs lighter shimmer */
+  .stat-card .skeleton {
+    background: linear-gradient(90deg, rgba(255,255,255,.25) 25%, rgba(255,255,255,.45) 50%, rgba(255,255,255,.25) 75%);
+    background-size: 800px 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: 6px;
   }
 </style>
 {% endblock %}
@@ -174,9 +351,12 @@
 
   <!-- Header + Filter -->
   <div class="dash-header">
-    <div>
-      <h1>Dashboard</h1>
-      <p>Monitoring perpustakaan secara real-time — hanya untuk Guru &amp; Petugas</p>
+    <h1>Dashboard Monitoring Peminjaman</h1>
+    <p class="subtitle">Monitoring peminjaman perpustakaan secara real-time — hanya untuk Guru &amp; Petugas</p>
+    <!-- Tab navigasi antar dashboard -->
+    <div style="display:flex;gap:.5rem;margin-bottom:1rem;flex-wrap:wrap;justify-content:center;">
+      <a href="{% url 'dashboard:index' %}" style="padding:.45rem 1.1rem;border-radius:10px;font-family:'Work Sans',sans-serif;font-size:.82rem;font-weight:600;background:var(--blue);color:var(--white);text-decoration:none;border:1.5px solid var(--blue);">📚 Dashboard Peminjaman</a>
+      <a href="{% url 'dashboard:visitors' %}" style="padding:.45rem 1.1rem;border-radius:10px;font-family:'Work Sans',sans-serif;font-size:.82rem;font-weight:600;color:#6b7280;text-decoration:none;border:1.5px solid #d1d5db;background:var(--white);">👥 Dashboard Kunjungan</a>
     </div>
     <div class="period-select-wrap">
       <label for="periodSelect">Periode:</label>
@@ -188,7 +368,7 @@
       </select>
       <div class="custom-dates" id="customDateRow">
         <input type="date" id="startDate" />
-        <span style="font-size:.8125rem;color:var(--gray500);">s/d</span>
+        <span style="font-size:.8rem;color:#6b7280;">s/d</span>
         <input type="date" id="endDate" />
         <button class="btn-apply" onclick="applyCustom()">Terapkan</button>
       </div>
@@ -199,11 +379,8 @@
   <div class="stat-grid" id="statCards">
     {% for i in "1234" %}
     <div class="stat-card {% if forloop.counter == 1 %}visitors{% elif forloop.counter == 2 %}loans{% elif forloop.counter == 3 %}returned{% else %}overdue{% endif %}">
-      <div class="stat-icon skeleton" style="width:44px;height:44px;"></div>
-      <div class="stat-info">
-        <div class="skeleton" style="height:10px;width:60%;margin-bottom:.5rem;"></div>
-        <div class="skeleton" style="height:28px;width:45%;"></div>
-      </div>
+      <div class="skeleton sk-label"></div>
+      <div class="skeleton sk-value"></div>
     </div>
     {% endfor %}
   </div>
@@ -213,13 +390,13 @@
 
     <!-- Chart -->
     <div class="section-card">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.25rem;">
-        <h2 class="section-title">📈 Statistik Peminjaman</h2>
-        <span id="chartPeriodLabel" style="font-size:.75rem;color:var(--gray500);"></span>
+      <div class="chart-header">
+        <h2 class="section-title" style="margin:0;">Statistik Peminjaman</h2>
+        <span id="chartPeriodLabel" style="font-size:.75rem;color:#6b7280;font-family:'Work Sans',sans-serif;"></span>
       </div>
       <div class="chart-legend">
         <span class="legend-item"><span class="legend-dot" style="background:#1E3A8A;"></span>Dipinjam</span>
-        <span class="legend-item"><span class="legend-dot" style="background:#10B981;"></span>Dikembalikan</span>
+        <span class="legend-item"><span class="legend-dot" style="background:#40C79A;"></span>Dikembalikan</span>
       </div>
       <div class="chart-wrap">
         <div class="no-data-msg" id="chartNoData" style="display:none;">Data tidak tersedia</div>
@@ -227,26 +404,32 @@
       </div>
       <div class="chart-totals">
         <div class="chart-total-item">
-          <span>Total Dipinjam</span>
-          <span id="totalBorrowed" style="color:#1E3A8A;">—</span>
+          <span class="ct-label">Total Dipinjam</span>
+          <span class="ct-value" id="totalBorrowed" style="color:#1E3A8A;">—</span>
         </div>
         <div class="chart-total-item">
-          <span>Total Dikembalikan</span>
-          <span id="totalReturned" style="color:#10B981;">—</span>
+          <span class="ct-label">Total Dikembalikan</span>
+          <span class="ct-value" id="totalReturned" style="color:#40C79A;">—</span>
         </div>
       </div>
     </div>
 
     <!-- Categories -->
     <div class="section-card">
-      <h2 class="section-title">🏷️ Kategori Terpopuler</h2>
-      <div id="dashCategoryList">
+      <h2 class="section-title">Kategori Terpopuler</h2>
+      <div class="cat-list" id="dashCategoryList">
         {% for i in "12345" %}
-        <div class="cat-item">
-          <div class="skeleton" style="width:16px;height:14px;border-radius:4px;"></div>
-          <div class="skeleton" style="width:90px;height:12px;border-radius:4px;"></div>
-          <div class="cat-bar-wrap"><div class="skeleton" style="height:7px;width:100%;border-radius:999px;"></div></div>
-          <div class="skeleton" style="width:24px;height:12px;border-radius:4px;"></div>
+        <div>
+          <div class="cat-item-top">
+            <div class="cat-name-wrap">
+              <div class="skeleton" style="width:14px;height:12px;border-radius:4px;"></div>
+              <div class="skeleton" style="width:110px;height:12px;border-radius:4px;"></div>
+            </div>
+            <div class="skeleton" style="width:50px;height:12px;border-radius:4px;"></div>
+          </div>
+          <div class="cat-bar-wrap" style="margin-top:.3rem;">
+            <div class="skeleton" style="height:7px;width:100%;border-radius:999px;"></div>
+          </div>
         </div>
         {% endfor %}
       </div>
@@ -256,17 +439,17 @@
   </div><!-- /mid-grid -->
 
   {% if is_librarian %}
-  <!-- Activity (full width, table style) -->
+  <!-- Activity (full width) -->
   <div class="section-card">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
-      <h2 class="section-title" style="margin:0;">🔔 Aktivitas Terbaru</h2>
-      <a href="{% url 'book_loan:loan_management' %}" style="font-size:.8125rem;font-weight:600;color:var(--blue);">Lihat semua →</a>
+    <div class="activity-header">
+      <h2 class="section-title" style="margin:0;">Aktivitas Terbaru</h2>
+      <a href="{% url 'book_loan:loan_management' %}">Lihat semua →</a>
     </div>
-    <div id="activityWrap">
+    <div class="tbl-wrap" id="activityWrap">
       <table class="activity-table">
         <thead>
           <tr>
-            <th style="width:40px;"></th>
+            <th style="width:48px;">No</th>
             <th>Anggota</th>
             <th>Buku</th>
             <th>Status</th>
@@ -276,11 +459,11 @@
         <tbody id="activityFeed">
           {% for i in "12345678" %}
           <tr>
-            <td><div class="skeleton" style="width:30px;height:30px;border-radius:8px;"></div></td>
-            <td><div class="skeleton" style="height:12px;width:120px;"></div></td>
+            <td><div class="skeleton" style="width:20px;height:12px;"></div></td>
+            <td><div class="skeleton" style="height:12px;width:130px;"></div></td>
             <td><div class="skeleton" style="height:12px;width:180px;"></div></td>
-            <td><div class="skeleton" style="height:18px;width:70px;border-radius:999px;"></div></td>
-            <td><div class="skeleton" style="height:12px;width:70px;"></div></td>
+            <td><div class="skeleton" style="height:22px;width:90px;border-radius:999px;"></div></td>
+            <td><div class="skeleton" style="height:22px;width:100px;border-radius:6px;"></div></td>
           </tr>
           {% endfor %}
         </tbody>
@@ -289,7 +472,6 @@
     <div id="activityNoData" class="no-data-msg" style="display:none;">Data tidak tersedia</div>
   </div>
   {% endif %}
-
 
 </div><!-- /dash-wrap -->
 
@@ -326,7 +508,7 @@ function buildParams() {
 
 /* ── Fetch ── */
 async function fetchJSON(url) {
-  const r = await fetch(url, { headers:{ 'X-CSRFToken': getCookie('csrftoken') } });
+  const r = await fetch(url, { headers: { 'X-CSRFToken': getCookie('csrftoken') } });
   if (!r.ok) throw new Error(`HTTP ${r.status}`);
   return r.json();
 }
@@ -338,63 +520,124 @@ async function loadSummary() {
     const data = await fetchJSON(`/api/dashboard/?${buildParams()}`);
     if (data.status !== 'success') return;
     const s = data.stats;
-    container.innerHTML = `
-      ${card('visitors','🏛️','Total Pengunjung', s.total_visitors, 'Kunjungan dalam periode ini')}
-      ${card('loans',   '📚','Peminjaman Aktif', s.active_loans,   'Sedang dipinjam saat ini')}
-      ${card('returned','✅','Dikembalikan',     s.returned,       'Dikembalikan dalam periode ini')}
-      ${card('overdue', '⚠️','Terlambat',        s.overdue_loans,  'Melewati batas pengembalian')}`;
+    container.innerHTML =
+      statCard('visitors', 'Total Pengunjung',  s.total_visitors) +
+      statCard('loans',    'Peminjaman Aktif',   s.active_loans)   +
+      statCard('returned', 'Dikembalikan',       s.returned)       +
+      statCard('overdue',  'Terlambat',          s.overdue_loans);
   } catch(e) {
-    container.innerHTML = '<p style="color:#EF4444;font-size:.875rem;padding:1rem;">Gagal memuat statistik.</p>';
+    container.innerHTML = '<p style="color:#F26969;font-size:.875rem;padding:1rem;">Gagal memuat statistik.</p>';
   }
 }
 
-function card(type, icon, label, value, sub) {
+function statCard(type, label, value) {
   return `
     <div class="stat-card ${type}">
-      <div class="stat-icon">${icon}</div>
-      <div class="stat-info">
-        <div class="stat-label">${label}</div>
-        <div class="stat-value">${value.toLocaleString('id-ID')}</div>
-        <div class="stat-sub">${sub}</div>
-      </div>
+      <div class="stat-label">${label}</div>
+      <div class="stat-value">${Number(value).toLocaleString('id-ID')}</div>
     </div>`;
 }
 
 /* ── Chart ── */
 async function loadChart() {
-  const canvas   = document.getElementById('loanChart');
-  const noData   = document.getElementById('chartNoData');
+  const canvas    = document.getElementById('loanChart');
+  const noData    = document.getElementById('chartNoData');
   const periodLbl = document.getElementById('chartPeriodLabel');
   try {
     const data = await fetchJSON(`/api/dashboard/loan-chart/?${buildParams()}`);
     if (data.status !== 'success') return;
+
     document.getElementById('totalBorrowed').textContent = data.summary.total_borrowed;
     document.getElementById('totalReturned').textContent = data.summary.total_returned;
-    const labels = { today:'Hari Ini', this_week:'Minggu Ini', this_month:'Bulan Ini',
-      custom: `${document.getElementById('startDate').value} s/d ${document.getElementById('endDate').value}` };
-    periodLbl.textContent = labels[data.period] || data.period;
+
+    const periodLabels = {
+      today:      'Hari Ini',
+      this_week:  'Minggu Ini',
+      this_month: 'Bulan Ini',
+      custom: `${document.getElementById('startDate').value} s/d ${document.getElementById('endDate').value}`,
+    };
+    periodLbl.textContent = periodLabels[data.period] || data.period;
 
     const rows = data.data;
     if (!rows?.length || (!data.summary.total_borrowed && !data.summary.total_returned)) {
-      canvas.style.display='none'; noData.style.display='block'; return;
+      canvas.style.display = 'none'; noData.style.display = 'block'; return;
     }
-    canvas.style.display=''; noData.style.display='none';
+    canvas.style.display = ''; noData.style.display = 'none';
     if (loanChart) loanChart.destroy();
+
+    const ctx = canvas.getContext('2d');
+    const gradBlue = ctx.createLinearGradient(0, 0, 0, 220);
+    gradBlue.addColorStop(0, 'rgba(30,58,138,.18)');
+    gradBlue.addColorStop(1, 'rgba(30,58,138,0)');
+    const gradGreen = ctx.createLinearGradient(0, 0, 0, 220);
+    gradGreen.addColorStop(0, 'rgba(64,199,154,.18)');
+    gradGreen.addColorStop(1, 'rgba(64,199,154,0)');
+
     loanChart = new Chart(canvas, {
-      type:'bar',
-      data:{ labels: rows.map(r=>formatDateLabel(r.date)),
-        datasets:[
-          { label:'Dipinjam',     data:rows.map(r=>r.borrowed), backgroundColor:'#1E3A8A', borderRadius:4 },
-          { label:'Dikembalikan', data:rows.map(r=>r.returned), backgroundColor:'#10B981', borderRadius:4 },
-        ]},
-      options:{ responsive:true, maintainAspectRatio:false,
-        plugins:{ legend:{ display:false }},
-        scales:{
-          x:{ grid:{ display:false }, ticks:{ font:{ size:11 }}},
-          y:{ beginAtZero:true, grid:{ color:'#F3F4F6' }, ticks:{ font:{ size:11 }, precision:0 }},
-        }},
+      type: 'line',
+      data: {
+        labels: rows.map(r => formatDateLabel(r.date)),
+        datasets: [
+          {
+            label: 'Dipinjam',
+            data: rows.map(r => r.borrowed),
+            borderColor: '#1E3A8A',
+            backgroundColor: gradBlue,
+            borderWidth: 2.5,
+            pointRadius: 5,
+            pointBackgroundColor: '#1E3A8A',
+            pointBorderColor: '#fff',
+            pointBorderWidth: 2,
+            tension: 0.45,
+            fill: true,
+          },
+          {
+            label: 'Dikembalikan',
+            data: rows.map(r => r.returned),
+            borderColor: '#40C79A',
+            backgroundColor: gradGreen,
+            borderWidth: 2.5,
+            pointRadius: 5,
+            pointBackgroundColor: '#40C79A',
+            pointBorderColor: '#fff',
+            pointBorderWidth: 2,
+            tension: 0.45,
+            fill: true,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: '#fff',
+            titleColor: '#111',
+            bodyColor: '#6b7280',
+            borderColor: '#e5e7eb',
+            borderWidth: 1,
+            padding: 10,
+            cornerRadius: 8,
+          },
+        },
+        scales: {
+          x: {
+            grid: { display: false },
+            ticks: { font: { family: 'Josefin Sans', size: 11 }, color: '#6b7280' },
+          },
+          y: {
+            beginAtZero: true,
+            grid: { color: '#F3F4F6' },
+            ticks: { font: { family: 'Josefin Sans', size: 11 }, color: '#6b7280', precision: 0 },
+          },
+        },
+      },
     });
-  } catch(e) { canvas.style.display='none'; noData.style.display='block'; }
+  } catch(e) {
+    canvas.style.display = 'none'; noData.style.display = 'block';
+  }
 }
 
 /* ── Categories ── */
@@ -405,17 +648,31 @@ async function loadCategories() {
   try {
     const data = await fetchJSON(`/api/dashboard/popular-categories/?${buildParams()}`);
     list.innerHTML = '';
-    if (!data?.categories?.length) { noData.style.display='block'; return; }
+    if (!data?.categories?.length) { noData.style.display = 'block'; return; }
     data.categories.forEach((c, i) => {
       list.innerHTML += `
-        <div class="cat-item">
-          <span class="cat-rank">${i+1}</span>
-          <span class="cat-name">${escHtml(c.name)}</span>
-          <div class="cat-bar-wrap"><div class="cat-bar-fill" style="width:${c.percentage}%"></div></div>
-          <span class="cat-count">${c.count} <span class="cat-loans-label">pinjam</span></span>
+        <div>
+          <div class="cat-item-top">
+            <div class="cat-name-wrap">
+              <span class="cat-rank">${i + 1}</span>
+              <span class="cat-name">${escHtml(c.name)}</span>
+            </div>
+            <span class="cat-count">${c.count} <span class="cat-loans-label">pinjam</span></span>
+          </div>
+          <div class="cat-bar-wrap">
+            <div class="cat-bar-fill" style="width:0%" data-width="${c.percentage}%"></div>
+          </div>
         </div>`;
     });
-  } catch(e) { list.innerHTML=''; noData.style.display='block'; }
+    // animate bars after render
+    setTimeout(() => {
+      list.querySelectorAll('.cat-bar-fill').forEach(el => {
+        el.style.width = el.dataset.width;
+      });
+    }, 80);
+  } catch(e) {
+    list.innerHTML = ''; noData.style.display = 'block';
+  }
 }
 
 /* ── Activity ── */
@@ -424,24 +681,28 @@ async function loadActivity() {
   const noData = document.getElementById('activityNoData');
   const wrap   = document.getElementById('activityWrap');
   try {
-    const data = await fetchJSON(`/api/dashboard/recent-activity/`);
+    const data = await fetchJSON(`/api/dashboard/recent-activity/?${buildParams()}`);
     if (data.status !== 'success') return;
     const acts = data.activities;
-    if (!acts?.length) { wrap.style.display='none'; noData.style.display='block'; return; }
-    noData.style.display='none'; wrap.style.display='';
-    tbody.innerHTML = acts.map(a => {
+    if (!acts?.length) {
+      wrap.style.display = 'none'; noData.style.display = 'block'; return;
+    }
+    noData.style.display = 'none'; wrap.style.display = '';
+    tbody.innerHTML = acts.map((a, idx) => {
       const cls   = a.type.toLowerCase();
-      const emoji = cls==='borrowed'?'📤': cls==='returned'?'📥':'🚨';
-      const label = cls==='borrowed'?'Dipinjam': cls==='returned'?'Dikembalikan':'Terlambat';
+      const label = cls === 'borrowed' ? 'Dipinjam' : cls === 'returned' ? 'Dikembalikan' : 'Terlambat';
+      const pillCls = cls === 'borrowed' ? 'borrowed' : cls === 'returned' ? 'returned' : 'overdue';
       return `<tr>
-        <td><div class="act-badge-sm ${cls}">${emoji}</div></td>
-        <td style="font-weight:600;color:var(--gray900);">${escHtml(a.member_name)}</td>
-        <td style="color:var(--gray500);max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(a.book_title)}</td>
-        <td><span class="act-pill ${cls}">${label}</span></td>
-        <td style="color:var(--gray500);white-space:nowrap;">${formatTimestamp(a.timestamp)}</td>
+        <td class="td-no">${idx + 1}</td>
+        <td>${escHtml(a.member_name)}</td>
+        <td class="td-muted">${escHtml(a.book_title)}</td>
+        <td><span class="act-pill ${pillCls}">${label}</span></td>
+        <td><span class="act-date-pill">${formatTimestamp(a.timestamp)}</span></td>
       </tr>`;
     }).join('');
-  } catch(e) { wrap.style.display='none'; noData.style.display='block'; }
+  } catch(e) {
+    wrap.style.display = 'none'; noData.style.display = 'block';
+  }
 }
 
 const IS_LIBRARIAN = document.getElementById('librarian-flag').dataset.value === 'true';
@@ -457,7 +718,7 @@ function loadAll() {
 function getCookie(name) {
   for (const c of document.cookie.split(';')) {
     const t = c.trim();
-    if (t.startsWith(name+'=')) return decodeURIComponent(t.slice(name.length+1));
+    if (t.startsWith(name + '=')) return decodeURIComponent(t.slice(name.length + 1));
   }
   return '';
 }
@@ -465,12 +726,12 @@ function escHtml(str) {
   return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 function formatDateLabel(iso) {
-  return new Date(iso+'T00:00:00').toLocaleDateString('id-ID',{day:'numeric',month:'short'});
+  return new Date(iso + 'T00:00:00').toLocaleDateString('id-ID', { day:'numeric', month:'short' });
 }
 function formatTimestamp(ts) {
   if (!ts) return '—';
   const d = new Date(ts);
-  return isNaN(d) ? ts : d.toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'2-digit'});
+  return isNaN(d) ? ts : d.toLocaleDateString('id-ID', { day:'numeric', month:'short', year:'2-digit' });
 }
 
 document.addEventListener('DOMContentLoaded', loadAll);

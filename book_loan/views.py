@@ -4,7 +4,7 @@ from django.contrib import messages
 from django.views.decorators.http import require_http_methods, require_POST
 from django.http import JsonResponse
 from django.utils import timezone
-from django.db.models import Q, Count
+from django.db.models import Q, Count, F
 from datetime import timedelta
 import json
 
@@ -220,10 +220,190 @@ def loan_management(request):
 @login_required
 def notifications(request):
     """Display user's notifications page"""
+    return render(request, 'notifications.html')
+
+
+@login_required
+def loan_history_admin(request):
+    """Admin/Librarian page for viewing book borrowing history and analytics"""
+    if not _is_librarian(request.user):
+        messages.error(request, "Anda tidak memiliki akses ke halaman ini.")
+        return redirect('main:mainpage')
+
+    # Get filter parameters
+    search = request.GET.get('search', '').strip()
+    status_filter = request.GET.get('status', '').strip()
+
+    # Get all completed loans (dikembalikan)
+    loans = Loan.objects.filter(status='dikembalikan').select_related('user', 'book')
+
+    # Apply search filter (judul buku, penulis, atau peminjam)
+    if search:
+        loans = loans.filter(
+            Q(book__title__icontains=search) |
+            Q(book__author__icontains=search) |
+            Q(user__first_name__icontains=search) |
+            Q(user__last_name__icontains=search)
+        )
+
+    # Apply status filter
+    if status_filter == 'tepat_waktu':
+        loans = loans.filter(is_overdue=False)
+    elif status_filter == 'terlambat':
+        loans = loans.filter(is_overdue=True)
+
+    # Calculate statistics
+    total_loans = loans.count()
+    unique_borrowers = loans.values('user').distinct().count()
+    on_time_loans = loans.filter(is_overdue=False).count()
+    late_loans = loans.filter(is_overdue=True).count()
+
+    # Get book borrowing analytics - group by book and calculate stats
+    from django.db.models import Count, Max
+    book_stats = loans.values('book').annotate(
+        total_loans=Count('id'),
+        unique_borrowers=Count('user', distinct=True),
+        last_borrowed_date=Max('loan_date')
+    ).order_by('-total_loans')[:10]  # Top 10 most borrowed books
+
+    # Enrich with book details and loan history
+    book_analytics = []
+    for stat in book_stats:
+        book = Book.objects.get(id=stat['book'])
+        # Determine popularity based on total loans
+        total_loans = stat['total_loans']
+        if total_loans >= 10:
+            popularity = 'Sangat Populer'
+            popularity_class = 'emerald'
+            icon = '🔥'
+        elif total_loans >= 5:
+            popularity = 'Cukup Populer'
+            popularity_class = 'amber'
+            icon = '⭐'
+        else:
+            popularity = 'Jarang Dipinjam'
+            popularity_class = 'slate'
+            icon = '📚'
+
+        # Get loan history for this book
+        book_loans = loans.filter(book=book).select_related('user').order_by('-loan_date')[:10]  # Last 10 loans for this book
+
+        book_analytics.append({
+            'book': book,
+            'total_loans': total_loans,
+            'unique_borrowers': stat['unique_borrowers'],
+            'last_borrowed': stat['last_borrowed_date'],
+            'popularity': popularity,
+            'popularity_class': popularity_class,
+            'icon': icon,
+            'loan_history': book_loans,
+        })
+
+    # Get timeline data (recent loans for timeline view)
+    timeline_loans = loans.select_related('user', 'book').order_by('-loan_date')[:20]  # Last 20 loans
+
     context = {
-        'unread_count': Notification.objects.filter(user=request.user, is_read=False).count(),
+        'search': search,
+        'status_filter': status_filter,
+        'total_loans': total_loans,
+        'unique_borrowers': unique_borrowers,
+        'on_time_loans': on_time_loans,
+        'late_loans': late_loans,
+        'book_analytics': book_analytics,
+        'timeline_loans': timeline_loans,
     }
-    return render(request, 'notifications.html', context)
+    return render(request, 'loan_history_admin.html', context)
+
+
+@login_required
+def waiting_list_admin(request):
+    """Admin/Librarian page for monitoring current waiting lists and queue status"""
+    if not _is_librarian(request.user):
+        messages.error(request, "Anda tidak memiliki akses ke halaman ini.")
+        return redirect('main:mainpage')
+
+    # Get filter parameters
+    search = request.GET.get('search', '').strip()
+    status_filter = request.GET.get('status', '').strip()
+
+    # Get all books that have active waiting lists
+    books_with_queues = Book.objects.filter(
+        waiting_lists__status__in=['menunggu', 'siap_dipinjam']
+    ).distinct().prefetch_related(
+        'waiting_lists'
+    )
+
+    # Apply search filter (judul buku, penulis)
+    if search:
+        books_with_queues = books_with_queues.filter(
+            Q(title__icontains=search) |
+            Q(author__icontains=search)
+        )
+
+    # Get comprehensive data about waiting lists
+    book_queue_data = []
+    
+    for book in books_with_queues:
+        # Get all waiting lists for this book
+        waiting_lists = book.waiting_lists.select_related('user').filter(
+            status__in=['menunggu', 'siap_dipinjam']
+        ).order_by('position', 'registered_date')
+
+        # Apply status filter
+        if status_filter:
+            waiting_lists = waiting_lists.filter(status=status_filter)
+        
+        if not waiting_lists.exists():
+            continue
+
+        # Count by status
+        waiting_count = waiting_lists.filter(status='menunggu').count()
+        ready_count = waiting_lists.filter(status='siap_dipinjam').count()
+
+        # Determine queue status
+        if ready_count > 0:
+            queue_status = 'Ada Yang Siap Diambil'
+            status_class = 'emerald'
+            icon = '✓'
+        elif waiting_count > 0:
+            queue_status = 'Menunggu Ketersediaan'
+            status_class = 'amber'
+            icon = '⏳'
+        else:
+            queue_status = 'Kosong'
+            status_class = 'slate'
+            icon = '—'
+
+        book_queue_data.append({
+            'book': book,
+            'waiting_count': waiting_count,
+            'ready_count': ready_count,
+            'total_queue': waiting_count + ready_count,
+            'queue_status': queue_status,
+            'status_class': status_class,
+            'icon': icon,
+            'waiting_lists': waiting_lists,
+        })
+
+    # Sort by total queue size (descending)
+    book_queue_data.sort(key=lambda x: x['total_queue'], reverse=True)
+
+    # Calculate overall statistics
+    total_books_with_queue = len(book_queue_data)
+    total_people_waiting = sum(x['total_queue'] for x in book_queue_data)
+    books_ready = sum(1 for x in book_queue_data if x['ready_count'] > 0)
+    people_ready = sum(x['ready_count'] for x in book_queue_data)
+
+    context = {
+        'search': search,
+        'status_filter': status_filter,
+        'book_queue_data': book_queue_data,
+        'total_books_with_queue': total_books_with_queue,
+        'total_people_waiting': total_people_waiting,
+        'books_ready': books_ready,
+        'people_ready': people_ready,
+    }
+    return render(request, 'waiting_list_admin.html', context)
 
 
 @login_required
@@ -309,6 +489,41 @@ def loan_confirm_pickup(request, loan_id):
         loan.pickup()
         
         messages.success(request, '✓ Pengambilan buku dikonfirmasi')
+        return redirect('book_loan:loan_management')
+    
+    except Exception as e:
+        messages.error(request, f'Terjadi kesalahan: {str(e)}')
+        return redirect('book_loan:loan_management')
+
+
+@login_required
+@require_http_methods(["POST"])
+def loan_cancel(request, loan_id):
+    """Cancel a ready-for-pickup loan"""
+    if not _is_librarian(request.user):
+        messages.error(request, "Anda tidak memiliki akses.")
+        return redirect('book_loan:loan_management')
+    
+    try:
+        loan = get_object_or_404(Loan, id=loan_id)
+        
+        if loan.status != 'siap_diambil':
+            messages.error(request, 'Hanya peminjaman dengan status "Siap Diambil" yang dapat dibatalkan')
+            return redirect('book_loan:loan_management')
+        
+        loan.cancel()
+        
+        # Notify user about cancellation
+        Notification.objects.create(
+            user=loan.user,
+            notification_type='loan_cancelled',
+            title='Peminjaman Dibatalkan',
+            message=f'Peminjaman {loan.book.title} telah dibatalkan oleh petugas perpustakaan.',
+            loan=loan,
+            book=loan.book
+        )
+        
+        messages.success(request, '✓ Peminjaman dibatalkan dan stok buku dikembalikan')
         return redirect('book_loan:loan_management')
     
     except Exception as e:
@@ -506,6 +721,18 @@ def api_approve_loan(request, loan_id):
             }, status=400)
         
         loan.approve()
+        
+        # Update waiting list status to "siap_diambil_di_perpustakaan" if loan came from waiting list
+        waiting = WaitingList.objects.filter(
+            user=loan.user,
+            book=loan.book,
+            status='menunggu_konfirmasi_dari_admin'
+        ).first()
+        
+        if waiting:
+            waiting.status = 'siap_diambil_di_perpustakaan'
+            waiting.approved_by_admin_date = timezone.now()
+            waiting.save()
         
         Notification.objects.create(
             user=loan.user,
@@ -848,18 +1075,26 @@ def api_create_waiting_list(request):
                 'message': 'Buku tersedia, tidak perlu antrian'
             }, status=400)
         
-        existing = WaitingList.objects.filter(
+        # Check for active waiting list entries
+        existing_active = WaitingList.objects.filter(
             user=request.user,
             book=book,
             status__in=['menunggu', 'siap_dipinjam']
         ).first()
         
-        if existing:
+        if existing_active:
             return JsonResponse({
                 'status': 'error',
                 'message': 'Anda sudah dalam antrian untuk buku ini',
                 'error_code': 'ALREADY_IN_QUEUE'
             }, status=409)
+        
+        # Check for old cancelled/completed entries to reuse
+        existing_old = WaitingList.objects.filter(
+            user=request.user,
+            book=book,
+            status__in=['dibatalkan', 'selesai']
+        ).first()
         
         active_loan = Loan.objects.filter(
             user=request.user,
@@ -873,15 +1108,32 @@ def api_create_waiting_list(request):
                 'message': 'Anda sudah meminjam buku ini'
             }, status=400)
         
-        last_in_queue = WaitingList.objects.filter(book=book).order_by('-position').first()
-        next_position = (last_in_queue.position + 1) if last_in_queue else 1
-        
-        waiting = WaitingList.objects.create(
-            user=request.user,
+        # Count only active waiting list entries to determine next position
+        active_count = WaitingList.objects.filter(
             book=book,
-            position=next_position,
-            status='menunggu'
-        )
+            status__in=['menunggu', 'siap_dipinjam']
+        ).count()
+        next_position = active_count + 1
+        
+        # If there's an old entry, reuse it instead of creating a new one
+        if existing_old:
+            existing_old.status = 'menunggu'
+            existing_old.position = next_position
+            existing_old.registered_date = timezone.now()
+            existing_old.ready_date = None
+            existing_old.claim_deadline = None
+            existing_old.is_claimed = False
+            existing_old.claimed_date = None
+            existing_old.approved_by_admin_date = None
+            existing_old.save()
+            waiting = existing_old
+        else:
+            waiting = WaitingList.objects.create(
+                user=request.user,
+                book=book,
+                position=next_position,
+                status='menunggu'
+            )
         
         return JsonResponse({
             'status': 'success',
@@ -935,7 +1187,14 @@ def api_cancel_waiting_list(request, waiting_id):
             return JsonResponse({'status': 'error', 'message': 'Akses ditolak'}, status=403)
         
         waiting.cancel()
-        
+
+        # Update positions for remaining waiting list entries
+        WaitingList.objects.filter(
+            book=waiting.book,
+            position__gt=waiting.position,
+            status__in=['menunggu', 'siap_dipinjam']
+        ).update(position=F('position') - 1)
+
         return JsonResponse({'status': 'success', 'message': 'Antrian dibatalkan'}, status=200)
     
     except Exception as e:
@@ -981,33 +1240,47 @@ def api_claim_waiting_list(request, waiting_id):
                 'message': 'Anda sudah meminjam atau mengajukan peminjaman buku ini'
             }, status=400)
         
-        # Create loan with default 7 days duration (as per system requirements)
+        # Create loan with default 7 days duration and auto-approve status
         duration_days = 7
         loan = Loan.objects.create(
             user=request.user,
             book=waiting.book,
-            status='menunggu_konfirmasi',
-            duration_days=duration_days
+            status='siap_diambil',  # Auto-approve directly to ready for pickup
+            duration_days=duration_days,
+            approved_date=timezone.now(),
+            due_date=(timezone.now() + timedelta(days=duration_days)).date()
         )
         
-        # Mark waiting as claimed
-        waiting.claim()
-        
-        # Notify librarians
-        librarians = UserProfile.objects.filter(is_staff=True).values_list('user_id', flat=True)
-        for librarian_id in librarians:
-            Notification.objects.create(
-                user_id=librarian_id,
-                notification_type='loan_approved',
-                title='Pengajuan Peminjaman dari Antrian',
-                message=f'{request.user.first_name} mengklaim antrian untuk {waiting.book.title}',
-                loan=loan,
-                book=waiting.book
-            )
+        # Mark waiting list as claimed - completed status
+        claimed_position = waiting.position
+        waiting.is_claimed = True
+        waiting.claimed_date = timezone.now()
+        waiting.status = 'selesai'  # Mark as completed/claimed
+        waiting.save()
+
+        # Shift positions down for all remaining waiters behind this entry.
+        # Do NOT promote the next person here — claiming the book does not free
+        # up a copy. Promotion to 'siap_dipinjam' only happens when a book is
+        # returned (handled in api_return_loan / process_return).
+        WaitingList.objects.filter(
+            book=waiting.book,
+            position__gt=claimed_position,
+            status='menunggu'
+        ).update(position=F('position') - 1)
+
+        # Notify user that their loan is ready
+        Notification.objects.create(
+            user=request.user,
+            notification_type='loan_approved',
+            title='Peminjaman Siap Diambil',
+            message=f'{waiting.book.title} sudah siap untuk diambil. Jatuh tempo: {loan.due_date.strftime("%d %b %Y")}',
+            loan=loan,
+            book=waiting.book
+        )
         
         return JsonResponse({
             'status': 'success',
-            'message': 'Berhasil mengklaim antrian. Menunggu persetujuan petugas.',
+            'message': 'Peminjaman berhasil! Buku sudah masuk ke "Peminjaman Saya"',
             'loan_id': loan.id,
             'due_date': loan.due_date.isoformat() if loan.due_date else None
         }, status=201)
@@ -1135,6 +1408,101 @@ def api_get_active_loans(request):
             'count': loans.count(),
             'active_loans': data,
             'overdue_count': len([l for l in data if l['is_overdue']])
+        }, status=200)
+    
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+
+@login_required
+@require_http_methods(["GET"])
+def api_loan_detail(request, loan_id):
+    """
+    Get loan detail
+    GET /api/loans/<loan_id>/detail/
+    Returns: book info, borrower info, dates, and location
+    """
+    try:
+        loan = get_object_or_404(Loan, id=loan_id)
+        
+        # Check access: user can only view their own loans, librarians can view all
+        if loan.user != request.user and not _is_librarian(request.user):
+            return JsonResponse({'status': 'error', 'message': 'Akses ditolak'}, status=403)
+        
+        # Format dates using locale-aware format
+        loan_date_str = loan.loan_date.strftime('%d %b %Y').replace('Jan', 'Jan').replace('Feb', 'Feb').replace('Mar', 'Mar').replace('Apr', 'Apr').replace('May', 'May').replace('Jun', 'Jun').replace('Jul', 'Jul').replace('Aug', 'Aug').replace('Sep', 'Sep').replace('Oct', 'Oct').replace('Nov', 'Nov').replace('Dec', 'Dec')
+        
+        # Using natural date format for better display
+        months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+        loan_month = months[loan.loan_date.month - 1]
+        loan_date_formatted = f"{loan.loan_date.day} {loan_month} {loan.loan_date.year}"
+        
+        # Handle due_date that might be None for rejected loans
+        due_date_formatted = ''
+        if loan.due_date:
+            due_month = months[loan.due_date.month - 1]
+            due_date_formatted = f"{loan.due_date.day} {due_month} {loan.due_date.year}"
+        
+        data = {
+            'id': loan.id,
+            'book_id': loan.book.id,
+            'book_title': loan.book.title,
+            'book_author': loan.book.author,
+            'book_location': loan.book.shelf_location or 'Informasi lokasi tidak tersedia',
+            'status': loan.status,
+            'status_display': loan.get_status_display(),
+            'loan_date': loan_date_formatted,
+            'due_date': due_date_formatted,
+            'borrower': f"{loan.user.first_name} {loan.user.last_name}",
+            'borrower_name': f"{loan.user.first_name} {loan.user.last_name}",
+            'quantity': 1,  # Standard quantity for single loan
+            'days_overdue': loan.days_overdue,
+            'is_overdue': loan.days_overdue > 0,
+            'rejection_reason': loan.rejection_reason or '',  # Include rejection reason if loan was rejected
+        }
+        
+        return JsonResponse({
+            'status': 'success',
+            'data': data
+        }, status=200)
+    
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+
+@login_required
+@require_http_methods(["GET"])
+def api_waiting_list_detail(request, waiting_id):
+    """
+    Get waiting list detail with current status
+    GET /api/waitlist/<waiting_id>/detail/
+    """
+    try:
+        waiting = get_object_or_404(WaitingList, id=waiting_id)
+        
+        # Check access: user can only view their own waiting lists, librarians can view all
+        if waiting.user != request.user and not _is_librarian(request.user):
+            return JsonResponse({'status': 'error', 'message': 'Akses ditolak'}, status=403)
+        
+        data = {
+            'id': waiting.id,
+            'book_id': waiting.book.id,
+            'book_title': waiting.book.title,
+            'book_author': waiting.book.author,
+            'status': waiting.status,
+            'status_display': waiting.get_status_display(),
+            'position': waiting.position,
+            'registered_date': waiting.registered_date.isoformat(),
+            'is_claimed': waiting.is_claimed,
+            'is_expired': waiting.is_expired,
+            'claim_deadline': waiting.claim_deadline.isoformat() if waiting.claim_deadline else None,
+            'available_copies': waiting.book.available_copies,
+            'total_copies': waiting.book.total_copies,
+        }
+        
+        return JsonResponse({
+            'status': 'success',
+            'data': data
         }, status=200)
     
     except Exception as e:

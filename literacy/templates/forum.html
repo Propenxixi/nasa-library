@@ -1,148 +1,785 @@
 {% extends 'base.html' %}
 
-{% block title %}Literacy Forum - NASA Library{% endblock %}
+{% block title %}Forum Literasi - NASA Library{% endblock %}
 
 {% block content %}
-<div class="min-h-screen bg-gradient-to-br from-white via-gray-50 to-white">
-    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        
-        <!-- Page Header -->
-        <div class="mb-12">
-            <div class="flex items-center justify-between mb-4">
-                <div>
-                    <h1 class="font-display text-4xl md:text-5xl font-bold text-gray-900">💬 Forum</h1>
-                    <p class="font-sans text-gray-600 mt-2">Share your reading experiences and connect with fellow students</p>
+<style>.main-content { visibility: hidden; }</style>
+<div class="main-content">
+
+    <!-- Page Header -->
+    <div class="page-header">
+        <div class="page-header-left">
+            <h1 class="page-title">Forum</h1>
+            <p class="page-subtitle">Bagikan pengalaman membacamu dan terhubung dengan sesama siswa</p>
+        </div>
+        {% if user_profile and user_profile.is_teacher %}
+        <a href="{% url 'literacy:create_session' %}" class="btn btn-primary">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+            Buat Sesi
+        </a>
+        {% endif %}
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════
+         RIWAYAT POSTINGAN — Hanya tampil untuk Siswa
+         ══════════════════════════════════════════════════════ -->
+    {% if user_profile and not user_profile.is_teacher %}
+    <div class="riwayat-section" id="riwayat-section">
+
+        <!-- Header riwayat -->
+        <div class="riwayat-header">
+            <div class="riwayat-header-left">
+                <h2 class="riwayat-title">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/>
+                    </svg>
+                    Riwayat Postingan Saya
+                </h2>
+                <p class="riwayat-subtitle">Pantau status verifikasi dan progres literasimu</p>
+            </div>
+            <!-- Tombol akses ke halaman history lengkap -->
+            <a href="{% url 'literacy:history' %}" class="btn btn-ghost btn-sm">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                </svg>
+                Lihat Semua Riwayat
+            </a>
+        </div>
+
+        <!-- Summary badges -->
+        <div class="riwayat-summary" id="riwayat-summary">
+            <div class="rsummary-chip rsummary-chip--total">
+                <span class="rsummary-val" id="rs-total">—</span>
+                <span class="rsummary-label">Total</span>
+            </div>
+            <div class="rsummary-chip rsummary-chip--verified">
+                <span class="rsummary-val" id="rs-verified">—</span>
+                <span class="rsummary-label">Disetujui</span>
+            </div>
+            <div class="rsummary-chip rsummary-chip--pending">
+                <span class="rsummary-val" id="rs-pending">—</span>
+                <span class="rsummary-label">Menunggu</span>
+            </div>
+            <div class="rsummary-chip rsummary-chip--rejected">
+                <span class="rsummary-val" id="rs-rejected">—</span>
+                <span class="rsummary-label">Ditolak</span>
+            </div>
+        </div>
+
+        <!-- Table wrapper -->
+        <div class="riwayat-table-wrap" id="riwayat-table-wrap">
+            <!-- Skeleton loader -->
+            <div class="riwayat-skeleton" id="riwayat-skeleton">
+                {% for i in "12345" %}
+                <div class="skeleton-row">
+                    <div class="skel skel--no"></div>
+                    <div class="skel skel--title"></div>
+                    <div class="skel skel--date"></div>
+                    <div class="skel skel--badge"></div>
+                    <div class="skel skel--btn"></div>
                 </div>
-                <a href="{% url 'literacy:create_post' %}" class="hidden md:block px-6 py-3 bg-blue-100 text-blue-700 font-sans font-semibold rounded-lg hover:bg-blue-200 transition-colors">
-                    ✍️ New Post
-                </a>
-            </div>
-        </div>
-
-        <!-- Search & Sort -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4 mb-8">
-            <div class="md:col-span-2">
-                <form method="GET" class="relative">
-                    <input 
-                        type="text" 
-                        name="q" 
-                        placeholder="Search discussions..."
-                        value="{{ search_query }}"
-                        class="w-full px-4 py-3 pl-12 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all font-sans text-sm"
-                    >
-                    <span class="absolute left-4 top-3.5 text-lg">🔍</span>
-                </form>
-            </div>
-            
-            <div>
-                <select name="sort" onchange="location.href='?sort=' + this.value + (document.querySelector('input[name=q]').value ? '&q=' + document.querySelector('input[name=q]').value : '');" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 font-sans text-sm bg-white">
-                    <option value="recent" {% if sort_by == 'recent' %}selected{% endif %}>📅 Most Recent</option>
-                    <option value="popular" {% if sort_by == 'popular' %}selected{% endif %}>❤️ Most Popular</option>
-                </select>
-            </div>
-        </div>
-
-        <!-- Posts List -->
-        <div class="space-y-4">
-            {% if posts %}
-                {% for post in posts %}
-                    <a href="{% url 'literacy:post_detail' post.pk %}" class="block bg-white border-2 border-gray-100 rounded-2xl p-4 md:p-6 hover:shadow-lg hover:border-blue-200 transition-all duration-300 group">
-                        <div class="flex gap-3 md:gap-4">
-                            <!-- Author Avatar -->
-                            <div class="flex-shrink-0">
-                                <div class="w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center text-white font-bold text-sm md:text-lg bg-gradient-to-br from-blue-500 to-blue-600 shadow-md group-hover:scale-110 transition-transform">
-                                    {{ post.student.first_name|first|upper }}
-                                </div>
-                            </div>
-
-                            <!-- Post Content -->
-                            <div class="flex-1 min-w-0">
-                                <!-- Header -->
-                                <div class="flex items-start justify-between gap-4 mb-2">
-                                    <div>
-                                        <h3 class="font-display text-base md:text-lg font-bold text-gray-900 group-hover:text-blue-700 transition-colors">{{ post.title }}</h3>
-                                        <p class="font-sans text-sm text-gray-600">
-                                            by <span class="font-semibold">{{ post.student.get_full_name }}</span>
-                                            • {{ post.created_at|date:"d M Y \a\t H:i" }}
-                                        </p>
-                                    </div>
-                                    {% if post.book_review %}
-                                        <span class="inline-flex items-center gap-1 px-2 md:px-3 py-1 font-sans text-xs font-semibold rounded-full flex-shrink-0 bg-blue-50 text-blue-700 border border-blue-200">
-                                            📚 {{ post.book_review.title|truncatechars:15 }}
-                                        </span>
-                                    {% endif %}
-                                </div>
-
-                                <!-- Content Preview -->
-                                <p class="font-sans text-sm text-gray-600 mb-2 md:mb-3 line-clamp-2">{{ post.content }}</p>
-
-                                <!-- Engagement Footer -->
-                                <div class="flex gap-4 md:gap-6 text-xs md:text-sm text-gray-500">
-                                    <span class="flex items-center gap-1 hover:text-red-500 transition-colors">
-                                        <span class="text-base">❤️</span> {{ post.like_count }}
-                                    </span>
-                                    <span class="flex items-center gap-1 hover:text-blue-500 transition-colors">
-                                        <span class="text-base">💬</span> {{ post.comment_count }}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                    </a>
                 {% endfor %}
-            {% else %}
-                <div class="bg-white border border-gray-200 rounded-2xl p-12 text-center">
-                    <div class="text-6xl mb-4">💭</div>
-                    <h3 class="font-display text-2xl font-bold text-gray-900 mb-2">No Posts Yet</h3>
-                    {% if search_query %}
-                        <p class="font-sans text-gray-600 mb-6">No posts found matching "{{ search_query }}"</p>
-                        <a href="{% url 'literacy:forum' %}" class="inline-block px-6 py-2 bg-gray-100 text-gray-700 font-sans font-semibold rounded-lg hover:bg-gray-200 transition-colors">
-                            Clear Search
-                        </a>
-                    {% else %}
-                        <p class="font-sans text-gray-600 mb-6">Be the first to share your literacy experience!</p>
-                        <a href="{% url 'literacy:create_post' %}" class="inline-block px-8 py-3 bg-blue-100 text-blue-700 font-sans font-semibold rounded-lg hover:bg-blue-200 transition-colors">
-                            ✍️ Create the First Post
-                        </a>
-                    {% endif %}
-                </div>
-            {% endif %}
+            </div>
+
+            <!-- Populated table (hidden until data loads) -->
+            <table class="riwayat-table" id="riwayat-table" style="display:none;">
+                <thead>
+                <tr>
+                    <th class="col-no">No</th>
+                    <th class="col-title">Judul Postingan</th>
+                    <th class="col-date">Tanggal Submit</th>
+                    <th class="col-status">Status</th>
+                    <th class="col-action"></th>
+                </tr>
+                </thead>
+                <tbody id="riwayat-tbody"></tbody>
+            </table>
+
+            <!-- Empty state -->
+            <div class="riwayat-empty" id="riwayat-empty" style="display:none;">
+                <svg width="44" height="44" fill="none" stroke="currentColor" stroke-width="1.3" viewBox="0 0 24 24">
+                    <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+                </svg>
+                <p class="riwayat-empty-title">Belum ada posting literasi. Jadilah yang pertama!</p>
+                <p class="riwayat-empty-desc">Ikuti sesi forum dan buat postingan pertamamu!</p>
+            </div>
         </div>
 
-        <!-- Tips Section -->
-        <div class="mt-12 grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div class="bg-gradient-to-br from-blue-50 to-cyan-50 border-2 border-blue-300 rounded-2xl p-6">
-                <h3 class="font-display text-lg font-bold flex items-center gap-2 mb-4 text-blue-900">
-                    <span class="text-2xl">💡</span> Posting Tips
-                </h3>
-                <ul class="font-sans text-sm space-y-2 text-blue-700">
-                    <li>✓ Share genuine reactions to books</li>
-                    <li>✓ Ask questions & discuss themes</li>
-                    <li>✓ Recommend books to classmates</li>
-                    <li>✓ Connect posts to your reviews</li>
-                </ul>
+    </div>
+    {% endif %}
+    <!-- ══════════════════════════════════════════════════════ -->
+
+    <!-- Stats Row -->
+    <div class="stats-row">
+        <div class="stat-card">
+            <div class="stat-icon stat-icon--primary">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>
+                </svg>
             </div>
-            
-            <div class="bg-gradient-to-br from-purple-50 to-pink-50 border-2 border-purple-300 rounded-2xl p-6">
-                <h3 class="font-display text-lg font-bold flex items-center gap-2 mb-4 text-purple-900">
-                    <span class="text-2xl">🎯</span> Community Guidelines
-                </h3>
-                <ul class="font-sans text-sm space-y-2 text-purple-700">
-                    <li>✓ Be respectful to all students</li>
-                    <li>✓ No spoilers without warning</li>
-                    <li>✓ Keep discussions on-topic</li>
-                    <li>✓ Engage constructively</li>
-                </ul>
+            <div class="stat-value" data-count="{{ total_sessions }}">{{ total_sessions }}</div>
+            <div class="stat-label">Sesi Aktif</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon stat-icon--secondary">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
             </div>
+            <div class="stat-value" data-count="{{ total_verified|default:'0' }}">{{ total_verified|default:"0" }}</div>
+            <div class="stat-label">Entri Terverifikasi</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon stat-icon--accent">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                </svg>
+            </div>
+            <div class="stat-value" data-count="{{ total_pending|default:'0' }}">{{ total_pending|default:"0" }}</div>
+            <div class="stat-label">Menunggu Review</div>
         </div>
     </div>
+
+    <!-- Search & Filter Bar -->
+    <div class="filter-bar">
+        <form method="GET" class="search-form" id="search-form">
+            <div class="search-input-wrap">
+                <svg class="search-icon" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+                </svg>
+                <input
+                        type="text"
+                        name="q"
+                        id="search-input"
+                        placeholder="Cari sesi literasi..."
+                        value="{{ search_query }}"
+                        class="search-input"
+                        autocomplete="off"
+                >
+                {% if sort_by %}<input type="hidden" name="sort" value="{{ sort_by }}">{% endif %}
+                {% if topic_filter %}<input type="hidden" name="topic" value="{{ topic_filter }}">{% endif %}
+            </div>
+        </form>
+
+        <select class="sort-select" onchange="applyFilter('sort', this.value)">
+            <option value="recent"  {% if sort_by == 'recent' %}selected{% endif %}>Terbaru</option>
+            <option value="entries" {% if sort_by == 'entries' %}selected{% endif %}>Terbanyak Entri</option>
+        </select>
+
+        <select class="sort-select" onchange="applyFilter('topic', this.value)">
+            <option value="">Semua Topik</option>
+            {% for value, label in topic_choices %}
+            <option value="{{ value }}" {% if topic_filter == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <!-- Section Header -->
+    <div class="section-header">
+        <h2 class="section-title">
+            Daftar Sesi
+            {% if topic_filter %}
+            <span class="section-badge">{{ topic_filter|title }}</span>
+            {% endif %}
+        </h2>
+        <span class="section-count">{{ sessions|length }} sesi</span>
+    </div>
+
+    <!-- Sessions List -->
+    <div class="posts-list">
+        {% if sessions %}
+        {% for session in sessions %}
+        <a href="{% url 'literacy:session_detail' session.pk %}" class="post-card" style="--i: {{ forloop.counter }}">
+            <div class="post-card-icon">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/>
+                </svg>
+            </div>
+
+            <div class="post-card-body">
+                <div class="post-card-header">
+                    <div>
+                        <div class="post-card-title">{{ session.title }}</div>
+                        <div class="post-card-meta">
+                            {{ session.get_topic_display }} &bull; {{ session.date|date:"d M Y" }}
+                            {% if not session.is_open %}
+                            &bull; <span style="color:var(--error-400);font-weight:600;">Ditutup</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="post-card-right">
+                        <div class="post-card-stats">
+                            <span class="post-stat post-stat--comment">
+                                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+                                {{ session.entry_count }} entri
+                            </span>
+                            {% if session.pending_count > 0 %}
+                            <span class="post-stat post-stat--pending">
+                                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                                {{ session.pending_count }} menunggu
+                            </span>
+                            {% endif %}
+                        </div>
+                        <svg class="post-card-chevron" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+                    </div>
+                </div>
+            </div>
+        </a>
+        {% endfor %}
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">
+                <svg width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                    <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+                </svg>
+            </div>
+            {% if search_query or topic_filter %}
+            <h3 class="empty-title">Tidak ada sesi ditemukan</h3>
+            <p class="empty-desc">
+                {% if search_query %}Tidak ada sesi untuk "{{ search_query }}"{% endif %}
+                {% if topic_filter %}dengan topik {{ topic_filter }}{% endif %}.
+            </p>
+            <a href="{% url 'literacy:forum' %}" class="btn btn-ghost btn-sm">Hapus Filter</a>
+            {% else %}
+            <h3 class="empty-title">Belum ada sesi literasi.</h3>
+            <p class="empty-desc">Tunggu guru membuat sesi literasi baru.</p>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Tips & Guidelines -->
+    <div class="tips-grid">
+        <div class="tips-card tips-card--blue">
+            <div class="tips-card-header">
+                <span class="tips-icon">✏️</span>
+                <h3 class="tips-title">Tips Menulis Postingan</h3>
+            </div>
+            <ul class="tips-list">
+                <li>Tulis reaksi jujurmu terhadap buku</li>
+                <li>Ajukan pertanyaan dan diskusikan temanya</li>
+                <li>Rekomendasikan buku kepada teman sekelas</li>
+                <li>Hubungkan isi buku dengan kehidupan nyata</li>
+            </ul>
+        </div>
+        <div class="tips-card tips-card--red">
+            <div class="tips-card-header">
+                <span class="tips-icon">📋</span>
+                <h3 class="tips-title">Aturan Komunitas</h3>
+            </div>
+            <ul class="tips-list">
+                <li>Hormati semua siswa di forum</li>
+                <li>Jangan spoiler tanpa peringatan</li>
+                <li>Jaga diskusi tetap relevan dengan topik</li>
+                <li>Berikan masukan yang membangun</li>
+            </ul>
+        </div>
+    </div>
+
 </div>
 
+<script>
+    function applyFilter(key, value) {
+        const url = new URL(window.location.href);
+        const q = document.getElementById('search-input').value.trim();
+        if (q) url.searchParams.set('q', q); else url.searchParams.delete('q');
+        if (value) url.searchParams.set(key, value); else url.searchParams.delete(key);
+        window.location.href = url.toString();
+    }
+
+    document.getElementById('search-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        applyFilter('q', document.getElementById('search-input').value.trim());
+    });
+
+    // Animated counter
+    function animateCount(el) {
+        const target = parseInt(el.dataset.count) || 0;
+        if (target === 0) return;
+        const dur = 900, step = 16;
+        let current = 0;
+        const inc = target / (dur / step);
+        const timer = setInterval(() => {
+            current = Math.min(current + inc, target);
+            el.textContent = Math.round(current);
+            if (current >= target) clearInterval(timer);
+        }, step);
+    }
+
+    const observer = new IntersectionObserver(entries => {
+        entries.forEach(e => {
+            if (e.isIntersecting) { animateCount(e.target); observer.unobserve(e.target); }
+        });
+    }, { threshold: 0.5 });
+    document.querySelectorAll('.stat-value[data-count]').forEach(el => observer.observe(el));
+
+    // Search clear button
+    const searchInput = document.getElementById('search-input');
+    const searchWrap  = searchInput.closest('.search-input-wrap');
+    const clearBtn    = document.createElement('button');
+    clearBtn.type      = 'button';
+    clearBtn.className = 'search-clear';
+    clearBtn.innerHTML = `<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>`;
+    searchWrap.appendChild(clearBtn);
+    function toggleClear() {
+        clearBtn.style.opacity = searchInput.value ? '1' : '0';
+        clearBtn.style.pointerEvents = searchInput.value ? 'auto' : 'none';
+    }
+    searchInput.addEventListener('input', toggleClear);
+    clearBtn.addEventListener('click', () => { searchInput.value = ''; toggleClear(); searchInput.focus(); });
+    toggleClear();
+
+    document.querySelector('.main-content').classList.add('ready');
+
+    // ── Riwayat Postingan Siswa ─────────────────────────────
+    (function () {
+        const section = document.getElementById('riwayat-section');
+        if (!section) return;
+
+        const skeleton = document.getElementById('riwayat-skeleton');
+        const table    = document.getElementById('riwayat-table');
+        const tbody    = document.getElementById('riwayat-tbody');
+        const empty    = document.getElementById('riwayat-empty');
+
+        const STATUS_MAP = {
+            pending:  { label: 'Menunggu',  cls: 'badge--pending'  },
+            verified: { label: 'Disetujui', cls: 'badge--verified' },
+            rejected: { label: 'Ditolak',   cls: 'badge--rejected' },
+        };
+
+        function fmtDate(iso) {
+            if (!iso) return '-';
+            return new Date(iso).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+        }
+
+        function buildRow(r, idx) {
+            const st  = STATUS_MAP[r.status_verifikasi] || STATUS_MAP.pending;
+            const rej = r.status_verifikasi === 'rejected' && r.catatan_wali
+                ? `<span class="info-icon" tabindex="0" aria-label="Catatan penolakan: ${r.catatan_wali}" data-tooltip="${r.catatan_wali.replace(/"/g, '&quot;')}">
+                        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                   </span>` : '';
+
+            const detailUrl = r.post_pk
+                ? `/literacy/forum/${r.post_pk}/`
+                : null;
+
+            const actionCell = detailUrl
+                ? `<a href="${detailUrl}" class="btn-detail">Lihat Detail</a>`
+                : `<span class="btn-detail btn-detail--disabled">Lihat Detail</span>`;
+
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td class="col-no">${idx}</td>
+                <td class="col-title">${r.judul_buku || '-'}</td>
+                <td class="col-date">${fmtDate(r.tanggal_submit)}</td>
+                <td class="col-status">
+                    <span class="status-badge ${st.cls}">${st.label}</span>
+                    ${rej}
+                </td>
+                <td class="col-action">${actionCell}</td>`;
+            return tr;
+        }
+
+        async function loadReviews() {
+            try {
+                const res  = await fetch('{% url "literacy:my_forum_posts_api" %}');
+                const data = await res.json();
+                const reviews = Array.isArray(data) ? data : (data.data || data.reviews || []);
+
+                const total    = reviews.length;
+                const verified = reviews.filter(r => r.status_verifikasi === 'verified').length;
+                const pending  = reviews.filter(r => r.status_verifikasi === 'pending').length;
+                const rejected = reviews.filter(r => r.status_verifikasi === 'rejected').length;
+                document.getElementById('rs-total').textContent    = total;
+                document.getElementById('rs-verified').textContent = verified;
+                document.getElementById('rs-pending').textContent  = pending;
+                document.getElementById('rs-rejected').textContent = rejected;
+
+                skeleton.style.display = 'none';
+                if (total === 0) {
+                    empty.style.display = 'flex';
+                } else {
+                    reviews.forEach((r, i) => tbody.appendChild(buildRow(r, i + 1)));
+                    table.style.display = 'table';
+                    attachTooltipListeners();
+                }
+            } catch (e) {
+                skeleton.style.display = 'none';
+                empty.style.display = 'flex';
+                console.warn('Riwayat fetch error:', e);
+            }
+        }
+
+        function attachTooltipListeners() {
+            tbody.querySelectorAll('.info-icon').forEach(ic => {
+                ic.addEventListener('mouseenter', () => {
+                    const tip = document.createElement('div');
+                    tip.className = 'rej-tooltip';
+                    tip.textContent = ic.dataset.tooltip;
+                    document.body.appendChild(tip);
+                    const rect = ic.getBoundingClientRect();
+                    tip.style.left = rect.left + window.scrollX + 'px';
+                    tip.style.top  = rect.top  + window.scrollY - tip.offsetHeight - 8 + 'px';
+                    ic._tip = tip;
+                });
+                ic.addEventListener('mouseleave', () => { if (ic._tip) { ic._tip.remove(); ic._tip = null; } });
+            });
+        }
+
+        loadReviews();
+    })();
+</script>
+
 <style>
-    .line-clamp-2 {
-        display: -webkit-box;
-        -webkit-line-clamp: 2;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
+    /* ── Page Header ─────────────────────────────────────── */
+    .page-header {
+        display: flex; align-items: flex-start; justify-content: space-between;
+        margin-bottom: 28px; gap: 16px;
+        animation: fadeSlideDown .5s ease both;
+    }
+    .page-title {
+        font-family: 'Playfair Display', serif; font-size: 2rem; font-weight: 700;
+        color: var(--primary-900); line-height: 1.2;
+    }
+    .page-subtitle { font-size: .9rem; color: var(--neutral-500); margin-top: 6px; }
+    .btn-primary {
+        display: inline-flex; align-items: center; gap: 7px;
+        transition: transform .2s ease, box-shadow .2s ease;
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(30,58,138,.2); }
+    .btn-primary:active { transform: translateY(0); }
+
+    /* ── Stats Row ───────────────────────────────────────── */
+    .stats-row {
+        display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px;
+    }
+    .stat-card {
+        background: var(--neutral-50); border: 1.5px solid #1e3a8a;
+        border-radius: var(--radius-md); padding: 20px 24px;
+        box-shadow: var(--shadow-sm); display: flex; flex-direction: column; gap: 8px;
+        animation: fadeSlideUp .5s ease both;
+        transition: transform .25s ease, box-shadow .25s ease; cursor: default;
+    }
+    .stat-card:nth-child(1) { animation-delay: .05s; }
+    .stat-card:nth-child(2) { animation-delay: .12s; }
+    .stat-card:nth-child(3) { animation-delay: .19s; }
+    .stat-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(30,58,138,.12); }
+    .stat-icon {
+        width: 40px; height: 40px; border-radius: var(--radius-sm);
+        display: flex; align-items: center; justify-content: center;
+        transition: transform .3s ease;
+    }
+    .stat-card:hover .stat-icon { transform: scale(1.12) rotate(-4deg); }
+    .stat-icon--primary   { background: var(--primary-50);   color: var(--primary-700); }
+    .stat-icon--secondary { background: var(--secondary-50); color: var(--secondary-700); }
+    .stat-icon--accent    { background: var(--accent-50);    color: var(--accent-700); }
+    .stat-value {
+        font-family: 'Playfair Display', serif; font-size: 2rem; font-weight: 700;
+        color: var(--primary-900); line-height: 1;
+    }
+    .stat-label { font-size: .8rem; color: var(--neutral-500); font-weight: 600; text-transform: uppercase; letter-spacing: .05em; }
+
+    /* ── Filter Bar ──────────────────────────────────────── */
+    .filter-bar { display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; animation: fadeSlideUp .5s .25s ease both; }
+    .search-form { flex: 1; min-width: 200px; }
+    .search-input-wrap { position: relative; width: 100%; }
+    .search-icon {
+        position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+        color: var(--neutral-400); pointer-events: none; transition: color .2s;
+    }
+    .search-input-wrap:focus-within .search-icon { color: var(--primary-700); }
+    .search-input {
+        width: 100%; padding: 10px 36px 10px 40px; border: 1.5px solid #1e3a8a;
+        border-radius: var(--radius-sm); font-family: 'Work Sans', sans-serif;
+        font-size: .9rem; color: var(--primary-900); background: var(--neutral-50);
+        outline: none; transition: box-shadow .2s, border-color .2s;
+    }
+    .search-input:focus { box-shadow: 0 0 0 3px rgba(30,58,138,.1); border-color: var(--primary-700); }
+    .search-clear {
+        position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+        background: none; border: none; cursor: pointer; color: var(--neutral-400); padding: 4px;
+        border-radius: 50%; display: flex; transition: color .2s, opacity .2s, background .2s; opacity: 0;
+    }
+    .search-clear:hover { color: var(--primary-700); background: var(--primary-50); }
+    .sort-select {
+        padding: 10px 36px 10px 14px; border: 1.5px solid #1e3a8a;
+        border-radius: var(--radius-sm); font-family: 'Work Sans', sans-serif;
+        font-size: .88rem; color: var(--primary-900);
+        background: var(--neutral-50) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%231e3a8a' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 12px center;
+        appearance: none; outline: none; cursor: pointer; white-space: nowrap;
+        transition: box-shadow .2s, border-color .2s;
+    }
+    .sort-select:focus { box-shadow: 0 0 0 3px rgba(30,58,138,.1); border-color: var(--primary-700); }
+
+    /* ── Section Header ──────────────────────────────────── */
+    .section-header {
+        display: flex; align-items: center; justify-content: space-between;
+        margin-bottom: 12px; animation: fadeSlideUp .5s .3s ease both;
+    }
+    .section-title {
+        font-family: 'Playfair Display', serif; font-size: 1.1rem; font-weight: 700;
+        color: var(--primary-900); display: flex; align-items: center; gap: 10px;
+    }
+    .section-badge {
+        font-family: 'Work Sans', sans-serif; font-size: .72rem; font-weight: 700;
+        text-transform: uppercase; letter-spacing: .06em;
+        background: var(--primary-50); color: var(--primary-700);
+        border: 1px solid #1e3a8a; border-radius: 100px; padding: 3px 12px;
+        animation: popIn .3s ease;
+    }
+    .section-count { font-family: 'Work Sans', sans-serif; font-size: .78rem; font-weight: 600; color: var(--neutral-400); }
+
+    /* ── Posts / Sessions List ───────────────────────────── */
+    .posts-list {
+        display: flex; flex-direction: column;
+        border: 1.5px solid #1e3a8a; border-radius: var(--radius-md);
+        overflow: hidden; margin-bottom: 28px; box-shadow: var(--shadow-sm);
+        animation: fadeSlideUp .5s .35s ease both;
+    }
+    .post-card {
+        display: flex; align-items: center; gap: 16px;
+        padding: 18px 20px; background: var(--neutral-50);
+        border-bottom: 1px solid rgba(30,58,138,.15);
+        text-decoration: none; color: inherit;
+        transition: background .2s, padding-left .2s;
+        animation: fadeSlideIn .4s calc(var(--i, 1) * 60ms) ease both;
+        position: relative;
+    }
+    .post-card::before {
+        content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+        background: var(--primary-700); transform: scaleY(0); transform-origin: center;
+        transition: transform .2s ease;
+    }
+    .post-card:last-child { border-bottom: none; }
+    .post-card:hover { background: var(--primary-50); padding-left: 26px; }
+    .post-card:hover::before { transform: scaleY(1); }
+    .post-card-icon {
+        width: 44px; height: 44px; background: var(--neutral-100);
+        border: 1.5px solid #1e3a8a; border-radius: var(--radius-sm);
+        display: flex; align-items: center; justify-content: center;
+        color: var(--primary-700); flex-shrink: 0;
+        transition: background .2s, transform .2s;
+    }
+    .post-card:hover .post-card-icon { background: var(--primary-100); transform: rotate(-4deg) scale(1.05); }
+    .post-card-body { flex: 1; min-width: 0; }
+    .post-card-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+    .post-card-title { font-weight: 700; font-size: .95rem; color: var(--primary-900); line-height: 1.3; }
+    .post-card-meta  { font-size: .78rem; color: var(--neutral-500); margin-top: 3px; }
+    .post-card-right { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+    .post-card-stats { display: flex; align-items: center; gap: 10px; }
+    .post-stat {
+        display: flex; align-items: center; gap: 5px;
+        font-size: .78rem; color: var(--neutral-500); font-weight: 500;
+        padding: 3px 8px; border-radius: 100px; transition: background .2s, color .2s;
+    }
+    .post-card:hover .post-stat--comment { background: var(--secondary-50); color: var(--secondary-700); }
+    .post-stat--pending { color: var(--accent-700); background: var(--accent-50); }
+    .post-card-chevron { color: var(--neutral-400); transition: transform .25s ease, color .2s; }
+    .post-card:hover .post-card-chevron { transform: translateX(5px); color: var(--primary-700); }
+
+    /* ── Empty State ──────────────────────────────────────── */
+    .empty-state {
+        display: flex; flex-direction: column; align-items: center;
+        padding: 60px 24px; background: var(--neutral-50); text-align: center; gap: 12px;
+        animation: fadeSlideUp .5s ease;
+    }
+    .empty-icon { color: var(--neutral-300); margin-bottom: 4px; animation: float 3s ease-in-out infinite; }
+    .empty-title { font-family: 'Playfair Display', serif; font-size: 1.2rem; font-weight: 700; color: var(--primary-900); }
+    .empty-desc  { font-size: .88rem; color: var(--neutral-500); max-width: 320px; }
+
+    /* ── Tips Grid ───────────────────────────────────────── */
+    .tips-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; animation: fadeSlideUp .5s .5s ease both; }
+    .tips-card { border-radius: var(--radius-md); padding: 24px; border: 1.5px solid; transition: transform .25s ease, box-shadow .25s ease; }
+    .tips-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(30,58,138,.1); }
+    .tips-card--blue { background: var(--primary-50); border-color: #1e3a8a; }
+    .tips-card--red  { background: var(--error-50);   border-color: var(--error-400); }
+    .tips-card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+    .tips-icon { font-size: 1.1rem; line-height: 1; }
+    .tips-title { font-family: 'Playfair Display', serif; font-size: .95rem; font-weight: 700; color: var(--primary-900); margin: 0; }
+    .tips-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+    .tips-list li {
+        font-size: .85rem; color: var(--neutral-600); padding-left: 20px; position: relative;
+        line-height: 1.4; transition: color .2s, padding-left .2s;
+    }
+    .tips-list li:hover { color: var(--primary-900); padding-left: 24px; }
+    .tips-list li::before {
+        content: ""; position: absolute; left: 0; top: 6px; width: 10px; height: 10px;
+        background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' stroke='%2310b981' stroke-width='3' viewBox='0 0 24 24'%3E%3Cpath d='M20 6L9 17l-5-5'/%3E%3C/svg%3E") center/contain no-repeat;
+    }
+
+    /* ── Keyframes ───────────────────────────────────────── */
+    @keyframes fadeSlideDown { from { opacity: 0; transform: translateY(-14px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes fadeSlideUp   { from { opacity: 0; transform: translateY(14px);  } to { opacity: 1; transform: translateY(0); } }
+    @keyframes fadeSlideIn   { from { opacity: 0; transform: translateX(-8px);  } to { opacity: 1; transform: translateX(0); } }
+    @keyframes popIn         { from { opacity: 0; transform: scale(.7); }        to { opacity: 1; transform: scale(1); }       }
+    @keyframes float         { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+
+    /* ── Responsive ──────────────────────────────────────── */
+    @media (max-width: 768px) {
+        .stats-row { grid-template-columns: 1fr; }
+        .tips-grid  { grid-template-columns: 1fr; }
+        .page-header { flex-direction: column; align-items: flex-start; }
+        .post-card-meta { display: none; }
+    }
+    .main-content.ready { visibility: visible; }
+
+    /* ══════════════════════════════════════════════════════
+       Riwayat Postingan Siswa
+       ══════════════════════════════════════════════════════ */
+    .riwayat-section {
+        margin-bottom: 32px;
+        animation: fadeSlideUp .5s .08s ease both;
+    }
+    .riwayat-header {
+        display: flex; align-items: flex-start; justify-content: space-between;
+        gap: 12px; margin-bottom: 16px;
+    }
+    .riwayat-title {
+        font-family: 'Playfair Display', serif; font-size: 1.1rem; font-weight: 700;
+        color: var(--primary-900); display: flex; align-items: center; gap: 8px; margin: 0;
+    }
+    .riwayat-subtitle { font-size: .8rem; color: var(--neutral-500); margin-top: 4px; }
+    .btn-sm {
+        padding: 8px 14px; font-size: .82rem;
+        display: inline-flex; align-items: center; gap: 6px;
+    }
+    .btn-ghost {
+        display: inline-flex; align-items: center; gap: 6px;
+        padding: 8px 16px; border-radius: var(--radius-sm);
+        font-size: .82rem; font-weight: 600;
+        border: 1.5px solid #1e3a8a; color: var(--primary-700);
+        background: var(--neutral-50); text-decoration: none;
+        transition: background .18s, color .18s, transform .18s;
+        white-space: nowrap; flex-shrink: 0;
+    }
+    .btn-ghost:hover { background: var(--primary-700); color: #fff; transform: translateY(-1px); }
+
+    /* Summary chips */
+    .riwayat-summary {
+        display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap;
+    }
+    .rsummary-chip {
+        display: flex; align-items: center; gap: 8px;
+        padding: 8px 16px; border-radius: var(--radius-sm);
+        border: 1.5px solid; font-family: 'Work Sans', sans-serif;
+        font-size: .82rem; font-weight: 600;
+        transition: transform .2s ease;
+    }
+    .rsummary-chip:hover { transform: translateY(-2px); }
+    .rsummary-val   { font-size: 1.15rem; font-weight: 700; font-family: 'Playfair Display', serif; }
+    .rsummary-label { font-size: .75rem; text-transform: uppercase; letter-spacing: .05em; }
+    .rsummary-chip--total    { background: var(--primary-50);   border-color: #1e3a8a;             color: var(--primary-900); }
+    .rsummary-chip--verified { background: #f0fdf4;             border-color: #16a34a;             color: #15803d; }
+    .rsummary-chip--pending  { background: var(--accent-50);    border-color: var(--accent-700);   color: var(--accent-700); }
+    .rsummary-chip--rejected { background: var(--error-50);     border-color: var(--error-400);    color: var(--error-400); }
+
+    /* Table wrap */
+    .riwayat-table-wrap {
+        border: 1.5px solid #1e3a8a; border-radius: var(--radius-md);
+        overflow: hidden; box-shadow: var(--shadow-sm); background: var(--neutral-50);
+    }
+
+    /* Skeleton */
+    .riwayat-skeleton { padding: 8px; }
+    .skeleton-row {
+        display: grid;
+        grid-template-columns: 40px 1fr 110px 110px 90px;
+        gap: 12px; padding: 14px 16px; border-bottom: 1px solid rgba(30,58,138,.1);
+        align-items: center;
+    }
+    .skeleton-row:last-child { border-bottom: none; }
+    .skel {
+        height: 14px; border-radius: 6px; background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
+        background-size: 200% 100%; animation: shimmer 1.4s infinite;
+    }
+    .skel--no     { width: 24px; }
+    .skel--title  { width: 80%; }
+    .skel--date   { width: 85%; }
+    .skel--badge  { width: 80px; height: 22px; border-radius: 100px; }
+    .skel--btn    { width: 76px; height: 28px; border-radius: 6px; }
+    @keyframes shimmer { to { background-position: -200% 0; } }
+
+    /* Real table */
+    .riwayat-table { width: 100%; border-collapse: collapse; }
+    .riwayat-table thead th {
+        background: var(--primary-50); color: var(--primary-900);
+        font-family: 'Work Sans', sans-serif; font-size: .75rem; font-weight: 700;
+        text-transform: uppercase; letter-spacing: .06em;
+        padding: 12px 16px; text-align: left;
+        border-bottom: 1.5px solid rgba(30,58,138,.2);
+    }
+    .riwayat-table tbody tr {
+        border-bottom: 1px solid rgba(30,58,138,.1);
+        transition: background .18s;
+    }
+    .riwayat-table tbody tr:last-child { border-bottom: none; }
+    .riwayat-table tbody tr:hover { background: var(--primary-50); }
+    .riwayat-table td {
+        padding: 13px 16px; font-size: .87rem;
+        color: var(--primary-900); vertical-align: middle;
+    }
+    .col-no { width: 44px; color: var(--neutral-400); font-weight: 600; text-align: center; }
+    .col-title  { font-weight: 600; }
+    .col-date   { color: var(--neutral-500); white-space: nowrap; }
+    .col-status { white-space: nowrap; }
+    .col-action { text-align: right; }
+
+    /* Status badges */
+    .status-badge {
+        display: inline-flex; align-items: center;
+        padding: 3px 10px; border-radius: 100px;
+        font-size: .72rem; font-weight: 700; letter-spacing: .04em;
+        border: 1.5px solid;
+    }
+    .badge--pending  { background: var(--accent-50);  border-color: var(--accent-700);  color: var(--accent-700); }
+    .badge--verified { background: #f0fdf4;            border-color: #16a34a;            color: #15803d; }
+    .badge--rejected { background: var(--error-50);   border-color: var(--error-400);   color: var(--error-400); }
+
+    /* Info icon tooltip */
+    .info-icon {
+        display: inline-flex; align-items: center; justify-content: center;
+        margin-left: 6px; color: var(--error-400); cursor: help; vertical-align: middle;
+        position: relative;
+    }
+    .rej-tooltip {
+        position: absolute; z-index: 9999;
+        background: #1e293b; color: #f8fafc;
+        font-size: .78rem; padding: 6px 12px; border-radius: 8px;
+        max-width: 260px; line-height: 1.5;
+        pointer-events: none; white-space: normal;
+        box-shadow: 0 4px 16px rgba(0,0,0,.25);
+    }
+
+    /* Detail button */
+    .btn-detail {
+        display: inline-flex; align-items: center; gap: 5px;
+        padding: 6px 12px; font-size: .78rem; font-weight: 600;
+        background: var(--neutral-50); border: 1.5px solid #1e3a8a;
+        border-radius: var(--radius-sm); color: var(--primary-700);
+        cursor: pointer; font-family: 'Work Sans', sans-serif;
+        text-decoration: none;
+        transition: background .18s, color .18s, transform .18s;
+        white-space: nowrap;
+    }
+    .btn-detail:hover {
+        background: var(--primary-700); color: #fff; transform: translateY(-1px);
+    }
+    .btn-detail--disabled {
+        opacity: .4; cursor: not-allowed; pointer-events: none;
+    }
+
+    /* Empty state riwayat */
+    .riwayat-empty {
+        display: none; flex-direction: column; align-items: center;
+        padding: 52px 24px; gap: 10px; color: var(--neutral-400); text-align: center;
+    }
+    .riwayat-empty-title { font-family: 'Playfair Display', serif; font-size: 1rem; font-weight: 700; color: var(--primary-900); margin: 0; }
+    .riwayat-empty-desc  { font-size: .84rem; color: var(--neutral-500); margin: 0; }
+
+    @media (max-width: 768px) {
+        .skeleton-row { grid-template-columns: 36px 1fr 90px 80px; }
+        .riwayat-summary { gap: 8px; }
+        .rsummary-chip { padding: 6px 12px; }
     }
 </style>
 {% endblock %}

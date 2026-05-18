@@ -52,17 +52,29 @@
   --neutral-800: #1f1f1f;
   --neutral-900: #000000;
 
-  /* Error */
-  --error-50:  #fdecec;
-  --error-100: #fac5c5;
-  --error-200: #f8a9a9;
-  --error-300: #f48282;
-  --error-400: #f26969;
-  --error-500: #ef4444;
-  --error-600: #d93e3e;
-  --error-700: #aa3030;
-  --error-800: #832525;
-  --error-900: #641d1d;
+   /* Success */
+   --success-50:  #ecfdf5;
+   --success-100: #d1fae5;
+   --success-200: #a7f3d0;
+   --success-300: #6ee7b7;
+   --success-400: #34d399;
+   --success-500: #10b981;
+   --success-600: #059669;
+   --success-700: #047857;
+   --success-800: #065f46;
+   --success-900: #064e3b;
+
+   /* Error */
+   --error-50:  #fdecec;
+   --error-100: #fac5c5;
+   --error-200: #f8a9a9;
+   --error-300: #f48282;
+   --error-400: #f26969;
+   --error-500: #ef4444;
+   --error-600: #d93e3e;
+   --error-700: #aa3030;
+   --error-800: #832525;
+   --error-900: #641d1d;
 
   /* Spacing / Radius / Shadow */
   --radius-sm:  6px;

@@ -130,6 +130,7 @@
     .status-rusak          { background: var(--orange-bg); color: var(--orange); border-color: var(--orange); }
     .status-hilang         { background: var(--red-bg); color: var(--red); border-color: var(--red); }
     .status-tidak_tersedia { background: var(--amber-bg); color: var(--amber); border-color: var(--amber); }
+    .status-tidak_aktif    { background: #F3F4F6; color: #6B7280; border-color: #D1D5DB; }
     .status-other          { background: var(--surface-2); color: var(--text-3); border-color: var(--text-3); }
 
     .book-author {
@@ -210,6 +211,8 @@
     .btn-outline-navy:hover { background: var(--navy-soft); }
     .btn-danger { background: #E14942; color: #fff; }
     .btn-danger:hover { filter: brightness(1.1); box-shadow: 0 4px 12px rgba(225,73,66,.25); }
+    .btn-green { background: #66cdaa; color: #fff; }
+    .btn-green:hover { filter: brightness(1.05); box-shadow: 0 4px 12px rgba(102,205,170,.3); }
     .btn-disabled { background: #F3F4F6; color: #9CA3AF; cursor: not-allowed; border: 1px solid var(--border); }
 
     /* ── RIGHT: REVIEW PANEL ── */
@@ -284,23 +287,37 @@
       padding: 12px 14px;
       font-size: 14px; font-family: 'DM Sans', sans-serif;
       color: #fff; resize: none; outline: none;
-      transition: border-color .15s;
+      transition: border-color .15s, box-shadow .15s;
     }
     .write-review-textarea::placeholder { color: rgba(255,255,255,.35); }
     .write-review-textarea:focus { border-color: rgba(255,255,255,.4); }
+
+    /* ── CHARACTER LIMIT OVER ── */
+    .write-review-textarea.over-limit {
+      border-color: var(--red) !important;
+      box-shadow: 0 0 0 2px rgba(220,38,38,.25);
+    }
+    .char-count.over-limit { color: #FCA5A5 !important; font-weight: 700; }
+    .char-helper {
+      font-size: 11px; color: rgba(255,255,255,.4);
+      margin-top: 4px; display: none;
+    }
+    .char-helper.show { display: block; color: #FCA5A5; }
+
     .write-review-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
-    .char-count { font-size: 11px; color: rgba(255,255,255,.4); }
+    .char-count { font-size: 11px; color: rgba(255,255,255,.4); transition: color .15s; }
     .submit-review-btn {
       background: #fff; color: var(--navy-dark);
       border: none; border-radius: var(--radius-sm);
       font-size: 12px; font-weight: 700;
       padding: 8px 18px; cursor: pointer;
       font-family: 'DM Sans', sans-serif;
-      transition: background .15s, color .15s, transform .1s;
+      transition: background .15s, color .15s, transform .1s, opacity .15s;
       letter-spacing: .02em;
     }
-    .submit-review-btn:hover { background: var(--navy-soft); }
-    .submit-review-btn:active { transform: scale(.97); }
+    .submit-review-btn:hover:not(:disabled) { background: var(--navy-soft); }
+    .submit-review-btn:active:not(:disabled) { transform: scale(.97); }
+    .submit-review-btn:disabled { opacity: .5; cursor: not-allowed; }
 
     /* ── READERS SECTION ── */
     .readers-section { margin-top: 48px; }
@@ -327,7 +344,7 @@
       border-radius: 2px;
     }
 
-    /* Filter dropdown */
+    /* ── FILTER DROPDOWN ── */
     .filter-wrap { position: relative; }
     .filter-btn {
       background: var(--surface); border: 1px solid var(--border);
@@ -358,6 +375,34 @@
     .filter-option .opt-stars { display: flex; gap: 2px; }
     .filter-option .opt-stars span { font-size: 13px; }
 
+    /* ── SORT DROPDOWN ── */
+    .sort-wrap { position: relative; }
+    .sort-btn {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); padding: 8px 16px;
+      font-size: 13px; font-weight: 600; color: var(--text-2);
+      cursor: pointer; display: flex; align-items: center; gap: 8px;
+      font-family: 'DM Sans', sans-serif; transition: border-color .15s;
+    }
+    .sort-btn:hover { border-color: var(--navy-mid); color: var(--navy-mid); }
+    .sort-dropdown {
+      position: absolute; right: 0; top: calc(100% + 6px);
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius-md); box-shadow: var(--shadow-lg);
+      padding: 6px; z-index: 20; min-width: 190px; display: none;
+    }
+    .sort-dropdown.open { display: block; }
+    .sort-option {
+      display: flex; align-items: center; gap: 8px;
+      padding: 9px 12px; border-radius: var(--radius-sm);
+      cursor: pointer; font-size: 13px; font-weight: 500;
+      color: var(--text-2); transition: background .1s;
+      border: none; background: none; width: 100%; text-align: left;
+      font-family: 'DM Sans', sans-serif;
+    }
+    .sort-option:hover { background: var(--surface-2); }
+    .sort-option.active { background: var(--navy-soft); color: var(--navy-mid); font-weight: 600; }
+
     /* Reviews list */
     .reviews-list { display: flex; flex-direction: column; gap: 12px; }
 
@@ -382,7 +427,15 @@
     .review-card-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
     .review-stars   { display: flex; gap: 2px; }
     .review-stars span { font-size: 14px; }
-    .review-time    { font-size: 11px; color: var(--text-3); margin-top: 4px; text-align: right; }
+
+    /* ── DUAL TIMESTAMP ── */
+    .review-timestamps {
+      display: flex; flex-direction: column; align-items: flex-end;
+      gap: 2px; margin-top: 4px;
+    }
+    .review-time         { font-size: 11px; color: var(--text-3); }
+    .review-time-edited  { font-size: 10px; color: var(--amber); font-style: italic; }
+
     .review-text    { font-size: 14px; color: var(--text-2); line-height: 1.65; word-break: break-word; }
     .review-delete-btn {
       background: none; border: none; cursor: pointer;
@@ -397,8 +450,6 @@
       font-size: 14px; color: var(--text-3);
     }
     .load-more-wrap { text-align: center; margin-top: 20px; }
-
-
 
     /* ── MODALS ── */
     .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.45); backdrop-filter: blur(3px); z-index: 50; display: none; align-items: center; justify-content: center; padding: 24px; }
@@ -598,8 +649,10 @@
                         <span class="status-badge status-hilang">Hilang</span>
                         {% elif book.display_status == 'tidak_tersedia' %}
                         <span class="status-badge status-tidak_tersedia">Tidak Tersedia</span>
+                        {% elif book.display_status == 'tidak_aktif' %}
+                        <span class="status-badge status-tidak_aktif">Tidak Aktif</span>
                         {% else %}
-                        <span class="status-badge status-other">Tidak Aktif</span>
+                        <span class="status-badge status-other">Lainnya</span>
                         {% endif %}
                     </div>
 
@@ -616,7 +669,6 @@
                     </div>
                     {% endif %}
 
-                    <!-- Primary CTA — most prominent -->
                     <!-- Info Grid -->
                     <div class="info-grid">
                         <div class="info-item">
@@ -701,11 +753,18 @@
                             {% if perms.book.change_book or is_librarian %}
                             <a href="{% url 'book:book_edit' book.pk %}" class="btn btn-outline-navy">Edit Buku</a>
                             {% endif %}
-                            {% if perms.book.delete_book and book.status != 'tidak_aktif' %}
-                            <button id="deleteBtn" class="btn {% if book.borrowed_copies > 0 %}btn-disabled{% else %}btn-danger{% endif %}"
-                                    {% if book.borrowed_copies > 0 %}disabled title="Buku sedang dipinjam"{% endif %}>
-                                Nonaktifkan Buku
-                            </button>
+                            {% if perms.book.delete_book %}
+                                {% if book.status != 'tidak_aktif' %}
+                                <button id="deleteBtn" class="btn {% if book.borrowed_copies > 0 %}btn-disabled{% else %}btn-danger{% endif %}"
+                                        {% if book.borrowed_copies > 0 %}disabled title="Buku sedang dipinjam"{% endif %}>
+                                    Nonaktifkan Buku
+                                </button>
+                                {% else %}
+                                <form action="{% url 'book:book_reactivate' book.pk %}" method="POST" style="display:inline-block; width:100%;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-green" style="width:100%;">Aktifkan Kembali</button>
+                                </form>
+                                {% endif %}
                             {% endif %}
                         {% endif %}
                     </div>
@@ -760,9 +819,11 @@
                         </label>
                         {% endfor %}
                     </div>
-                    <textarea name="comment" id="reviewComment" rows="4" maxlength="500"
+                    <!-- maxlength TIDAK dipakai agar validasi visual bisa berjalan (> 500 = border merah) -->
+                    <textarea name="comment" id="reviewComment" rows="4"
                               class="write-review-textarea"
                               placeholder="Bagikan pendapatmu tentang buku ini… (opsional)"></textarea>
+                    <p class="char-helper" id="charHelper">Maksimal 500 karakter</p>
                     <div class="write-review-footer">
                         <span class="char-count" id="charCount">0/500</span>
                         <button type="submit" class="submit-review-btn" id="submitReviewBtn">Kirim →</button>
@@ -780,24 +841,43 @@
             <div style="display:flex;align-items:center;flex-wrap:wrap;gap:8px;">
                 <h2 class="section-title">What Readers Say</h2>
                 <span class="filter-active-badge" id="filterActiveBadge" style="display:none;">
-          <span id="filterActiveLabel"></span>
-          <button onclick="clearFilter()" title="Hapus filter">✕</button>
-        </span>
+                    <span id="filterActiveLabel"></span>
+                    <button onclick="clearFilter()" title="Hapus filter">✕</button>
+                </span>
             </div>
-            <div class="filter-wrap">
-                <button class="filter-btn" id="filterBtn" onclick="toggleFilterMenu()">
-                    <span id="filterLabel">Semua</span>
-                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                </button>
-                <div class="filter-dropdown" id="filterMenu">
-                    <button class="filter-option active" data-val="all" onclick="setFilter('all','Semua')">
-                        Semua ulasan
+            <div style="display:flex;gap:8px;align-items:center;">
+                <!-- Sort dropdown -->
+                <div class="sort-wrap">
+                    <button class="sort-btn" id="sortBtn" onclick="toggleSortMenu()">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M7 12h10M11 18h2"/></svg>
+                        <span id="sortLabel">Terbaru</span>
+                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
                     </button>
-                    {% for n in "54321" %}
-                    <button class="filter-option" data-val="{{ n }}" onclick="setFilter('{{ n }}','{{ n }} Bintang')">
-                        {{ n }} Bintang
+                    <div class="sort-dropdown" id="sortMenu">
+                        <button class="sort-option active" data-val="newest" onclick="setSort('newest','Terbaru')">
+                            🕒 Terbaru (Posted)
+                        </button>
+                        <button class="sort-option" data-val="recently_edited" onclick="setSort('recently_edited','Baru Diedit')">
+                            ✏️ Baru Diedit
+                        </button>
+                    </div>
+                </div>
+                <!-- Filter dropdown -->
+                <div class="filter-wrap">
+                    <button class="filter-btn" id="filterBtn" onclick="toggleFilterMenu()">
+                        <span id="filterLabel">Semua</span>
+                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
                     </button>
-                    {% endfor %}
+                    <div class="filter-dropdown" id="filterMenu">
+                        <button class="filter-option active" data-val="all" onclick="setFilter('all','Semua')">
+                            Semua ulasan
+                        </button>
+                        {% for n in "54321" %}
+                        <button class="filter-option" data-val="{{ n }}" onclick="setFilter('{{ n }}','{{ n }} Bintang')">
+                            {{ n }} Bintang
+                        </button>
+                        {% endfor %}
+                    </div>
                 </div>
             </div>
         </div>
@@ -812,8 +892,6 @@
             </div>
         </div>
     </div>
-
-
 
 </div>
 
@@ -948,51 +1026,48 @@
       } catch(e){ console.warn('Enrich failed',e); }
     })();
 
-    /* ── Delete ── */
+    /* ── Delete Book ── */
     document.getElementById('deleteBtn')?.addEventListener('click', ()=>openModal('deleteModal'));
     document.getElementById('deleteModal')?.addEventListener('click', e=>{ if(e.target===document.getElementById('deleteModal')) closeModal('deleteModal'); });
     document.getElementById('borrowModal')?.addEventListener('click', e=>{ if(e.target===document.getElementById('borrowModal')) closeModal('borrowModal'); });
 
-  /* ── Borrow ── */
-  function requestBorrow(id) {
-    document.getElementById('borrowBookId').value = id;
-    document.getElementById('borrowDays').value = '7';
-    openModal('borrowModal');
-  }
-  function submitBorrow() {
-    const bookId = document.getElementById('borrowBookId').value;
-    const days   = document.getElementById('borrowDays').value;
-    
-    // Validasi durasi sebelum submit
-    const daysInt = parseInt(days);
-    if (!daysInt || daysInt < 1 || daysInt > 7) {
-      document.getElementById('borrowErrorMessage').textContent = 'Durasi peminjaman harus antara 1-7 hari';
-      openModal('borrowErrorModal');
-      return;
+    /* ── Borrow ── */
+    function requestBorrow(id) {
+      document.getElementById('borrowBookId').value = id;
+      document.getElementById('borrowDays').value = '7';
+      openModal('borrowModal');
     }
-    
-    fetch('/loan/api/loans/create/', {
-      method:'POST', headers:{'Content-Type':'application/json','X-CSRFToken':getCookie('csrftoken')},
-      body: JSON.stringify({book_id:bookId, duration_days:parseInt(days)})
-    }).then(r=>r.json()).then(d=>{
-      if (d.status==='success') {
-        showToast('✓ Peminjaman berhasil diajukan!');
-        closeModal('borrowModal');
-        setTimeout(()=>location.reload(),800);
-      } else if (d.is_waitlist_available) {
-        if (confirm('Buku tidak tersedia. Masuk antrian?')) joinWaitlist(bookId);
-        closeModal('borrowModal');
-      } else { 
-        document.getElementById('borrowErrorMessage').textContent = d.message||'Gagal meminjam buku';
+    function submitBorrow() {
+      const bookId  = document.getElementById('borrowBookId').value;
+      const days    = document.getElementById('borrowDays').value;
+      const daysInt = parseInt(days);
+      if (!daysInt || daysInt < 1 || daysInt > 7) {
+        document.getElementById('borrowErrorMessage').textContent = 'Durasi peminjaman harus antara 1-7 hari';
+        openModal('borrowErrorModal');
+        return;
+      }
+      fetch('/loan/api/loans/create/', {
+        method:'POST', headers:{'Content-Type':'application/json','X-CSRFToken':getCookie('csrftoken')},
+        body: JSON.stringify({book_id:bookId, duration_days:parseInt(days)})
+      }).then(r=>r.json()).then(d=>{
+        if (d.status==='success') {
+          showToast('✓ Peminjaman berhasil diajukan!');
+          closeModal('borrowModal');
+          setTimeout(()=>location.reload(),800);
+        } else if (d.is_waitlist_available) {
+          if (confirm('Buku tidak tersedia. Masuk antrian?')) joinWaitlist(bookId);
+          closeModal('borrowModal');
+        } else {
+          document.getElementById('borrowErrorMessage').textContent = d.message||'Gagal meminjam buku';
+          openModal('borrowErrorModal');
+          closeModal('borrowModal');
+        }
+      }).catch(()=>{
+        document.getElementById('borrowErrorMessage').textContent = 'Terjadi kesalahan saat mengajukan peminjaman';
         openModal('borrowErrorModal');
         closeModal('borrowModal');
-      }
-    }).catch(()=>{
-      document.getElementById('borrowErrorMessage').textContent = 'Terjadi kesalahan saat mengajukan peminjaman';
-      openModal('borrowErrorModal');
-      closeModal('borrowModal');
-    });
-  }
+      });
+    }
 
     /* ── Waitlist ── */
     function joinWaitlist(bookId) {
@@ -1008,10 +1083,13 @@
     }
 
 
-    /* ── Reviews + Filter ── */
-    let currentPage = 1;
-    let hasNext     = false;
-    let activeFilter = 'all';  // 'all' | '1'..'5'
+    /* ══════════════════════════════════════════════════════════
+       REVIEWS SYSTEM
+    ══════════════════════════════════════════════════════════ */
+    let currentPage  = 1;
+    let hasNext      = false;
+    let activeFilter = 'all';       // 'all' | '1'..'5'
+    let activeSort   = 'newest';    // 'newest' | 'recently_edited'
 
     const avatarColors = ['#4F46E5','#059669','#D97706','#DC2626','#7C3AED','#0284C7','#DB2777','#0F766E'];
     function getAvatarColor(name) {
@@ -1022,28 +1100,45 @@
       return name.split(' ').slice(0,2).map(p=>p[0]||'').join('').toUpperCase();
     }
 
-    /* Filter UI */
+    /* ── Format tanggal lokal ── */
+    function formatDate(isoStr) {
+      if (!isoStr) return '';
+      const d = new Date(isoStr);
+      return d.toLocaleDateString('id-ID', {
+        day: '2-digit', month: 'short', year: 'numeric',
+        hour: '2-digit', minute: '2-digit'
+      });
+    }
+
+    /* ── Filter UI ── */
     function toggleFilterMenu() {
       document.getElementById('filterMenu').classList.toggle('open');
+      document.getElementById('sortMenu')?.classList.remove('open');
     }
+
+    /* ── Sort UI ── */
+    function toggleSortMenu() {
+      document.getElementById('sortMenu').classList.toggle('open');
+      document.getElementById('filterMenu')?.classList.remove('open');
+    }
+
+    /* Tutup semua dropdown saat klik di luar */
     document.addEventListener('click', e => {
-      const wrap = document.querySelector('.filter-wrap');
-      if (wrap && !wrap.contains(e.target)) {
-        document.getElementById('filterMenu').classList.remove('open');
-      }
+      const filterWrap = document.querySelector('.filter-wrap');
+      const sortWrap   = document.querySelector('.sort-wrap');
+      if (filterWrap && !filterWrap.contains(e.target))
+        document.getElementById('filterMenu')?.classList.remove('open');
+      if (sortWrap && !sortWrap.contains(e.target))
+        document.getElementById('sortMenu')?.classList.remove('open');
     });
 
     function setFilter(val, label) {
       activeFilter = val;
       document.getElementById('filterLabel').textContent = label;
       document.getElementById('filterMenu').classList.remove('open');
-
-      // update active class
       document.querySelectorAll('.filter-option').forEach(el => {
         el.classList.toggle('active', el.dataset.val === val);
       });
-
-      // show/hide badge
       const badge = document.getElementById('filterActiveBadge');
       if (val === 'all') {
         badge.style.display = 'none';
@@ -1051,15 +1146,24 @@
         badge.style.display = 'inline-flex';
         document.getElementById('filterActiveLabel').textContent = label;
       }
+      loadReviews(1);
+    }
+    function clearFilter() { setFilter('all', 'Semua'); }
 
+    function setSort(val, label) {
+      activeSort = val;
+      document.getElementById('sortLabel').textContent = label;
+      document.getElementById('sortMenu').classList.remove('open');
+      document.querySelectorAll('.sort-option').forEach(el => {
+        el.classList.toggle('active', el.dataset.val === val);
+      });
       loadReviews(1);
     }
 
-    function clearFilter() { setFilter('all', 'Semua'); }
-
+    /* ── Load Reviews ── */
     async function loadReviews(page=1) {
       try {
-        let url = `/book/api/books/${bookPk}/reviews/?page=${page}&per_page=5`;
+        let url = `/book/api/books/${bookPk}/reviews/?page=${page}&per_page=5&sort=${activeSort}`;
         if (activeFilter !== 'all') url += `&rating=${activeFilter}`;
 
         const r = await fetch(url);
@@ -1069,6 +1173,11 @@
           updateSummary(d);
           document.getElementById('reviewsList').innerHTML = '';
           document.getElementById('noReviews').style.display = 'none';
+
+          /* ── Persistensi rating: pre-fill bintang jika user sudah pernah review ── */
+          if (d.user_rating && d.user_rating >= 1 && d.user_rating <= 5) {
+            prefillStars(d.user_rating);
+          }
         }
 
         if (d.reviews.length > 0) {
@@ -1091,7 +1200,6 @@
       const avg = d.average_rating;
       document.getElementById('avgRating').textContent = avg ? avg.toFixed(1) : '--';
       document.getElementById('ratingCountText').textContent = `dari ${d.total_reviews} ulasan`;
-
       const starsEl = document.getElementById('avgStars');
       starsEl.innerHTML = '';
       for(let i=1;i<=5;i++){
@@ -1101,7 +1209,6 @@
         s.textContent = '★';
         starsEl.appendChild(s);
       }
-
       for(let i=1;i<=5;i++){
         const count = d.rating_distribution[i] || 0;
         const pct   = d.total_reviews > 0 ? (count / d.total_reviews * 100) : 0;
@@ -1111,6 +1218,17 @@
       }
     }
 
+    /* ── Prefill bintang (persistensi rating) ── */
+    function prefillStars(rating) {
+      document.querySelectorAll('.star-radio').forEach((r, i) => {
+        r.checked = (i + 1) === rating;
+      });
+      document.querySelectorAll('.star-icon').forEach((s, i) => {
+        s.style.color = i < rating ? '#F59E0B' : 'rgba(255,255,255,.3)';
+      });
+    }
+
+    /* ── Review Card ── */
     function createReviewCard(rv) {
       const div = document.createElement('div');
       div.className = 'review-card';
@@ -1119,6 +1237,7 @@
       ).join('');
       const initials = getInitials(rv.nama_reviewer || '??');
       const color    = getAvatarColor(rv.nama_reviewer || '');
+
       let deleteHtml = '';
       if (rv.user_id === userId || isStaff) {
         deleteHtml = `<button onclick="showDeleteReviewModal(${rv.id})" class="review-delete-btn" title="Hapus ulasan">
@@ -1127,6 +1246,13 @@
             <path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/>
           </svg></button>`;
       }
+
+      /* ── Dual Timestamp ── */
+      const postedHtml = `<span class="review-time">Posted at ${formatDate(rv.created_at)}</span>`;
+      const editedHtml = rv.is_edited
+        ? `<span class="review-time-edited">✏ Edited at ${formatDate(rv.updated_at)}</span>`
+        : '';
+
       div.innerHTML = `
         <div class="review-card-top">
           <div class="reviewer-left">
@@ -1141,22 +1267,17 @@
               <div class="review-stars">${starsHtml}</div>
               ${deleteHtml}
             </div>
-            <p class="review-time">${timeAgo(rv.timestamp)}</p>
+            <div class="review-timestamps">
+              ${postedHtml}
+              ${editedHtml}
+            </div>
           </div>
         </div>
         ${rv.comment ? `<p class="review-text">${rv.comment}</p>` : ''}`;
       return div;
     }
 
-    function timeAgo(ts) {
-      const diff = (Date.now() - new Date(ts)) / 1000;
-      if (diff < 60)    return 'Baru saja';
-      if (diff < 3600)  return `${Math.floor(diff/60)} menit lalu`;
-      if (diff < 86400) return `${Math.floor(diff/3600)} jam lalu`;
-      return `${Math.floor(diff/86400)} hari lalu`;
-    }
-
-    /* Star picker */
+    /* ── Star Picker ── */
     document.querySelectorAll('.star-icon').forEach(star => {
       star.addEventListener('mouseenter', () => {
         const val = parseInt(star.dataset.val);
@@ -1177,38 +1298,79 @@
         s.style.color = i < val ? '#F59E0B' : 'rgba(255,255,255,.3)');
     });
 
+    /* ── Character Limit Validation ── */
     document.getElementById('reviewComment')?.addEventListener('input', function(){
-      document.getElementById('charCount').textContent = `${this.value.length}/500`;
+      const len       = this.value.length;
+      const countEl   = document.getElementById('charCount');
+      const helperEl  = document.getElementById('charHelper');
+      const submitBtn = document.getElementById('submitReviewBtn');
+
+      countEl.textContent = `${len}/500`;
+
+      if (len > 500) {
+        // Border merah + helper text + disable submit
+        this.classList.add('over-limit');
+        countEl.classList.add('over-limit');
+        helperEl.classList.add('show');
+        submitBtn.disabled = true;
+      } else {
+        this.classList.remove('over-limit');
+        countEl.classList.remove('over-limit');
+        helperEl.classList.remove('show');
+        submitBtn.disabled = false;
+      }
     });
 
+    /* ── Submit Review ── */
     document.getElementById('reviewForm')?.addEventListener('submit', async function(e){
       e.preventDefault();
       const rating  = document.querySelector('.star-radio:checked')?.value;
       const comment = this.comment.value;
+
       if (!rating) { showToast('Pilih rating bintang terlebih dahulu', 'red'); return; }
+      if (comment.length > 500) { showToast('Komentar maksimal 500 karakter', 'red'); return; }
+
       const btn = document.getElementById('submitReviewBtn');
-      btn.disabled = true; btn.textContent = 'Mengirim…';
+      btn.disabled = true;
+      btn.textContent = 'Mengirim…';
+
       try {
         const r = await fetch(`/book/api/books/${bookPk}/reviews/`, {
           method: 'POST',
-          headers: {'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value, 'Content-Type': 'application/json'},
-          body: JSON.stringify({rating: parseInt(rating), comment})
+          headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ rating: parseInt(rating), comment })
         });
         const d = await r.json();
         if (r.ok) {
-          showToast(d.message?.includes('diperbarui') ? 'Review diperbarui!' : 'Review terkirim!');
+          const isUpdate = d.message?.includes('diperbarui');
+          showToast(isUpdate ? 'Review diperbarui!' : 'Review terkirim!');
           loadReviews(1);
-          this.reset();
-          document.querySelectorAll('.star-icon').forEach(s => s.style.color = 'rgba(255,255,255,.3)');
-        } else { showToast(d.error || 'Gagal mengirim review', 'red'); }
-      } catch(err){ showToast('Terjadi kesalahan', 'red'); }
-      finally { btn.disabled = false; btn.textContent = 'Kirim →'; }
+          // Reset textarea & char count saja — bintang TIDAK di-reset (persistensi rating)
+          this.comment.value = '';
+          document.getElementById('charCount').textContent = '0/500';
+          document.getElementById('charHelper').classList.remove('show');
+          this.comment.classList.remove('over-limit');
+          document.getElementById('charCount').classList.remove('over-limit');
+        } else {
+          showToast(d.error || 'Gagal mengirim review', 'red');
+        }
+      } catch(err){
+        showToast('Terjadi kesalahan', 'red');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Kirim →';
+      }
     });
 
+    /* ── Load More ── */
     document.getElementById('loadMoreBtn')?.addEventListener('click', () => {
       if (hasNext) loadReviews(currentPage + 1);
     });
 
+    /* ── Delete Review ── */
     let reviewToDelete = null;
 
     function showDeleteReviewModal(id) {
@@ -1220,8 +1382,8 @@
       if (!reviewToDelete) return;
       closeModal('reviewDeleteModal');
       const r = await fetch(`/book/api/books/${bookPk}/reviews/${reviewToDelete}/`, {
-        method:'DELETE',
-        headers:{'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value}
+        method: 'DELETE',
+        headers: { 'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value }
       });
       if (r.ok) { showToast('Ulasan dihapus'); loadReviews(1); }
       else showToast('Gagal menghapus', 'red');

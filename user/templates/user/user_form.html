@@ -208,6 +208,22 @@
     .uf-hint { font-size: .75rem; color: var(--neutral-400); margin-top: 5px; }
     .uf-error { font-size: .75rem; color: var(--error-600); margin-top: 5px; display: flex; align-items: center; gap: 4px; }
 
+    /* Checkbox styling */
+    .uf-field label[style*="display:flex"] {
+        cursor: pointer;
+        padding: 8px 0;
+        margin-top: 8px;
+        border-radius: var(--radius-sm);
+        transition: background var(--transition);
+    }
+    .uf-field label[style*="display:flex"]:hover {
+        background: var(--neutral-50);
+    }
+    .uf-field input[type="checkbox"] {
+        margin-right: 8px;
+        accent-color: var(--primary-500);
+    }
+
     /* ── PASSWORD TOGGLE WRAP ── */
     .uf-pw-wrap { position: relative; }
     .uf-pw-wrap input { padding-right: 42px !important; }
@@ -284,7 +300,11 @@
         <!-- Profile Preview Card -->
         <div class="uf-profile-card" id="profileCard">
             <div class="uf-profile-avatar" id="profileAvatar">
-                {% if action != 'Add' %}{{ form.first_name.value|make_list|first|upper|default:"?" }}{% else %}?{% endif %}
+                {% if action != 'Add' and user_obj.profile.profile_picture %}
+                    <img src="{{ user_obj.profile.get_profile_picture_url }}" alt="Profile Picture" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">
+                {% else %}
+                    {% if action != 'Add' %}{{ form.first_name.value|make_list|first|upper|default:"?" }}{% else %}?{% endif %}
+                {% endif %}
                 <div class="uf-profile-avatar-edit">
                     <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                 </div>
@@ -375,6 +395,18 @@
                     <h3>Informasi Profil</h3>
                 </div>
                 <div class="uf-section-body">
+                    {% if action == 'Edit' and user_obj.profile.profile_picture %}
+                    <div class="uf-field">
+                        <label class="uf-label">Foto Profil</label>
+                        <p class="uf-hint">Pengguna memiliki foto profil. Anda dapat menghapusnya jika diperlukan.</p>
+                        <div style="margin-top:8px;">
+                            <label style="display:flex;align-items:center;gap:8px;font-size:0.875rem;color:#374151;cursor:pointer;">
+                                {{ form.remove_profile_picture }}
+                                <span>Hapus foto profil saat ini</span>
+                            </label>
+                        </div>
+                    </div>
+                    {% endif %}
                     <div class="uf-grid-2">
                         <div>
                             <label class="uf-label">Role <span class="req">*</span></label>
@@ -439,9 +471,12 @@
             if (profileName) profileName.textContent = (fn || ln) ? (fn + ' ' + ln).trim() : 'Nama Pengguna';
             if (profileEmail) profileEmail.textContent = em || 'email@nasalib.ac.id';
             if (profileAvatar) {
-                // Keep just the edit icon, set the letter
+                // Keep just the edit icon, set the letter (no file upload anymore)
                 const letter = fn ? fn[0].toUpperCase() : '?';
-                profileAvatar.childNodes[0].textContent = letter;
+                const textNode = profileAvatar.firstChild;
+                if (textNode && textNode.nodeType === Node.TEXT_NODE) {
+                    textNode.textContent = letter;
+                }
             }
             if (profileRole) profileRole.textContent = rl && roleSelect.value ? rl : 'Peran';
         }

@@ -5,6 +5,7 @@
 {% block content %}
 
 <style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Work+Sans:wght@600&family=Inter:wght@400&display=swap');
   :root {
     --color-yellow:    #F8BE5C;
     --color-green:     #0FA875;
@@ -22,7 +23,9 @@
   .br-page {
     min-height: 100vh;
     background: linear-gradient(135deg, #f0f4ff 0%, #ffffff 50%, #f0f4ff 100%);
-    font-family: 'Segoe UI', system-ui, sans-serif;
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    line-height: 1.5;
   }
 
   .br-container {
@@ -43,14 +46,18 @@
 
   .br-header h1 {
     font-size: 2.5rem;
-    font-weight: 800;
+    font-family: 'Playfair Display', serif;
+    font-weight: 700;
+    line-height: 1.2;
     color: var(--color-blue);
     letter-spacing: -0.03em;
-    line-height: 1.1;
     margin: 0;
   }
 
   .br-header p {
+    font-family: 'Work Sans', sans-serif;
+    font-weight: 600;
+    line-height: 1.2;
     color: var(--color-gray-ui);
     margin-top: 0.4rem;
     font-size: 0.95rem;
@@ -92,7 +99,7 @@
     text-transform: uppercase;
     letter-spacing: .08em;
     margin-top: .35rem;
-    font-weight: 600;
+    font-weight: 400;
   }
 
   .br-stat--total  { border-color: var(--color-blue);   }
@@ -150,12 +157,17 @@
 
   .br-card__head h2 {
     font-size: 1.35rem;
-    font-weight: 800;
+    font-family: 'Playfair Display', serif;
+    font-weight: 700;
+    line-height: 1.2;
     color: #fff;
     margin: 0;
   }
 
   .br-card__head p {
+    font-family: 'Work Sans', sans-serif;
+    font-weight: 600;
+    line-height: 1.2;
     color: rgba(255,255,255,.72);
     font-size: .82rem;
     margin-top: .2rem;
@@ -317,7 +329,7 @@
 
   .br-modal__close-x:hover { background: #d1d5db; }
 
-  .br-modal__title  { font-size: 1.2rem; font-weight: 800; color: var(--color-blue); margin: 0 0 .15rem; }
+  .br-modal__title  { font-size: 1.2rem; font-weight: 800; color: var(--color-blue); margin: 0 0 .15rem;font-family: 'Playfair Display', serif; font-weight: 700; line-height: 1.2; }
   .br-modal__author { font-size: .85rem; color: var(--color-gray-ui); margin: 0 0 1.25rem; }
 
   .br-modal__fields { display: flex; flex-direction: column; gap: .9rem; }
@@ -444,7 +456,9 @@
   /* ── Judul ── */
   .notif-card h3 {
     font-size: 1.4rem;
-    font-weight: 800;
+    font-family: 'Playfair Display', serif;
+    font-weight: 700;
+    line-height: 1.2;
     color: #111827;
     margin: 0 0 .35rem;
   }
@@ -462,7 +476,7 @@
     font-size: .84rem;
     color: var(--color-gray-ui);
     margin-bottom: 1rem;
-    line-height: 1.6;
+    line-height: 1.5;
   }
 
   /* ── Box catatan ── */

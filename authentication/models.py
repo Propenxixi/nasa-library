@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
+from django.urls import reverse
 
 
 class UserProfile(models.Model):
@@ -24,6 +25,7 @@ class UserProfile(models.Model):
     nis = models.CharField(max_length=20, unique=True, blank=True, null=True, help_text="Nomor Induk Siswa")
     gender = models.CharField(max_length=1, choices=GENDER_CHOICES, blank=True, null=True)
     kelas = models.CharField(max_length=50, blank=True, null=True, help_text="Kelas/Class")
+    profile_picture = models.ImageField(upload_to='profile_pictures/', blank=True, null=True, help_text="Foto profil pengguna")
     
     # Soft delete for graduated students
     is_active_student = models.BooleanField(
@@ -67,6 +69,13 @@ class UserProfile(models.Model):
     
     def is_librarian(self):
         return self.role == 'librarian'
+
+    def get_profile_picture_url(self):
+        """Return profile picture URL or default avatar"""
+        if self.profile_picture:
+            return self.profile_picture.url
+        # Return a default avatar SVG data URL
+        return 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iMTAiIGZpbGw9IiNFNUU3RUIiLz4KPHBhdGggZD0iTTEyIDEyQzEzLjY2IDEyIDE1IDExLjIxIDE1IDEwQzE1IDguNzkgMTMuNjYgOCA5LjUgOEM4LjM0IDggOCA4Ljc5IDggMTBDOCA5LjIxIDkuMzQgMTAgOS41IDEwQzEwLjY2IDEwIDEyIDExLjIxIDEyIDEyWiIgZmlsbD0iIzk0QTNCMSIvPgo8cGF0aCBkPSJNMjEgMjFIM0MxLjkgMjEgMSAyMC4xIDEgMTlWMThDMSAxNi45IDEuOSAxNiAzIDE2SDE3QzE4LjEgMTYgMTkgMTYuOSAxOSA5QzE5IDE3LjEgMTguMSAxOCAxNyAxOEgxNUMxMy45IDE4IDEzIDE3LjEgMTMgMTlWMjFIMjFaIiBmaWxsPSIjOTRBQTNCIi8+Cjwvc3ZnPgo='
     
     def deactivate(self, reason='graduated'):
         """Soft delete: deactivate student"""

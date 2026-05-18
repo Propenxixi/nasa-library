@@ -32,7 +32,8 @@ def _snapshot(user):
     p = user.profile if hasattr(user, "profile") else None
     return {"id": user.pk, "username": user.username,
             "name": f"{user.first_name} {user.last_name}".strip(),
-            "role": p.role if p else "", "is_active": user.is_active}
+            "role": p.role if p else "", "is_active": user.is_active,
+            "has_profile_picture": bool(p and p.profile_picture) if p else False}
 
 
 @login_required
@@ -61,7 +62,7 @@ def user_list(request):
 def user_create(request):
     _require_librarian(request.user)
     if request.method == "POST":
-        form = UserCreateForm(request.POST)
+        form = UserCreateForm(request.POST, request.FILES)
         if form.is_valid():
             user = form.save(created_by=request.user)
             _log(request.user, "CREATE", target=user, after=_snapshot(user))

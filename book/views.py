@@ -1,4 +1,6 @@
 import json
+import csv
+import io
 from django.shortcuts import render, get_object_or_404, redirect, reverse
 from django.contrib.auth.decorators import login_required
 from django.contrib.admin.views.decorators import staff_member_required
@@ -92,6 +94,9 @@ def book_list(request):
         borrowed_count=Coalesce(Count('loans', filter=Q(loans__status='sedang_dipinjam')), Value(0))
     ).order_by('title')
 
+    if not _is_staff_or_librarian(request.user):
+        books = books.exclude(status='tidak_aktif')
+
     if q:
         books = books.filter(Q(title__icontains=q) | Q(author__icontains=q) | Q(isbn__icontains=q))
     if category:
@@ -131,14 +136,15 @@ def book_list(request):
             if c:
                 all_cats.add(c)
 
-    # Create status choices without 'tidak_aktif' for regular users
+    # Create status choices
     status_choices = [
         ('tersedia', 'Tersedia'),
         ('tidak_tersedia', 'Tidak Tersedia'),
         ('rusak', 'Rusak'),
         ('hilang', 'Hilang'),
-        ('tidak_aktif', 'Tidak Aktif')
     ]
+    if _is_staff_or_librarian(request.user):
+        status_choices.append(('tidak_aktif', 'Tidak Aktif'))
 
     context = {
         'page_obj':       page_obj,
@@ -315,6 +321,21 @@ def book_delete(request, pk):
     book.save()
     messages.success(request, f'Buku "{book.title}" berhasil dinonaktifkan.')
     return redirect('book:book_list')
+
+
+@login_required
+@require_POST
+def book_reactivate(request, pk):
+    if not _is_staff_or_librarian(request.user):
+        messages.error(request, 'Anda tidak memiliki izin untuk mengaktifkan buku.')
+        return redirect('book:book_detail', pk=pk)
+
+    book = get_object_or_404(Book, pk=pk)
+    book.status = 'tersedia'
+    book.updated_by = request.user
+    book.save()
+    messages.success(request, f'Buku "{book.title}" berhasil diaktifkan kembali.')
+    return redirect('book:book_detail', pk=pk)
 
 
 # ─── API: Enrich from ISBN ────────────────────────────────────────────────────
@@ -496,10 +517,17 @@ def api_book_reviews(request, book_id):
             if 1 <= rating <= 5:
                 reviews = reviews.filter(rating=rating)
 
+        # ── Sorting: 'newest' (default, by created_at) atau 'recently_edited' (by updated_at)
+        sort_by = request.GET.get('sort', 'newest').strip()
+        if sort_by == 'recently_edited':
+            reviews = reviews.order_by('-updated_at')
+        else:
+            reviews = reviews.order_by('-created_at')
+
         # Get reviews with pagination
         page = int(request.GET.get('page', 1))
         per_page = int(request.GET.get('per_page', 10))
-        paginator = Paginator(reviews.order_by('-created_at'), per_page)
+        paginator = Paginator(reviews, per_page)
         page_obj = paginator.get_page(page)
 
         # Statistics (always for all reviews)
@@ -508,6 +536,12 @@ def api_book_reviews(request, book_id):
         distribution = {}
         for r in range(1, 6):
             distribution[r] = all_reviews.filter(rating=r).count()
+
+        # ── Persistensi rating: kirim rating user saat ini (jika sudah pernah review)
+        user_rating = None
+        user_review_obj = all_reviews.filter(user=request.user).first()
+        if user_review_obj:
+            user_rating = user_review_obj.rating
 
         # Get user profile info
         review_data = []
@@ -519,6 +553,13 @@ def api_book_reviews(request, book_id):
             except:
                 role = 'Siswa'  # default
 
+            # ── is_edited: True jika updated_at berbeda dari created_at
+            is_edited = (
+                review.updated_at is not None
+                and review.created_at is not None
+                and review.updated_at != review.created_at
+            )
+
             review_data.append({
                 'id': review.id,
                 'user_id': review.user.id,
@@ -527,7 +568,14 @@ def api_book_reviews(request, book_id):
                 'role': role,
                 'rating': review.rating,
                 'comment': review.comment,
-                'timestamp': review.created_at.isoformat(),
+                # Dual timestamp
+                'created_at': review.created_at.isoformat() if review.created_at else None,
+                'updated_at': review.updated_at.isoformat() if review.updated_at else (
+                    review.created_at.isoformat() if review.created_at else None
+                ),
+                'is_edited': is_edited,
+                # Legacy field — tetap dikirim agar tidak ada breaking change
+                'timestamp': review.created_at.isoformat() if review.created_at else None,
             })
 
         return JsonResponse({
@@ -537,6 +585,8 @@ def api_book_reviews(request, book_id):
             'reviews': review_data,
             'has_next': page_obj.has_next(),
             'next_page': page_obj.next_page_number() if page_obj.has_next() else None,
+            # Persistensi rating untuk pre-fill form
+            'user_rating': user_rating,
         })
 
     elif request.method == "POST":
@@ -560,12 +610,13 @@ def api_book_reviews(request, book_id):
             return JsonResponse({'error': 'Komentar maksimal 500 karakter'}, status=400)
 
         # Check for active review first
-        active_review = reviews.filter(user=request.user).first()
+        active_review = all_reviews.filter(user=request.user).first()
         if active_review:
-            # Update existing active review
-            active_review.rating = rating
+            # ── Update review: hanya updated_at yang berubah, created_at tetap
+            active_review.rating  = rating
             active_review.comment = comment
-            active_review.save()
+            active_review.updated_at = timezone.now()
+            active_review.save(update_fields=['rating', 'comment', 'updated_at'])
             return JsonResponse({
                 'message': 'Review berhasil diperbarui',
                 'review_id': active_review.id
@@ -579,18 +630,20 @@ def api_book_reviews(request, book_id):
         ).first()
 
         if deleted_review:
-            # Restore the soft-deleted review
-            deleted_review.rating = rating
-            deleted_review.comment = comment
+            # ── Restore: anggap sebagai review baru — reset kedua timestamp
+            deleted_review.rating     = rating
+            deleted_review.comment    = comment
             deleted_review.deleted_at = None
             deleted_review.deleted_by = None
+            deleted_review.created_at = timezone.now()
+            deleted_review.updated_at = timezone.now()
             deleted_review.save()
             return JsonResponse({
                 'message': 'Review berhasil dikirim',
                 'review_id': deleted_review.id
             })
 
-        # Create new review
+        # Create new review — created_at & updated_at di-set sama (auto via model)
         review = Review.objects.create(
             book=book,
             user=request.user,
@@ -623,3 +676,332 @@ def api_delete_review(request, book_id, review_id):
         review.delete()  # hard delete
 
     return JsonResponse({'message': 'Review berhasil dihapus'})
+
+# ─── Bulk Upload Page ─────────────────────────────────────────────────────────
+
+@login_required
+def book_bulk_upload(request):
+    if not _is_staff_or_librarian(request.user):
+        messages.error(request, 'Anda tidak memiliki izin untuk mengakses fitur ini.')
+        return redirect('book:book_list')
+    return render(request, 'book_bulk_upload.html')
+
+
+# ─── API: Bulk Upload Books ───────────────────────────────────────────────────
+
+@login_required
+@require_POST
+def api_bulk_upload_books(request):
+    """
+    POST /api/books/bulk
+    Menerima file CSV atau Excel, validasi setiap baris, lalu bulk insert (atomic).
+    Hanya bisa diakses oleh Petugas Perpustakaan.
+    ISBN bersifat opsional — jika kosong, buku diidentifikasi berdasarkan judul.
+    """
+    if not _is_staff_or_librarian(request.user):
+        return JsonResponse({'error': 'Forbidden: hanya Petugas Perpustakaan yang dapat mengakses fitur ini.'}, status=403)
+
+    uploaded_file = request.FILES.get('file')
+    if not uploaded_file:
+        return JsonResponse({'error': 'Tidak ada file yang diunggah.'}, status=400)
+
+    # Validasi tipe & ukuran file
+    filename = uploaded_file.name.lower()
+    allowed_extensions = ('.csv', '.xlsx', '.xls')
+    if not filename.endswith(allowed_extensions):
+        return JsonResponse({'error': 'Tipe file tidak valid. Hanya CSV dan Excel (.xlsx/.xls) yang diperbolehkan.'}, status=400)
+
+    MAX_FILE_SIZE = 5 * 1024 * 1024  # 5 MB
+    if uploaded_file.size > MAX_FILE_SIZE:
+        return JsonResponse({'error': 'Ukuran file terlalu besar. Maksimal 5 MB.'}, status=400)
+
+    # Parse file menjadi list of dicts
+    rows = []
+
+    try:
+        if filename.endswith('.csv'):
+            content = uploaded_file.read().decode('utf-8-sig')
+            reader = csv.DictReader(io.StringIO(content))
+            rows = list(reader)
+        else:
+            try:
+                import openpyxl
+            except ImportError:
+                return JsonResponse({'error': 'Library openpyxl tidak terinstall. Gunakan file CSV.'}, status=500)
+
+            wb = openpyxl.load_workbook(uploaded_file, read_only=True, data_only=True)
+            ws = wb.active
+            headers = None
+            for i, row in enumerate(ws.iter_rows(values_only=True)):
+                if i == 0:
+                    headers = [str(h).strip() if h is not None else '' for h in row]
+                else:
+                    if all(cell is None for cell in row):
+                        continue
+                    rows.append(dict(zip(headers, [str(c).strip() if c is not None else '' for c in row])))
+            wb.close()
+    except Exception as e:
+        return JsonResponse({'error': f'Gagal membaca file: {str(e)}'}, status=400)
+
+    if not rows:
+        return JsonResponse({'error': 'File kosong atau tidak ada data yang dapat dibaca.'}, status=400)
+
+    # Kolom yang diterima (case-insensitive, strip whitespace)
+    COLUMN_MAP = {
+        'title':         ['title', 'judul'],
+        'author':        ['author', 'authors', 'author(s)', 'penulis'],
+        'isbn':          ['isbn', 'isbn code', 'kode isbn'],
+        'pages':         ['pages', 'length', 'jumlah halaman', 'halaman'],
+        'language':      ['language', 'bahasa'],
+        'total_copies':  ['total copies', 'total_copies', 'jumlah stok', 'stok'],
+        'shelf_location':['shelf location', 'shelf_location', 'lokasi rak', 'rak'],
+        'cover_url':     ['image', 'image(url)', 'cover url', 'cover_url', 'url gambar'],
+        'category':      ['category', 'kategori'],
+    }
+
+    def normalize_key(raw_key):
+        """Normalisasi header kolom ke field name standar."""
+        k = raw_key.strip().lower()
+        for field, aliases in COLUMN_MAP.items():
+            if k in [a.lower() for a in aliases]:
+                return field
+        return None
+
+    # Normalisasi header dari baris pertama
+    if not rows:
+        return JsonResponse({'error': 'File tidak memiliki data.'}, status=400)
+
+    sample_keys = list(rows[0].keys())
+    key_mapping = {}
+    for raw_key in sample_keys:
+        normalized = normalize_key(raw_key)
+        if normalized:
+            key_mapping[raw_key] = normalized
+
+    # Cek kolom wajib ada di file — ISBN tidak lagi wajib
+    REQUIRED_FIELDS_IN_FILE = ['title', 'author', 'total_copies']
+    found_fields = set(key_mapping.values())
+    missing_columns = [f for f in REQUIRED_FIELDS_IN_FILE if f not in found_fields]
+    if missing_columns:
+        col_display = {'title': 'Title', 'author': 'Author(s)', 'total_copies': 'Total Copies'}
+        missing_labels = [col_display.get(f, f) for f in missing_columns]
+        return JsonResponse({
+            'error': f'Kolom wajib tidak ditemukan di file: {", ".join(missing_labels)}. Pastikan header sesuai template.'
+        }, status=400)
+
+    def normalize_isbn(isbn_val):
+        """Kembalikan ISBN bersih, atau None jika kosong/tidak valid.
+        Menangani nilai string kosong, '0', 'nan', 'none', serta float dari Excel."""
+        if isbn_val is None:
+            return None
+        cleaned = str(isbn_val).strip()
+        if cleaned.lower() in ('', '0', 'nan', 'none', 'null'):
+            return None
+        # Hapus desimal jika Excel membaca ISBN sebagai float (mis. 9786234727210.0)
+        if cleaned.endswith('.0') and cleaned[:-2].isdigit():
+            cleaned = cleaned[:-2]
+        return cleaned
+
+    # Bangun lookup dari DB:
+    # - Buku ber-ISBN  → diindex by isbn
+    # - Buku tanpa ISBN (isbn None) → diindex by title lowercase
+    existing_by_isbn  = {}
+    existing_by_title = {}
+    for b in Book.objects.all():
+        if b.isbn:
+            existing_by_isbn[b.isbn.strip()] = b
+        else:
+            key = b.title.strip().lower()
+            if key not in existing_by_title:
+                existing_by_title[key] = b
+
+    errors = []
+    books_to_insert = []
+    books_to_update = []
+    books_to_skip   = []
+    books_to_reject = []  # Buku yang ditolak karena ISBN sudah terdaftar di sistem
+    seen_isbns_in_file   = set()  # Melacak ISBN duplikat dalam file
+    seen_titles_in_file  = set()  # Melacak judul duplikat (untuk buku tanpa ISBN) dalam file
+
+    for idx, raw_row in enumerate(rows, start=2):  # start=2 karena baris 1 = header
+        # Remap keys
+        row = {}
+        for raw_key, val in raw_row.items():
+            mapped = key_mapping.get(raw_key)
+            if mapped:
+                row[mapped] = str(val).strip() if val is not None else ''
+
+        row_errors = []
+
+        # Validasi field wajib tidak kosong (ISBN tidak termasuk)
+        field_labels = {
+            'title':        'Title',
+            'author':       'Author(s)',
+            'total_copies': 'Total Copies',
+        }
+        for field, label in field_labels.items():
+            if not row.get(field, '').strip():
+                row_errors.append(f'{label} tidak boleh kosong.')
+
+        isbn      = normalize_isbn(row.get('isbn', ''))
+        title     = row.get('title', '').strip()
+        title_key = title.lower()
+
+        # ── Deteksi duplikat dalam file ──────────────────────────────────────
+        if isbn:
+            # Buku ber-ISBN: duplikat = ISBN sama
+            if isbn in seen_isbns_in_file:
+                row_errors.append(f'ISBN "{isbn}" muncul lebih dari satu kali dalam file.')
+            else:
+                seen_isbns_in_file.add(isbn)
+        else:
+            # Buku tanpa ISBN: duplikat = judul sama (case-insensitive)
+            if title_key in seen_titles_in_file:
+                row_errors.append(f'Judul "{title}" muncul lebih dari satu kali dalam file (keduanya tanpa ISBN).')
+            else:
+                if title_key:
+                    seen_titles_in_file.add(title_key)
+
+        # Validasi format angka
+        pages_raw = row.get('pages', '').strip()
+        pages = None
+        if pages_raw:
+            if not pages_raw.isdigit() or int(pages_raw) < 0:
+                row_errors.append('Jumlah halaman (Length) harus berupa angka positif.')
+            else:
+                pages = int(pages_raw)
+
+        total_copies_raw = row.get('total_copies', '').strip()
+        total_copies = None
+        if total_copies_raw:
+            if not total_copies_raw.isdigit() or int(total_copies_raw) < 0:
+                row_errors.append('Total Copies harus berupa angka positif.')
+            else:
+                total_copies = int(total_copies_raw)
+        elif 'total_copies' in found_fields:
+            row_errors.append('Total Copies tidak boleh kosong.')
+
+        if row_errors:
+            errors.append({'row': idx, 'title': title or f'(Baris {idx})', 'errors': row_errors})
+            continue
+
+        # ── Cek ISBN sudah terdaftar di sistem → TOLAK (masuk books_to_reject) ──
+        if isbn and isbn in existing_by_isbn:
+            conflict_book = existing_by_isbn[isbn]
+            books_to_reject.append({
+                'row':    idx,
+                'title':  title,
+                'isbn':   isbn,
+                'reason': f'ISBN "{isbn}" sudah terdaftar atas buku "{conflict_book.title}" di sistem.',
+            })
+            continue
+
+        # ── Cek duplikat tanpa ISBN berdasarkan judul ────────────────────────
+        if not isbn:
+            existing_book = existing_by_title.get(title_key)
+        else:
+            existing_book = None  # ISBN baru, pasti tidak konflik
+
+        new_total = total_copies or 1
+
+        if existing_book:
+            if new_total > existing_book.total_copies:
+                existing_book.total_copies = new_total
+                existing_book.updated_by   = request.user
+                books_to_update.append({'book': existing_book, 'row': idx})
+            else:
+                books_to_skip.append({'title': existing_book.title, 'row': idx})
+        else:
+            books_to_insert.append({
+                'data': {
+                    'title':          title,
+                    'author':         row.get('author', ''),
+                    'isbn':           isbn or None,
+                    'pages':          pages,
+                    'language':       row.get('language', 'Indonesian') or 'Indonesian',
+                    'total_copies':   new_total,
+                    'shelf_location': row.get('shelf_location', ''),
+                    'cover_url':      row.get('cover_url', '') or None,
+                    'category':       row.get('category', '') or None,
+                    'status':         'tersedia',
+                    'updated_by':     request.user,
+                },
+                'row': idx,
+            })
+
+    # Jika ada error format/data → tolak semua (data belum ada yang tersimpan)
+    if errors:
+        return JsonResponse({
+            'success': False,
+            'message': f'Terdapat {len(errors)} baris dengan data tidak valid. Tidak ada data yang disimpan.',
+            'errors': errors,
+        }, status=400)
+
+    # Tidak ada yang perlu dilakukan sama sekali
+    if not books_to_insert and not books_to_update:
+        return JsonResponse({
+            'success': True,
+            'message': 'Tidak ada buku baru yang ditambahkan.',
+            'count_inserted': 0,
+            'count_updated':  0,
+            'count_skipped':  len(books_to_skip),
+            'count_rejected': len(books_to_reject),
+            'skipped':  books_to_skip,
+            'rejected': books_to_reject,
+        }, status=200)
+
+    # Eksekusi insert + update dalam satu transaksi
+    from django.db import transaction
+
+    def _make_book(data):
+        """Buat instance Book dengan normalisasi ISBN (mirip logika save())."""
+        isbn_raw = data.get('isbn')
+        if not isbn_raw or str(isbn_raw).strip() in ('', '0'):
+            data['isbn'] = None
+        else:
+            data['isbn'] = str(isbn_raw).strip()
+        return Book(**data)
+
+    inserted_books = []
+    updated_books  = []
+
+    try:
+        with transaction.atomic():
+            if books_to_insert:
+                created = Book.objects.bulk_create([_make_book(item['data']) for item in books_to_insert])
+                inserted_books = [
+                    {'title': item['data']['title'], 'isbn': item['data'].get('isbn'), 'row': item['row']}
+                    for item in books_to_insert
+                ]
+            if books_to_update:
+                Book.objects.bulk_update([item['book'] for item in books_to_update], ['total_copies', 'updated_by'])
+                updated_books = [
+                    {'title': item['book'].title, 'isbn': item['book'].isbn, 'row': item['row']}
+                    for item in books_to_update
+                ]
+    except Exception as e:
+        return JsonResponse({'error': f'Gagal menyimpan data: {str(e)}'}, status=500)
+
+    # Susun pesan ringkasan
+    parts = []
+    if inserted_books:
+        parts.append(f'{len(inserted_books)} buku baru ditambahkan')
+    if updated_books:
+        parts.append(f'{len(updated_books)} buku diperbarui stoknya')
+    if books_to_skip:
+        parts.append(f'{len(books_to_skip)} buku dilewati (sudah ada, stok sama)')
+    if books_to_reject:
+        parts.append(f'{len(books_to_reject)} buku ditolak (ISBN sudah terdaftar)')
+
+    return JsonResponse({
+        'success':        True,
+        'message':        ' · '.join(parts) + '.',
+        'count_inserted': len(inserted_books),
+        'count_updated':  len(updated_books),
+        'count_skipped':  len(books_to_skip),
+        'count_rejected': len(books_to_reject),
+        'inserted':       inserted_books,
+        'updated':        updated_books,
+        'skipped':        books_to_skip,
+        'rejected':       books_to_reject,
+    }, status=201 if inserted_books else 200)

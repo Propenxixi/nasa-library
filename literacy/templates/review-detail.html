@@ -1,158 +1,408 @@
 {% extends 'base.html' %}
 
-{% block title %}{{ review.title }} - NASA Library Literacy Program{% endblock %}
+{% block title %}{{ review.title }} - NASA Library{% endblock %}
 
 {% block content %}
-<div class="min-h-screen bg-gradient-to-br from-white via-blue-50 to-white">
-    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        
-        <!-- Back Button -->
-        <a href="{% url 'literacy:my_reviews' %}" class="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 font-semibold mb-6">
-            ← Back to My Reviews
+<style>.main-content { visibility: hidden; }</style>
+<div class="main-content">
+
+    <!-- Breadcrumb -->
+    <div class="breadcrumb">
+        <a href="{% url 'literacy:history' %}" class="breadcrumb-link">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M19 12H5M12 5l-7 7 7 7"/>
+            </svg>
+            Kembali ke Riwayat
         </a>
+    </div>
 
-        <!-- Review Card -->
-        <div class="bg-white border-2 border-gray-200 rounded-2xl p-6 md:p-8 shadow-sm">
-            <!-- Header -->
-            <div class="mb-6 pb-6 border-b border-gray-200">
-                <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-4">
-                    <h1 class="font-display text-3xl md:text-4xl font-bold text-gray-900">{{ review.title }}</h1>
-                    
-                    <!-- Status Badge -->
-                    {% if review.status == 'verified' %}
-                        <span class="inline-flex items-center gap-1 px-4 py-2 bg-green-100 border-2 border-green-300 text-green-700 font-semibold rounded-full">
-                            ✓ Verified
-                        </span>
-                    {% elif review.status == 'pending' %}
-                        <span class="inline-flex items-center gap-1 px-4 py-2 bg-orange-100 border-2 border-orange-300 text-orange-700 font-semibold rounded-full animate-pulse">
-                            ⏳ Pending
-                        </span>
-                    {% else %}
-                        <span class="inline-flex items-center gap-1 px-4 py-2 bg-red-100 border-2 border-red-300 text-red-700 font-semibold rounded-full">
-                            ✕ Rejected
-                        </span>
-                    {% endif %}
-                </div>
-
-                <!-- Book Info -->
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div>
-                        <p class="font-sans text-xs text-gray-500 uppercase mb-1">Author</p>
-                        <p class="font-semibold text-gray-900">{{ review.author }}</p>
-                    </div>
-                    <div>
-                        <p class="font-sans text-xs text-gray-500 uppercase mb-1">Publisher</p>
-                        <p class="font-semibold text-gray-900">{{ review.publisher }}</p>
-                    </div>
-                    <div>
-                        <p class="font-sans text-xs text-gray-500 uppercase mb-1">Year Published</p>
-                        <p class="font-semibold text-gray-900">{{ review.year_published }}</p>
-                    </div>
-                    <div>
-                        <p class="font-sans text-xs text-gray-500 uppercase mb-1">Submitted</p>
-                        <p class="font-semibold text-gray-900">{{ review.created_at|date:"d M Y" }}</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Review Content -->
-            <div class="mb-8">
-                <h3 class="font-display text-lg font-bold text-gray-900 mb-4">Your Review</h3>
-                <div class="bg-gray-50 border border-gray-200 rounded-lg p-6">
-                    <p class="font-sans text-gray-700 leading-relaxed whitespace-pre-wrap">{{ review.summary }}</p>
-                </div>
-            </div>
-
-            <!-- Verification Details -->
-            {% if review.verified_by %}
-                <div class="mb-8 p-4 {% if review.status == 'verified' %}bg-green-50 border-2 border-green-200{% else %}bg-red-50 border-2 border-red-200{% endif %} rounded-lg">
-                    <p class="font-sans text-sm {% if review.status == 'verified' %}text-green-900{% else %}text-red-900{% endif %}">
-                        <span class="font-semibold">
-                            {% if review.status == 'verified' %}
-                                ✓ Verified by {{ review.verified_by.first_name }} on {{ review.verified_at|date:"d M Y \a\t H:i" }}
-                            {% else %}
-                                ✕ Rejected by {{ review.verified_by.first_name }} on {{ review.verified_at|date:"d M Y \a\t H:i" }}
-                            {% endif %}
-                        </span>
-                    </p>
-                    
-                    {% if review.rejection_reason %}
-                        <p class="font-sans text-sm {% if review.status == 'verified' %}text-green-800{% else %}text-red-800{% endif %} mt-3">
-                            <span class="font-semibold">Feedback:</span><br>
-                            {{ review.rejection_reason }}
-                        </p>
-                    {% endif %}
-                </div>
+    <!-- Hero Header Card -->
+    <div class="hero-card">
+        <div class="hero-card-left">
+            <!-- Status badge di atas judul -->
+            {% if review.status == 'verified' %}
+            <span class="status-badge badge--verified">
+                <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>
+                Disetujui
+            </span>
+            {% elif review.status == 'pending' %}
+            <span class="status-badge badge--pending badge--pulse">
+                <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                Menunggu Verifikasi
+            </span>
+            {% else %}
+            <span class="status-badge badge--rejected">
+                <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                Ditolak
+            </span>
             {% endif %}
 
-            <!-- Actions -->
-            <div class="flex gap-3 flex-wrap">
-                <a href="{% url 'literacy:my_reviews' %}" class="px-6 py-2 bg-gray-600 text-white font-sans font-semibold rounded-lg hover:bg-gray-700 transition-colors">
-                    Back to Reviews
-                </a>
-                
-                {% if review.status == 'rejected' %}
-                    <a href="{% url 'literacy:submit_review' %}" class="px-6 py-2 bg-blue-600 text-white font-sans font-semibold rounded-lg hover:bg-blue-700 transition-colors">
-                        ✏️ Resubmit Review
-                    </a>
-                {% endif %}
+            <h1 class="hero-title">{{ review.title }}</h1>
 
-                {% if review.status == 'verified' %}
-                    <a href="{% url 'literacy:create_post' %}" class="px-6 py-2 bg-green-600 text-white font-sans font-semibold rounded-lg hover:bg-green-700 transition-colors">
-                        ✨ Create Forum Post
-                    </a>
+            <!-- Meta info chips -->
+            <div class="hero-meta">
+                {% if review.author %}
+                <span class="meta-chip">
+                    <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    {{ review.author }}
+                </span>
                 {% endif %}
-            </div>
-
-            <!-- Info Message -->
-            <div class="mt-8 p-4 bg-blue-50 border border-blue-200 rounded-xl">
-                <p class="font-sans text-sm text-blue-900">
-                    <span class="font-semibold">📖 Tip:</span> 
-                    {% if review.status == 'verified' %}
-                        Your review has been verified! You earned 20 points. Share your thoughts about this book in the forum to earn more engagement!
-                    {% elif review.status == 'pending' %}
-                        Your review is waiting for teacher verification. You'll be notified once it's reviewed.
-                    {% else %}
-                        Your review was rejected. Review the feedback and resubmit with improvements to earn points!
-                    {% endif %}
-                </p>
+                {% if review.publisher %}
+                <span class="meta-chip">
+                    <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+                    {{ review.publisher }}
+                </span>
+                {% endif %}
+                {% if review.year_published %}
+                <span class="meta-chip">
+                    <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                    {{ review.year_published }}
+                </span>
+                {% endif %}
+                <span class="meta-chip">
+                    <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    Dikirim {{ review.created_at|date:"d M Y" }}
+                </span>
             </div>
         </div>
 
-        <!-- Quick Navigation -->
-        <div class="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
-            <a href="{% url 'literacy:submit_review' %}" class="bg-gradient-to-br from-blue-50 to-cyan-50 border-2 border-blue-300 rounded-xl p-6 hover:shadow-lg transition-shadow">
-                <h3 class="font-display text-lg font-bold text-blue-900 flex items-center gap-2 mb-2">
-                    <span class="text-2xl">✍️</span> Write Another Review
-                </h3>
-                <p class="font-sans text-sm text-blue-700">Share another book you've read</p>
-            </a>
-            
-            <a href="{% url 'literacy:my_reviews' %}" class="bg-gradient-to-br from-purple-50 to-pink-50 border-2 border-purple-300 rounded-xl p-6 hover:shadow-lg transition-shadow">
-                <h3 class="font-display text-lg font-bold text-purple-900 flex items-center gap-2 mb-2">
-                    <span class="text-2xl">📚</span> My Reviews
-                </h3>
-                <p class="font-sans text-sm text-purple-700">View all your reviews</p>
-            </a>
-            
-            <a href="{% url 'literacy:leaderboard' %}" class="bg-gradient-to-br from-yellow-50 to-orange-50 border-2 border-yellow-300 rounded-xl p-6 hover:shadow-lg transition-shadow">
-                <h3 class="font-display text-lg font-bold text-yellow-900 flex items-center gap-2 mb-2">
-                    <span class="text-2xl">🏆</span> Leaderboard
-                </h3>
-                <p class="font-sans text-sm text-yellow-700">Check your literacy ranking</p>
-            </a>
+        <!-- Book icon box -->
+        <div class="hero-book-icon">
+            <svg width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                <path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/>
+            </svg>
+            <span class="hero-book-label">Review Buku</span>
         </div>
     </div>
+
+    <!-- Verification Result Banner (tampil hanya jika sudah diverifikasi) -->
+    {% if review.verified_by %}
+    <div class="verify-banner verify-banner--{{ review.status }}">
+        <div class="verify-banner-icon">
+            {% if review.status == 'verified' %}
+            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            {% else %}
+            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            {% endif %}
+        </div>
+        <div class="verify-banner-body">
+            <p class="verify-banner-title">
+                {% if review.status == 'verified' %}
+                Disetujui oleh {{ review.verified_by.get_full_name|default:review.verified_by.first_name }}
+                &bull; {{ review.verified_at|date:"d M Y, H:i" }}
+                {% else %}
+                Ditolak oleh {{ review.verified_by.get_full_name|default:review.verified_by.first_name }}
+                &bull; {{ review.verified_at|date:"d M Y, H:i" }}
+                {% endif %}
+            </p>
+            {% if review.rejection_reason %}
+            <p class="verify-banner-feedback">
+                <strong>Catatan guru:</strong> {{ review.rejection_reason }}
+            </p>
+            {% endif %}
+        </div>
+        {% if review.status == 'verified' %}
+        <div class="verify-points-badge">+20 poin</div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- Review Content Card -->
+    <div class="content-card">
+        <div class="content-card-header">
+            <h2 class="content-card-title">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                </svg>
+                Ulasanmu
+            </h2>
+        </div>
+        <div class="content-body">
+            <p class="review-text">{{ review.summary }}</p>
+        </div>
+    </div>
+
+    <!-- Status Tip -->
+    <div class="tip-card tip-card--{{ review.status }}">
+        <div class="tip-icon">
+            {% if review.status == 'verified' %}🎉
+            {% elif review.status == 'pending' %}⏳
+            {% else %}💡{% endif %}
+        </div>
+        <p class="tip-text">
+            {% if review.status == 'verified' %}
+            Review kamu sudah diverifikasi dan <strong>+20 poin</strong> telah ditambahkan ke skormu! Bagikan pemikiranmu di forum untuk mendapat lebih banyak engagement.
+            {% elif review.status == 'pending' %}
+            Review kamu sedang menunggu verifikasi dari guru. Kamu akan dinotifikasi setelah proses selesai. Tetap semangat membaca!
+            {% else %}
+            Review kamu ditolak. Baca catatan dari guru di atas, perbaiki ulasanmu, lalu kirim ulang untuk mendapatkan poin!
+            {% endif %}
+        </p>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="action-row">
+        <a href="{% url 'literacy:history' %}" class="btn btn-ghost">
+            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+            Kembali ke Riwayat
+        </a>
+
+        {% if review.status == 'rejected' %}
+        <a href="{% url 'literacy:submit_review' %}" class="btn btn-retry">
+            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>
+            Kirim Ulang Review
+        </a>
+        {% endif %}
+
+        {% if review.status == 'verified' %}
+        <a href="{% url 'literacy:forum' %}" class="btn btn-primary">
+            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+            Bagikan di Forum
+        </a>
+        {% endif %}
+    </div>
+
+    <!-- Quick Nav -->
+    <div class="quicknav-grid">
+        <a href="{% url 'literacy:submit_review' %}" class="quicknav-card quicknav-card--blue">
+            <div class="quicknav-icon">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/>
+                </svg>
+            </div>
+            <div>
+                <div class="quicknav-title">Review Buku Baru</div>
+                <div class="quicknav-desc">Bagikan buku yang baru kamu selesaikan</div>
+            </div>
+            <svg class="quicknav-chevron" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+        </a>
+
+        <a href="{% url 'literacy:forum' %}" class="quicknav-card quicknav-card--green">
+            <div class="quicknav-icon quicknav-icon--green">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+                </svg>
+            </div>
+            <div>
+                <div class="quicknav-title">Forum Literasi</div>
+                <div class="quicknav-desc">Diskusi buku dengan sesama siswa</div>
+            </div>
+            <svg class="quicknav-chevron" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+        </a>
+
+        <a href="{% url 'literacy:leaderboard' %}" class="quicknav-card quicknav-card--accent">
+            <div class="quicknav-icon quicknav-icon--accent">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                </svg>
+            </div>
+            <div>
+                <div class="quicknav-title">Leaderboard</div>
+                <div class="quicknav-desc">Cek peringkatmu di antara siswa lain</div>
+            </div>
+            <svg class="quicknav-chevron" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+        </a>
+    </div>
+
 </div>
 
+<script>
+    document.querySelector('.main-content').classList.add('ready');
+</script>
+
 <style>
-    .animate-pulse {
-        animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    /* ── Breadcrumb ─────────────────────────────────────── */
+    .breadcrumb { margin-bottom: 20px; animation: fadeSlideDown .4s ease both; }
+    .breadcrumb-link {
+        display: inline-flex; align-items: center; gap: 6px;
+        font-size: .85rem; font-weight: 600; color: var(--primary-700);
+        text-decoration: none; transition: color .2s, gap .2s;
     }
-    
-    @keyframes pulse {
-        0%, 100% { opacity: 1; }
-        50% { opacity: 0.5; }
+    .breadcrumb-link:hover { color: var(--primary-900); gap: 10px; }
+
+    /* ── Hero Card ───────────────────────────────────────── */
+    .hero-card {
+        display: flex; align-items: flex-start; justify-content: space-between; gap: 20px;
+        background: var(--neutral-50); border: 1.5px solid #1e3a8a;
+        border-radius: var(--radius-md); padding: 28px;
+        margin-bottom: 16px; box-shadow: var(--shadow-sm);
+        animation: fadeSlideUp .5s ease both;
     }
+    .hero-card-left { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 12px; }
+    .hero-title {
+        font-family: 'Playfair Display', serif; font-size: 1.9rem; font-weight: 700;
+        color: var(--primary-900); line-height: 1.2; margin: 0;
+    }
+    .hero-meta { display: flex; flex-wrap: wrap; gap: 8px; }
+    .meta-chip {
+        display: inline-flex; align-items: center; gap: 5px;
+        font-size: .78rem; font-weight: 500; color: var(--neutral-600);
+        background: var(--neutral-100); border: 1px solid var(--neutral-200);
+        border-radius: 100px; padding: 4px 10px;
+    }
+    .hero-book-icon {
+        flex-shrink: 0; display: flex; flex-direction: column; align-items: center;
+        gap: 8px; background: var(--primary-50); border: 1.5px solid #1e3a8a;
+        border-radius: var(--radius-md); padding: 20px 24px; min-width: 100px;
+        color: var(--primary-700); text-align: center;
+    }
+    .hero-book-label {
+        font-size: .68rem; font-weight: 700; text-transform: uppercase;
+        letter-spacing: .07em; color: var(--primary-600);
+    }
+
+    /* ── Status Badges ────────────────────────────────────── */
+    .status-badge {
+        display: inline-flex; align-items: center; gap: 5px;
+        padding: 4px 12px; border-radius: 100px;
+        font-size: .72rem; font-weight: 700; letter-spacing: .04em; border: 1.5px solid;
+        align-self: flex-start;
+    }
+    .badge--verified { background: #f0fdf4; border-color: #16a34a; color: #15803d; }
+    .badge--pending  { background: var(--accent-50); border-color: var(--accent-700); color: var(--accent-700); }
+    .badge--rejected { background: var(--error-50);  border-color: var(--error-400); color: var(--error-400); }
+    .badge--pulse    { animation: badgePulse 2s ease-in-out infinite; }
+    @keyframes badgePulse { 0%, 100% { opacity: 1; } 50% { opacity: .55; } }
+
+    /* ── Verification Banner ─────────────────────────────── */
+    .verify-banner {
+        display: flex; align-items: flex-start; gap: 14px;
+        border-radius: var(--radius-md); padding: 18px 20px;
+        margin-bottom: 16px; border: 1.5px solid;
+        animation: fadeSlideUp .5s .08s ease both;
+    }
+    .verify-banner--verified { background: #f0fdf4; border-color: #16a34a; }
+    .verify-banner--rejected { background: var(--error-50); border-color: var(--error-400); }
+    .verify-banner-icon { flex-shrink: 0; margin-top: 1px; }
+    .verify-banner--verified .verify-banner-icon { color: #15803d; }
+    .verify-banner--rejected .verify-banner-icon { color: var(--error-400); }
+    .verify-banner-body { flex: 1; min-width: 0; }
+    .verify-banner-title {
+        font-size: .87rem; font-weight: 700; color: var(--primary-900); margin: 0 0 6px;
+    }
+    .verify-banner-feedback {
+        font-size: .84rem; color: var(--neutral-700); line-height: 1.6; margin: 0;
+    }
+    .verify-banner-feedback strong { font-weight: 700; color: var(--primary-900); }
+    .verify-points-badge {
+        flex-shrink: 0; align-self: center;
+        font-family: 'Playfair Display', serif; font-size: 1rem; font-weight: 700;
+        color: #15803d; background: #dcfce7; border: 1.5px solid #16a34a;
+        border-radius: var(--radius-sm); padding: 6px 14px; white-space: nowrap;
+    }
+
+    /* ── Content Card ────────────────────────────────────── */
+    .content-card {
+        background: var(--neutral-50); border: 1.5px solid #1e3a8a;
+        border-radius: var(--radius-md); overflow: hidden;
+        box-shadow: var(--shadow-sm); margin-bottom: 16px;
+        animation: fadeSlideUp .5s .12s ease both;
+    }
+    .content-card-header {
+        padding: 16px 24px; border-bottom: 1.5px solid rgba(30,58,138,.15);
+        background: var(--primary-50);
+    }
+    .content-card-title {
+        font-family: 'Playfair Display', serif; font-size: 1rem; font-weight: 700;
+        color: var(--primary-900); margin: 0;
+        display: flex; align-items: center; gap: 8px;
+    }
+    .content-body { padding: 24px; }
+    .review-text {
+        font-size: .92rem; color: var(--neutral-700); line-height: 1.8;
+        white-space: pre-wrap; margin: 0;
+        padding: 16px; background: rgba(30,58,138,.03);
+        border-left: 3px solid rgba(30,58,138,.2);
+        border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    }
+
+    /* ── Tip Card ────────────────────────────────────────── */
+    .tip-card {
+        display: flex; align-items: flex-start; gap: 12px;
+        border-radius: var(--radius-md); padding: 14px 18px;
+        margin-bottom: 20px; border: 1.5px solid;
+        animation: fadeSlideUp .5s .16s ease both;
+    }
+    .tip-card--verified { background: #f0fdf4; border-color: #16a34a; }
+    .tip-card--pending  { background: var(--primary-50); border-color: #1e3a8a; }
+    .tip-card--rejected { background: var(--accent-50); border-color: var(--accent-700); }
+    .tip-icon { font-size: 1.2rem; flex-shrink: 0; line-height: 1.4; }
+    .tip-text { font-size: .86rem; color: var(--primary-900); line-height: 1.6; margin: 0; }
+    .tip-text strong { font-weight: 700; }
+
+    /* ── Action Row ──────────────────────────────────────── */
+    .action-row {
+        display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 28px;
+        animation: fadeSlideUp .5s .2s ease both;
+    }
+    .btn-ghost {
+        display: inline-flex; align-items: center; gap: 7px;
+        padding: 10px 20px; border-radius: var(--radius-sm);
+        font-family: 'Work Sans', sans-serif; font-size: .88rem; font-weight: 600;
+        border: 1.5px solid #1e3a8a; color: var(--primary-700);
+        background: var(--neutral-50); text-decoration: none;
+        transition: background .18s, color .18s, transform .18s;
+    }
+    .btn-ghost:hover { background: var(--primary-700); color: #fff; transform: translateY(-1px); }
+    .btn-retry {
+        display: inline-flex; align-items: center; gap: 7px;
+        padding: 10px 20px; border-radius: var(--radius-sm);
+        font-family: 'Work Sans', sans-serif; font-size: .88rem; font-weight: 600;
+        border: 1.5px solid var(--error-400); color: var(--error-400);
+        background: var(--neutral-50); text-decoration: none;
+        transition: background .18s, color .18s, transform .18s;
+    }
+    .btn-retry:hover { background: var(--error-400); color: #fff; transform: translateY(-1px); }
+    .btn-primary {
+        display: inline-flex; align-items: center; gap: 7px;
+        transition: transform .2s ease, box-shadow .2s ease;
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(30,58,138,.2); }
+
+    /* ── Quick Nav ───────────────────────────────────────── */
+    .quicknav-grid {
+        display: grid; grid-template-columns: repeat(3, 1fr);
+        gap: 14px; animation: fadeSlideUp .5s .25s ease both;
+    }
+    .quicknav-card {
+        display: flex; align-items: center; gap: 14px;
+        padding: 18px; border-radius: var(--radius-md);
+        border: 1.5px solid #1e3a8a; background: var(--neutral-50);
+        text-decoration: none; color: inherit;
+        transition: transform .22s ease, box-shadow .22s ease, background .2s;
+        box-shadow: var(--shadow-sm);
+    }
+    .quicknav-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(30,58,138,.12); }
+    .quicknav-card--blue:hover  { background: var(--primary-50); }
+    .quicknav-card--green:hover { background: #f0fdf4; }
+    .quicknav-card--accent:hover{ background: var(--accent-50); }
+    .quicknav-icon {
+        width: 42px; height: 42px; border-radius: var(--radius-sm);
+        background: var(--primary-50); border: 1.5px solid #1e3a8a;
+        color: var(--primary-700); display: flex; align-items: center;
+        justify-content: center; flex-shrink: 0; transition: transform .25s ease;
+    }
+    .quicknav-card:hover .quicknav-icon { transform: rotate(-6deg) scale(1.08); }
+    .quicknav-icon--green  { background: #f0fdf4; border-color: #16a34a; color: #15803d; }
+    .quicknav-icon--accent { background: var(--accent-50); border-color: var(--accent-700); color: var(--accent-700); }
+    .quicknav-title { font-weight: 700; font-size: .9rem; color: var(--primary-900); }
+    .quicknav-desc  { font-size: .76rem; color: var(--neutral-500); margin-top: 2px; }
+    .quicknav-chevron { color: var(--neutral-300); margin-left: auto; flex-shrink: 0; transition: transform .22s ease, color .2s; }
+    .quicknav-card:hover .quicknav-chevron { transform: translateX(5px); color: var(--primary-700); }
+
+    /* ── Keyframes ───────────────────────────────────────── */
+    @keyframes fadeSlideDown { from { opacity: 0; transform: translateY(-14px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes fadeSlideUp   { from { opacity: 0; transform: translateY(14px);  } to { opacity: 1; transform: translateY(0); } }
+
+    /* ── Responsive ──────────────────────────────────────── */
+    @media (max-width: 768px) {
+        .hero-card { flex-direction: column; }
+        .hero-book-icon { align-self: flex-start; flex-direction: row; padding: 12px 16px; }
+        .hero-title { font-size: 1.5rem; }
+        .quicknav-grid { grid-template-columns: 1fr; }
+        .action-row { flex-direction: column; }
+        .verify-points-badge { align-self: flex-start; }
+    }
+    .main-content.ready { visibility: visible; }
 </style>
 {% endblock %}

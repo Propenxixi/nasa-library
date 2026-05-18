@@ -1,0 +1,267 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Riwayat Peminjaman Buku — Nasa Library{% endblock %}
+
+{% block content %}
+<div class="w-full min-h-screen bg-gray-50">
+    <div class="w-full flex justify-center px-4 sm:px-6 md:px-8 py-6 sm:py-8 md:py-12">
+        <div class="w-full max-w-7xl">
+
+            <!-- Header -->
+            <div class="mb-8 sm:mb-10">
+                <div class="inline-flex flex-col justify-start items-start gap-2">
+                    <h1 class="text-slate-900 text-3xl sm:text-4xl md:text-5xl font-bold font-['Playfair_Display'] leading-tight">
+                        Riwayat Peminjaman Buku
+                    </h1>
+                    <p class="text-zinc-600 text-base sm:text-lg font-normal font-['Work_Sans'] leading-normal">
+                        Pantau dan analisis riwayat peminjaman seluruh koleksi perpustakaan
+                    </p>
+                </div>
+            </div>
+
+            <!-- Search Bar -->
+            <form method="GET" class="mb-6">
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <div class="flex-1">
+                        <input
+                            type="text"
+                            name="search"
+                            value="{{ search }}"
+                            placeholder="Cari judul buku, penulis, atau peminjam..."
+                            class="w-full px-4 py-3 bg-white rounded-2xl outline outline-1 outline-offset-[-1px] outline-gray-300 text-slate-900 text-sm font-normal font-['Work_Sans'] placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-900 focus:border-transparent transition"
+                        >
+                    </div>
+                    <button type="submit" class="px-6 py-3 bg-blue-900 text-white text-sm font-semibold font-['Work_Sans'] leading-5 rounded-2xl hover:bg-blue-800 active:bg-blue-950 transition-colors whitespace-nowrap">
+                        Cari
+                    </button>
+                </div>
+            </form>
+
+            <!-- View Toggle -->
+            <div class="mb-6">
+                <div class="inline-flex bg-gray-100 rounded-2xl p-1 gap-1">
+                    <button onclick="switchView('per-buku')" class="view-btn px-5 py-2 text-sm font-semibold font-['Work_Sans'] rounded-xl transition-all duration-200" data-view="per-buku">
+                        Per Buku
+                    </button>
+                    <button onclick="switchView('timeline')" class="view-btn px-5 py-2 text-sm font-semibold font-['Work_Sans'] rounded-xl transition-all duration-200 text-zinc-600" data-view="timeline">
+                        Timeline
+                    </button>
+                </div>
+            </div>
+
+            <!-- ── Per Buku View ── -->
+            <div id="per-buku" class="view-content">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5">
+                    {% for book_stat in book_analytics %}
+                    <div class="bg-white rounded-2xl shadow-[0px_1px_3px_0px_rgba(0,0,0,0.10)] outline outline-1 outline-offset-[-1px] outline-gray-200 overflow-hidden">
+
+                        <!-- Card Header -->
+                        <div class="px-6 py-5 border-b border-gray-100">
+                            <div class="flex items-start justify-between gap-3">
+                                <div class="flex items-start gap-3 min-w-0">
+                                    <div class="w-9 h-9 bg-blue-50 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5">
+                                        <svg class="w-4 h-4 text-blue-900" fill="currentColor" viewBox="0 0 20 20">
+                                            <path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z"/>
+                                        </svg>
+                                    </div>
+                                    <div class="min-w-0">
+                                        <h3 class="text-slate-900 text-lg sm:text-xl font-bold font-['Playfair_Display'] leading-snug truncate">
+                                            {{ book_stat.book.title }}
+                                        </h3>
+                                        <p class="text-zinc-500 text-sm font-normal font-['Work_Sans'] mt-0.5 truncate">{{ book_stat.book.author }}</p>
+                                    </div>
+                                </div>
+                                {% if book_stat.popularity != 'Jarang Dipinjam' %}
+                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-semibold font-['Work_Sans'] whitespace-nowrap flex-shrink-0
+                                    bg-{{ book_stat.popularity_class }}-50 text-{{ book_stat.popularity_class }}-600">
+                                    {{ book_stat.icon }} {{ book_stat.popularity }}
+                                </span>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Stats Row -->
+                        <div class="px-6 py-4 grid grid-cols-3 gap-3 border-b border-gray-100">
+                            <div>
+                                <p class="text-zinc-500 text-[10px] font-semibold font-['Work_Sans'] uppercase tracking-wide leading-4 mb-1">Total Pinjam</p>
+                                <p class="text-slate-900 text-2xl font-bold font-['Playfair_Display']">{{ book_stat.total_loans }}</p>
+                            </div>
+                            <div>
+                                <p class="text-zinc-500 text-[10px] font-semibold font-['Work_Sans'] uppercase tracking-wide leading-4 mb-1">Peminjam Unik</p>
+                                <p class="text-slate-900 text-2xl font-bold font-['Playfair_Display']">{{ book_stat.unique_borrowers }}</p>
+                            </div>
+                            <div>
+                                <p class="text-zinc-500 text-[10px] font-semibold font-['Work_Sans'] uppercase tracking-wide leading-4 mb-1">Terakhir Dipinjam</p>
+                                <p class="text-slate-900 text-sm font-semibold font-['Work_Sans'] mt-1">{{ book_stat.last_borrowed|date:"d M Y" }}</p>
+                            </div>
+                        </div>
+
+                        <!-- Toggle Button -->
+                        <div class="px-6 py-4">
+                            <button
+                                onclick="toggleBookHistory({{ book_stat.book.id }}, {{ book_stat.total_loans }})"
+                                class="book-history-btn w-full px-4 py-2.5 bg-gray-50 outline outline-1 outline-offset-[-1px] outline-gray-200 text-blue-900 text-sm font-semibold font-['Work_Sans'] rounded-xl hover:bg-gray-100 active:bg-gray-200 transition-colors flex items-center justify-center gap-2"
+                                data-book-id="{{ book_stat.book.id }}"
+                            >
+                                <svg class="w-4 h-4 transition-transform duration-200" id="chevron-{{ book_stat.book.id }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                </svg>
+                                Lihat Riwayat ({{ book_stat.total_loans }})
+                            </button>
+                        </div>
+
+                        <!-- Expandable History -->
+                        <div id="history-{{ book_stat.book.id }}" class="hidden border-t border-gray-100 bg-gray-50 px-6 py-4 space-y-2">
+                            {% for loan in book_stat.loan_history %}
+                            <div class="bg-white rounded-xl outline outline-1 outline-offset-[-1px] outline-gray-200 px-4 py-3 flex items-center gap-3">
+                                <!-- Avatar -->
+                                <div class="w-8 h-8 bg-blue-900 rounded-full flex items-center justify-center flex-shrink-0">
+                                    <span class="text-white text-xs font-bold font-['Work_Sans']">{{ loan.user.first_name|first|upper }}</span>
+                                </div>
+                                <!-- Info -->
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-slate-900 text-sm font-semibold font-['Work_Sans'] truncate">{{ loan.user.first_name }} {{ loan.user.last_name }}</p>
+                                    <p class="text-zinc-500 text-xs font-['Work_Sans'] mt-0.5">
+                                        {{ loan.loan_date|date:"d M Y" }} → {{ loan.return_date|date:"d M Y" }}
+                                    </p>
+                                </div>
+                                <!-- Duration pill -->
+                                <span class="flex-shrink-0 px-2.5 py-1 bg-gray-100 rounded-lg text-[10px] font-semibold font-['Work_Sans'] text-zinc-600 whitespace-nowrap">
+                                    {{ loan.duration_days }} hari
+                                </span>
+                            </div>
+                            {% empty %}
+                            <div class="py-4 text-center">
+                                <p class="text-zinc-500 text-sm font-['Work_Sans']">Tidak ada riwayat peminjaman.</p>
+                            </div>
+                            {% endfor %}
+                        </div>
+
+                    </div>
+                    {% empty %}
+                    <div class="lg:col-span-2 bg-white rounded-2xl shadow-[0px_1px_3px_0px_rgba(0,0,0,0.10)] outline outline-1 outline-offset-[-1px] outline-gray-200 py-16 text-center">
+                        <div class="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <svg class="w-6 h-6 text-zinc-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.966 8.966 0 00-6 2.292m0-14.25v14.25"/>
+                            </svg>
+                        </div>
+                        <p class="text-slate-900 text-base font-semibold font-['Playfair_Display'] mb-1">Tidak Ada Data</p>
+                        <p class="text-zinc-500 text-sm font-['Work_Sans']">Tidak ada riwayat peminjaman ditemukan.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- ── Timeline View ── -->
+            <div id="timeline" class="view-content hidden">
+                <div class="space-y-0">
+                    {% for loan in timeline_loans %}
+                    <div class="flex gap-4 sm:gap-6">
+                        <!-- Timeline spine -->
+                        <div class="flex flex-col items-center flex-shrink-0 pt-5">
+                            <div class="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0
+                                {% if loan.return_date and loan.return_date > loan.due_date %}bg-red-50 outline outline-1 outline-red-200{% else %}bg-emerald-50 outline outline-1 outline-emerald-200{% endif %}">
+                                {% if loan.return_date and loan.return_date > loan.due_date %}
+                                <svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/>
+                                </svg>
+                                {% else %}
+                                <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                {% endif %}
+                            </div>
+                            {% if not forloop.last %}
+                            <div class="w-px flex-1 bg-gray-200 my-1"></div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Card -->
+                        <div class="flex-1 pb-4 {% if forloop.last %}pb-0{% endif %}">
+                            <div class="bg-white rounded-2xl shadow-[0px_1px_3px_0px_rgba(0,0,0,0.10)] outline outline-1 outline-offset-[-1px] outline-gray-200 px-5 py-4">
+                                <div class="flex items-start gap-3 mb-3">
+                                    <!-- Avatar -->
+                                    <div class="w-8 h-8 bg-blue-900 rounded-full flex items-center justify-center flex-shrink-0">
+                                        <span class="text-white text-xs font-bold font-['Work_Sans']">{{ loan.user.first_name|first|upper }}</span>
+                                    </div>
+                                    <div class="min-w-0 flex-1">
+                                        <p class="text-slate-900 text-base sm:text-lg font-bold font-['Playfair_Display'] leading-snug truncate">{{ loan.book.title }}</p>
+                                        <p class="text-zinc-500 text-sm font-['Work_Sans']">{{ loan.user.first_name }} {{ loan.user.last_name }}</p>
+                                    </div>
+                                    {% if loan.return_date and loan.return_date > loan.due_date %}
+                                    <span class="flex-shrink-0 px-2.5 py-1 bg-red-50 text-red-600 text-[10px] font-semibold font-['Work_Sans'] rounded-lg">Terlambat</span>
+                                    {% else %}
+                                    <span class="flex-shrink-0 px-2.5 py-1 bg-emerald-50 text-emerald-600 text-[10px] font-semibold font-['Work_Sans'] rounded-lg">Tepat Waktu</span>
+                                    {% endif %}
+                                </div>
+                                <div class="flex flex-wrap gap-x-5 gap-y-1.5 text-sm">
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="text-zinc-500 font-['Work_Sans'] text-xs">Dipinjam</span>
+                                        <span class="text-slate-900 font-semibold font-['Work_Sans'] text-xs">{{ loan.loan_date|date:"d M Y" }}</span>
+                                    </div>
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="text-zinc-500 font-['Work_Sans'] text-xs">Dikembalikan</span>
+                                        <span class="text-slate-900 font-semibold font-['Work_Sans'] text-xs">{{ loan.return_date|date:"d M Y" }}</span>
+                                    </div>
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="text-zinc-500 font-['Work_Sans'] text-xs">Durasi</span>
+                                        <span class="text-slate-900 font-semibold font-['Work_Sans'] text-xs">{{ loan.duration_days }} hari</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="bg-white rounded-2xl shadow-[0px_1px_3px_0px_rgba(0,0,0,0.10)] outline outline-1 outline-offset-[-1px] outline-gray-200 py-16 text-center">
+                        <div class="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <svg class="w-6 h-6 text-zinc-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
+                        <p class="text-slate-900 text-base font-semibold font-['Playfair_Display'] mb-1">Tidak Ada Data</p>
+                        <p class="text-zinc-500 text-sm font-['Work_Sans']">Tidak ada data peminjaman untuk ditampilkan.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+    function switchView(viewName) {
+        document.querySelectorAll('.view-content').forEach(el => el.classList.add('hidden'));
+        document.querySelectorAll('.view-btn').forEach(el => {
+            el.classList.remove('bg-white', 'text-slate-900', 'shadow-sm');
+            el.classList.add('text-zinc-600');
+        });
+
+        const viewEl = document.getElementById(viewName);
+        if (viewEl) viewEl.classList.remove('hidden');
+
+        const activeBtn = document.querySelector(`[data-view="${viewName}"]`);
+        if (activeBtn) {
+            activeBtn.classList.remove('text-zinc-600');
+            activeBtn.classList.add('bg-white', 'text-slate-900', 'shadow-sm');
+        }
+    }
+
+    function toggleBookHistory(bookId, count) {
+        const historyEl = document.getElementById(`history-${bookId}`);
+        const chevron = document.getElementById(`chevron-${bookId}`);
+        const btn = document.querySelector(`[data-book-id="${bookId}"]`);
+        const isHidden = historyEl.classList.contains('hidden');
+
+        historyEl.classList.toggle('hidden');
+        chevron.style.transform = isHidden ? 'rotate(180deg)' : '';
+        btn.querySelector('span') && (btn.querySelector('span').textContent = isHidden
+            ? `Sembunyikan Riwayat (${count})`
+            : `Lihat Riwayat (${count})`
+        );
+    }
+
+    document.addEventListener('DOMContentLoaded', () => switchView('per-buku'));
+</script>
+{% endblock %}

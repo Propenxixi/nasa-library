@@ -16,12 +16,17 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from django.conf import settings
+from django.conf.urls.static import static
+from literacy import views as literacy_views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('auth/', include('authentication.urls')),
     path('attendance/', include('attendance.urls')),
     path('literacy/', include('literacy.urls')),
+    path('api/literacy/leaderboard/', literacy_views.api_leaderboard, name='root_api_leaderboard'),
+    path('api/literacy/scores', literacy_views.api_scores, name='root_api_scores'),
     path('', include('main.urls')),
     path('book/', include('book.urls')),
     path('loan/', include('book_loan.urls')),
@@ -32,3 +37,7 @@ urlpatterns = [
     path('dashboard/', include('dashboard.urls')),
     path('api/dashboard/', include('dashboard.api_urls')),
 ]
+
+# Serve media files during development
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

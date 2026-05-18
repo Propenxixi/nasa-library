@@ -1,0 +1,461 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ session.title }} - Forum Literasi{% endblock %}
+
+{% block content %}
+<style>.main-content { visibility: hidden; }</style>
+<div class="main-content">
+
+    <!-- Breadcrumb -->
+    <div class="breadcrumb">
+        <a href="{% url 'literacy:forum' %}" class="breadcrumb-link">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M19 12H5M12 5l-7 7 7 7"/>
+            </svg>
+            Kembali ke Forum
+        </a>
+    </div>
+
+    <!-- Session Header Card -->
+    <div class="session-header-card">
+        <div class="session-header-left">
+            <span class="session-topic-badge">{{ session.get_topic_display }}</span>
+            <h1 class="session-title">{{ session.title }}</h1>
+            <div class="session-meta">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+                </svg>
+                {{ session.date|date:"d F Y" }}
+                {% if not session.is_open %}
+                <span class="session-closed-badge">Ditutup</span>
+                {% endif %}
+            </div>
+        </div>
+        <div class="session-entry-count-box">
+            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/>
+                <path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/>
+            </svg>
+            <span class="session-entry-number">{{ session.entry_count }}</span>
+            <span class="session-entry-label">Entri Literasi</span>
+        </div>
+    </div>
+
+    <!-- Action Bar -->
+    <div class="action-bar">
+        <!-- Search dalam sesi -->
+        <form method="GET" class="search-form" id="search-form">
+            <div class="search-input-wrap">
+                <svg class="search-icon" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+                </svg>
+                <input
+                        type="text" name="q" id="search-input"
+                        placeholder="Cari postingan di sesi ini..."
+                        value="{{ search_query }}" class="search-input" autocomplete="off"
+                >
+            </div>
+        </form>
+
+        <!-- CTA: Siswa bisa posting, Guru tidak -->
+        {% if is_teacher %}
+        {# Guru: tombol disabled dengan tooltip #}
+        <button class="btn btn-primary btn-disabled" disabled title="Guru tidak dapat membuat postingan di forum siswa">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+            Buat Posting
+        </button>
+        {% elif session.is_open %}
+        {% if user_already_submitted %}
+        <a href="{% url 'literacy:create_post' %}?session={{ session.pk }}" class="btn btn-ghost btn-sm" title="Tambah postingan lagi di sesi ini">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+            Tambah Postingan
+        </a>
+        {% else %}
+        <a href="{% url 'literacy:create_post' %}?session={{ session.pk }}" class="btn btn-primary">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+            Buat Posting
+        </a>
+        {% endif %}
+        {% else %}
+        <button class="btn btn-primary btn-disabled" disabled title="Sesi sudah ditutup">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+            Sesi Ditutup
+        </button>
+        {% endif %}
+    </div>
+
+    <!-- Section Header -->
+    <div class="section-header">
+        <h2 class="section-title">
+            Daftar Entri
+            {% if is_teacher and session.pending_count > 0 %}
+            <span class="section-badge section-badge--pending">{{ session.pending_count }} menunggu verifikasi</span>
+            {% endif %}
+        </h2>
+        <span class="section-count">{{ posts|length }} posting</span>
+    </div>
+
+    <!-- Posts List -->
+    <div class="posts-list">
+        {% if posts %}
+        {% for post in posts %}
+        <div class="post-card {% if post.verification_status == 'pending' %}post-card--pending{% elif post.verification_status == 'rejected' %}post-card--rejected{% endif %}" style="--i: {{ forloop.counter }}">
+
+            <!-- Avatar -->
+            <div class="post-avatar">
+                {{ post.student.first_name|first|upper }}{{ post.student.last_name|first|upper }}
+            </div>
+
+            <!-- Body -->
+            <div class="post-card-body">
+                <div class="post-card-header">
+                    <div class="post-card-info">
+                        <div class="post-card-author-row">
+                            <span class="post-author-name">{{ post.student.get_full_name }}</span>
+                            {% if post.student == request.user %}
+                            <span class="post-you-badge">Kamu</span>
+                            {% endif %}
+                        </div>
+                        <div class="post-card-meta">
+                            {% if post.student.profile.kelas %}Kelas {{ post.student.profile.kelas }} &bull; {% endif %}
+                            {{ post.created_at|date:"d M Y" }}
+                        </div>
+                        {% if post.book_review %}
+                        <div class="post-card-book">
+                            <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/>
+                            </svg>
+                            {{ post.book_review.title }} &mdash; {{ post.book_review.author }}
+                        </div>
+                        {% endif %}
+
+                        {# Status badge untuk siswa melihat posting sendiri #}
+                        {% if post.student == request.user and post.verification_status != 'verified' %}
+                        <div class="post-status-row">
+                            {% if post.verification_status == 'pending' %}
+                            <span class="status-badge status-badge--pending">⏳ Menunggu Verifikasi</span>
+                            {% elif post.verification_status == 'rejected' %}
+                            <span class="status-badge status-badge--rejected">✗ Ditolak</span>
+                            {% if post.rejection_reason %}
+                            <span class="rejection-reason">{{ post.rejection_reason }}</span>
+                            {% endif %}
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Right side: stats + actions -->
+                    <div class="post-card-right">
+                        <div class="post-card-actions">
+                            {% if is_teacher and post.verification_status == 'pending' %}
+                            {# Guru: arahkan ke halaman verifikasi, bukan verif langsung di sini #}
+                            <a href="{% url 'literacy:teacher_verify_reviews' %}"
+                               class="btn-verify-link" title="Verifikasi di halaman verifikasi">
+                                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                Tinjau
+                            </a>
+                            {% elif not is_teacher and post.verification_status == 'verified' %}
+                            {# Like/comment stats untuk siswa, hanya pada posting verified #}
+                            <div class="post-card-stats">
+                                <span class="post-stat post-stat--comment">
+                                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+                                    {{ post.comment_count }}
+                                </span>
+                                <span class="post-stat post-stat--like {% if post.user_liked %}post-stat--liked{% endif %}">
+                                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+                                    {{ post.like_count }}
+                                </span>
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        {# Chevron → hanya link untuk posting verified #}
+                        {% if post.verification_status == 'verified' %}
+                        <a href="{% url 'literacy:post_detail' post.pk %}" class="post-card-link">
+                            <svg class="post-card-chevron" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+                        </a>
+                        {% else %}
+                        <span class="post-card-chevron-placeholder"></span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                {# Preview konten untuk guru review #}
+                {% if is_teacher and post.verification_status == 'pending' %}
+                <div class="post-preview">{{ post.content|truncatewords:30 }}</div>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">
+                <svg width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                    <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+                </svg>
+            </div>
+            {% if search_query %}
+            <h3 class="empty-title">Tidak ada hasil untuk "{{ search_query }}"</h3>
+            <a href="{% url 'literacy:session_detail' session.pk %}" class="btn btn-ghost btn-sm">Hapus Pencarian</a>
+            {% else %}
+            <h3 class="empty-title">Belum ada entri literasi.</h3>
+            {% if not is_teacher and session.is_open %}
+            <p class="empty-desc">Jadilah yang pertama berbagi pengalaman membacamu di sesi ini!</p>
+            <a href="{% url 'literacy:create_post' %}?session={{ session.pk }}" class="btn btn-primary btn-sm">Buat Posting</a>
+            {% else %}
+            <p class="empty-desc">Tunggu siswa menambahkan postingan di sesi ini.</p>
+            {% endif %}
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+
+</div>
+
+<script>
+    // Search
+    document.getElementById('search-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const url = new URL(window.location.href);
+        const q = document.getElementById('search-input').value.trim();
+        if (q) url.searchParams.set('q', q); else url.searchParams.delete('q');
+        window.location.href = url.toString();
+    });
+
+    const searchInput = document.getElementById('search-input');
+    const clearBtn    = document.createElement('button');
+    clearBtn.type = 'button'; clearBtn.className = 'search-clear';
+    clearBtn.innerHTML = `<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>`;
+    searchInput.closest('.search-input-wrap').appendChild(clearBtn);
+    const toggleClear = () => {
+        clearBtn.style.opacity = searchInput.value ? '1' : '0';
+        clearBtn.style.pointerEvents = searchInput.value ? 'auto' : 'none';
+    };
+    searchInput.addEventListener('input', toggleClear);
+    clearBtn.addEventListener('click', () => { searchInput.value = ''; toggleClear(); searchInput.focus(); });
+    toggleClear();
+
+    document.querySelector('.main-content').classList.add('ready');
+</script>
+
+<style>
+    /* ── Breadcrumb ─────────────────────────────────────── */
+    .breadcrumb { margin-bottom: 20px; animation: fadeSlideDown .4s ease both; }
+    .breadcrumb-link {
+        display: inline-flex; align-items: center; gap: 6px;
+        font-size: .85rem; font-weight: 600; color: var(--primary-700);
+        text-decoration: none; transition: color .2s, gap .2s;
+    }
+    .breadcrumb-link:hover { color: var(--primary-900); gap: 10px; }
+
+    /* ── Session Header Card ────────────────────────────── */
+    .session-header-card {
+        display: flex; align-items: flex-start; justify-content: space-between; gap: 16px;
+        background: var(--neutral-50); border: 1.5px solid #1e3a8a;
+        border-radius: var(--radius-md); padding: 28px;
+        margin-bottom: 20px; box-shadow: var(--shadow-sm);
+        animation: fadeSlideUp .5s ease both;
+    }
+    .session-topic-badge {
+        display: inline-block; font-size: .72rem; font-weight: 700;
+        text-transform: uppercase; letter-spacing: .06em;
+        background: var(--primary-50); color: var(--primary-700);
+        border: 1px solid #1e3a8a; border-radius: 100px; padding: 4px 12px;
+        margin-bottom: 10px;
+    }
+    .session-title {
+        font-family: 'Playfair Display', serif; font-size: 1.8rem; font-weight: 700;
+        color: var(--primary-900); line-height: 1.2; margin-bottom: 8px;
+    }
+    .session-meta {
+        display: flex; align-items: center; gap: 8px;
+        font-size: .82rem; color: var(--neutral-500);
+    }
+    .session-closed-badge {
+        display: inline-flex; font-size: .7rem; font-weight: 700;
+        background: var(--error-50); color: var(--error-400);
+        border: 1px solid var(--error-400); border-radius: 100px; padding: 2px 10px;
+    }
+    .session-entry-count-box {
+        flex-shrink: 0; display: flex; flex-direction: column; align-items: center;
+        background: var(--primary-50); border: 1.5px solid #1e3a8a;
+        border-radius: var(--radius-md); padding: 18px 28px; gap: 4px;
+        min-width: 110px; text-align: center;
+    }
+    .session-entry-number {
+        font-family: 'Playfair Display', serif; font-size: 2.2rem; font-weight: 700;
+        color: var(--primary-900); line-height: 1;
+    }
+    .session-entry-label { font-size: .72rem; color: var(--neutral-500); font-weight: 600; text-transform: uppercase; letter-spacing: .05em; }
+
+    /* ── Action Bar ──────────────────────────────────────── */
+    .action-bar {
+        display: flex; gap: 12px; margin-bottom: 20px; align-items: center;
+        animation: fadeSlideUp .5s .1s ease both;
+    }
+    .action-bar .search-form { flex: 1; }
+    .search-input-wrap { position: relative; width: 100%; }
+    .search-icon {
+        position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+        color: var(--neutral-400); pointer-events: none; transition: color .2s;
+    }
+    .search-input-wrap:focus-within .search-icon { color: var(--primary-700); }
+    .search-input {
+        width: 100%; padding: 10px 36px 10px 40px; border: 1.5px solid #1e3a8a;
+        border-radius: var(--radius-sm); font-family: 'Work Sans', sans-serif;
+        font-size: .9rem; color: var(--primary-900); background: var(--neutral-50);
+        outline: none; transition: box-shadow .2s, border-color .2s;
+    }
+    .search-input:focus { box-shadow: 0 0 0 3px rgba(30,58,138,.1); border-color: var(--primary-700); }
+    .search-clear {
+        position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+        background: none; border: none; cursor: pointer; color: var(--neutral-400);
+        padding: 4px; border-radius: 50%; display: flex; opacity: 0;
+        transition: color .2s, opacity .2s, background .2s;
+    }
+    .search-clear:hover { color: var(--primary-700); background: var(--primary-50); }
+
+    .btn-disabled {
+        opacity: .45; cursor: not-allowed !important; pointer-events: none;
+    }
+    .btn-danger {
+        display: inline-flex; align-items: center; gap: 7px;
+        padding: 10px 18px; border-radius: var(--radius-sm); border: none; cursor: pointer;
+        font-family: 'Work Sans', sans-serif; font-size: .88rem; font-weight: 600;
+        background: var(--error-400); color: #fff; transition: background .2s;
+    }
+    .btn-danger:hover { background: #dc2626; }
+
+    /* ── Section Header ──────────────────────────────────── */
+    .section-header {
+        display: flex; align-items: center; justify-content: space-between;
+        margin-bottom: 12px; animation: fadeSlideUp .5s .2s ease both;
+    }
+    .section-title {
+        font-family: 'Playfair Display', serif; font-size: 1.1rem; font-weight: 700;
+        color: var(--primary-900); display: flex; align-items: center; gap: 10px;
+    }
+    .section-badge {
+        font-family: 'Work Sans', sans-serif; font-size: .72rem; font-weight: 700;
+        text-transform: uppercase; letter-spacing: .06em; border-radius: 100px; padding: 3px 12px;
+    }
+    .section-badge--pending { background: var(--accent-50); color: var(--accent-700); border: 1px solid var(--accent-300); }
+    .section-count { font-size: .78rem; font-weight: 600; color: var(--neutral-400); }
+
+    /* ── Posts List ──────────────────────────────────────── */
+    .posts-list {
+        display: flex; flex-direction: column;
+        border: 1.5px solid #1e3a8a; border-radius: var(--radius-md);
+        overflow: hidden; margin-bottom: 28px; box-shadow: var(--shadow-sm);
+        animation: fadeSlideUp .5s .3s ease both;
+    }
+    .post-card {
+        display: flex; align-items: flex-start; gap: 16px;
+        padding: 18px 20px; background: var(--neutral-50);
+        border-bottom: 1px solid rgba(30,58,138,.15);
+        transition: background .2s; position: relative;
+        animation: fadeSlideIn .4s calc(var(--i, 1) * 60ms) ease both;
+    }
+    .post-card:last-child { border-bottom: none; }
+    .post-card--pending  { background: #fffbeb; }
+    .post-card--rejected { background: #fff5f5; opacity: .8; }
+    .post-card--pending::before,
+    .post-card--rejected::before {
+        content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+    }
+    .post-card--pending::before  { background: var(--accent-400); }
+    .post-card--rejected::before { background: var(--error-400); }
+
+    /* Avatar */
+    .post-avatar {
+        width: 44px; height: 44px; flex-shrink: 0;
+        background: var(--primary-100); color: var(--primary-700);
+        border: 1.5px solid #1e3a8a; border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        font-family: 'Work Sans', sans-serif; font-weight: 700; font-size: .85rem;
+    }
+
+    .post-card-body { flex: 1; min-width: 0; }
+    .post-card-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+    .post-card-info { flex: 1; min-width: 0; }
+    .post-card-author-row { display: flex; align-items: center; gap: 8px; margin-bottom: 2px; }
+    .post-author-name { font-weight: 700; font-size: .95rem; color: var(--primary-900); }
+    .post-you-badge {
+        font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em;
+        background: var(--secondary-50); color: var(--secondary-700);
+        border: 1px solid var(--secondary-200); border-radius: 100px; padding: 2px 8px;
+    }
+    .post-card-meta { font-size: .78rem; color: var(--neutral-500); }
+    .post-card-book {
+        display: inline-flex; align-items: center; gap: 5px; margin-top: 6px;
+        font-size: .75rem; color: var(--primary-600); background: var(--primary-50);
+        border: 1px solid rgba(30,58,138,.25); border-radius: 4px; padding: 2px 8px;
+    }
+    .post-status-row { margin-top: 6px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .status-badge {
+        display: inline-flex; align-items: center; gap: 4px;
+        font-size: .72rem; font-weight: 600; border-radius: 100px; padding: 3px 10px;
+    }
+    .status-badge--pending  { background: #fef9c3; color: #854d0e; border: 1px solid #fde68a; }
+    .status-badge--rejected { background: var(--error-50); color: var(--error-400); border: 1px solid var(--error-200); }
+    .rejection-reason { font-size: .75rem; color: var(--error-400); font-style: italic; }
+
+    /* Right side */
+    .post-card-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+    .post-card-actions { display: flex; align-items: center; gap: 6px; }
+
+    .btn-verify-link {
+        display: inline-flex; align-items: center; gap: 5px;
+        padding: 5px 12px; border-radius: var(--radius-sm);
+        font-family: 'Work Sans', sans-serif; font-size: .78rem; font-weight: 700;
+        color: var(--primary-700); background: var(--primary-50);
+        border: 1.5px solid #1e3a8a; text-decoration: none;
+        transition: background .18s, color .18s;
+    }
+    .btn-verify-link:hover { background: var(--primary-100); color: var(--primary-900); }
+
+    .post-card-stats { display: flex; align-items: center; gap: 8px; }
+    .post-stat {
+        display: flex; align-items: center; gap: 5px;
+        font-size: .78rem; color: var(--neutral-500); font-weight: 500;
+        padding: 3px 8px; border-radius: 100px;
+    }
+    .post-stat--liked { color: #e11d48; }
+
+    .post-card-link { display: flex; align-items: center; text-decoration: none; }
+    .post-card-chevron { color: var(--neutral-400); transition: transform .25s ease, color .2s; }
+    .post-card-link:hover .post-card-chevron { transform: translateX(4px); color: var(--primary-700); }
+    .post-card-chevron-placeholder { width: 16px; }
+
+    .post-preview {
+        margin-top: 10px; font-size: .83rem; color: var(--neutral-600);
+        line-height: 1.55; padding: 10px 12px;
+        background: rgba(30,58,138,.04); border-radius: var(--radius-sm);
+        border-left: 3px solid rgba(30,58,138,.2);
+    }
+
+    /* ── Empty State ──────────────────────────────────────── */
+    .empty-state {
+        display: flex; flex-direction: column; align-items: center;
+        padding: 60px 24px; background: var(--neutral-50); text-align: center; gap: 12px;
+    }
+    .empty-icon { color: var(--neutral-300); margin-bottom: 4px; animation: float 3s ease-in-out infinite; }
+    .empty-title { font-family: 'Playfair Display', serif; font-size: 1.2rem; font-weight: 700; color: var(--primary-900); }
+    .empty-desc  { font-size: .88rem; color: var(--neutral-500); max-width: 320px; }
+
+    /* ── Keyframes ───────────────────────────────────────── */
+    @keyframes fadeSlideDown { from { opacity: 0; transform: translateY(-14px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes fadeSlideUp   { from { opacity: 0; transform: translateY(14px);  } to { opacity: 1; transform: translateY(0); } }
+    @keyframes fadeSlideIn   { from { opacity: 0; transform: translateX(-8px);  } to { opacity: 1; transform: translateX(0); } }
+    @keyframes float         { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+
+    /* ── Responsive ──────────────────────────────────────── */
+    @media (max-width: 768px) {
+        .session-header-card { flex-direction: column; }
+        .session-entry-count-box { align-self: flex-start; }
+        .post-card-meta { display: none; }
+        .action-bar { flex-wrap: wrap; }
+    }
+    .main-content.ready { visibility: visible; }
+</style>
+{% endblock %}

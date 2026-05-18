@@ -1,0 +1,729 @@
+{% extends 'base.html' %}
+
+{% block title %}Rekap Data Literasi — Nasa Library{% endblock %}
+
+{% block content %}
+<style>.recap-page { visibility: hidden; }</style>
+<div class="recap-page">
+    <div class="recap-container">
+
+        <!-- ── Page Header ── -->
+        <div class="page-header" style="--d:0">
+            <div class="page-header-left">
+                <p class="page-eyebrow">
+                    <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                    Program Literasi Sekolah
+                </p>
+                <h1 class="page-title">Rekap Data Literasi</h1>
+                <p class="page-subtitle">Pantau partisipasi dan progres program literasi per siswa, kelas, dan periode.</p>
+            </div>
+            <a href="{% url 'literacy:leaderboard' %}" class="btn-outline-nav">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                Leaderboard
+            </a>
+        </div>
+
+        <!-- ── Filter Card ── -->
+        <div class="filter-card" style="--d:1">
+            <form method="GET" class="filter-form" id="filterForm">
+                <div class="filter-group">
+                    <label class="filter-label">Periode</label>
+                    <input type="month" name="periode" class="filter-input"
+                           value="{{ current_periode }}" onchange="this.form.submit()">
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Kelas</label>
+                    <select name="kelas" class="filter-input" onchange="this.form.submit()">
+                        <option value="">Semua Kelas</option>
+                        {% for k in available_kelas %}
+                        <option value="{{ k }}" {% if k == current_kelas %}selected{% endif %}>{{ k }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="filter-group filter-group--btn">
+                    <label class="filter-label">&nbsp;</label>
+                    <button type="submit" class="btn-filter">
+                        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                        Terapkan
+                    </button>
+                </div>
+            </form>
+            <p class="filter-meta">
+                Menampilkan data untuk:
+                <strong>{{ current_periode_label }}{% if current_kelas %} · Kelas {{ current_kelas }}{% endif %}</strong>
+            </p>
+        </div>
+
+        <!-- ── Tab Navigation ── -->
+        <div class="tab-nav" style="--d:2" role="tablist">
+            <button class="tab-btn tab-btn--active" role="tab" data-tab="overview" onclick="switchTab(this,'overview')">
+                <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                Overview
+            </button>
+            <button class="tab-btn" role="tab" data-tab="per-siswa" onclick="switchTab(this,'per-siswa')">
+                <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                Per Siswa
+            </button>
+            <button class="tab-btn" role="tab" data-tab="per-kelas" onclick="switchTab(this,'per-kelas')">
+                <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+                Per Kelas
+            </button>
+        </div>
+
+        <!-- ════════════════════════════════════
+             TAB: OVERVIEW
+        ════════════════════════════════════ -->
+        <div class="tab-panel" id="tab-overview">
+
+            <div class="summary-grid">
+                <div class="summary-card summary-card--blue" style="--ci:1">
+                    <div class="summary-icon">📚</div>
+                    <div class="summary-value">{{ overview.total_review }}</div>
+                    <div class="summary-label">Total Review Disetujui</div>
+                    <div class="summary-sub">Periode ini</div>
+                </div>
+                <div class="summary-card summary-card--green" style="--ci:2">
+                    <div class="summary-icon">🏫</div>
+                    <div class="summary-value">{{ overview.kelas_terbaik|default:"—" }}</div>
+                    <div class="summary-label">Kelas Terbaik</div>
+                    <div class="summary-sub">{{ overview.kelas_terbaik_count }} review</div>
+                </div>
+                <div class="summary-card summary-card--gold" style="--ci:3">
+                    <div class="summary-icon">🌟</div>
+                    <div class="summary-value">{{ overview.siswa_terbaik|default:"—" }}</div>
+                    <div class="summary-label">Siswa Terbaik</div>
+                    <div class="summary-sub">{{ overview.siswa_terbaik_count }} review</div>
+                </div>
+                <div class="summary-card summary-card--purple" style="--ci:4">
+                    <div class="summary-icon">📊</div>
+                    <div class="summary-value">{{ overview.rata_per_siswa|floatformat:1 }}</div>
+                    <div class="summary-label">Rata-rata / Siswa</div>
+                    <div class="summary-sub">Review disetujui</div>
+                </div>
+            </div>
+
+            {% if overview.partisipasi_kelas %}
+            <div class="data-card">
+                <div class="data-card-header">
+                    <h2 class="data-card-title">
+                        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                        Partisipasi per Kelas
+                    </h2>
+                </div>
+                <div class="bar-chart">
+                    {% for item in overview.partisipasi_kelas %}
+                    <div class="bar-row" style="--bi:{{ forloop.counter }}">
+                        <div class="bar-label">{{ item.kelas }}</div>
+                        <div class="bar-track">
+                            <div class="bar-fill" style="--pct: {{ item.pct }}%"></div>
+                        </div>
+                        <div class="bar-value">{{ item.count }} <span>review</span></div>
+                    </div>
+                    {% empty %}
+                    <p class="empty-inline">Belum ada data kelas.</p>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+        </div>
+
+        <!-- ════════════════════════════════════
+             TAB: PER SISWA
+        ════════════════════════════════════ -->
+        <div class="tab-panel tab-panel--hidden" id="tab-per-siswa">
+
+            <div class="data-card">
+                <div class="data-card-header">
+                    <h2 class="data-card-title">
+                        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                        Data Siswa
+                    </h2>
+                    <span class="count-pill">{{ per_siswa|length }} siswa</span>
+                </div>
+
+                {% if per_siswa %}
+                <div class="table-scroll">
+                    <table class="recap-table" id="tableSiswa">
+                        <thead>
+                        <tr>
+                            <th class="th-no">No</th>
+                            <th class="th-sortable" onclick="sortTable('tableSiswa',1)">Nama <span class="sort-icon">⇅</span></th>
+                            <th class="th-sortable" onclick="sortTable('tableSiswa',2)">Kelas <span class="sort-icon">⇅</span></th>
+                            <th class="th-sortable th-num" onclick="sortTable('tableSiswa',3)">Review Disetujui <span class="sort-icon">⇅</span></th>
+                            <th class="th-sortable th-num" onclick="sortTable('tableSiswa',4)">Konsistensi <span class="sort-icon">⇅</span></th>
+                            <th>Aksi</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for s in per_siswa %}
+                        <tr class="tr-anim" style="--ri:{{ forloop.counter }}">
+                            <td class="td-no">{{ forloop.counter }}</td>
+                            <td>
+                                <div class="td-nama">
+                                    <div class="avatar avatar--xs">{{ s.nama|first|upper }}</div>
+                                    <span>{{ s.nama }}</span>
+                                </div>
+                            </td>
+                            <td><span class="badge-kelas">{{ s.kelas|default:"—" }}</span></td>
+                            <td class="td-num"><span class="num-chip num-chip--blue">{{ s.jumlah_review }}</span></td>
+                            <td class="td-num">
+                                {% if s.konsistensi > 0 %}
+                                <span class="konsistensi-bar">
+                                <span class="konsistensi-fill" style="width:{{ s.konsistensi|floatformat:0 }}%"></span>
+                            </span>
+                                <span class="konsistensi-label">{{ s.konsistensi }} mgg</span>
+                                {% else %}
+                                <span class="text-muted">—</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{% url 'literacy:recap' %}?siswa_id={{ s.siswa_id }}&periode={{ current_periode }}{% if current_kelas %}&kelas={{ current_kelas }}{% endif %}" class="btn-detail">
+                                    Lihat Detail
+                                    <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="empty-state">
+                    <div class="empty-icon">📋</div>
+                    <p class="empty-title">Belum ada data siswa</p>
+                    <p class="empty-desc">Tidak ada review yang disetujui pada periode ini{% if current_kelas %} untuk kelas {{ current_kelas }}{% endif %}.</p>
+                </div>
+                {% endif %}
+            </div>
+
+            {% if detail_siswa %}
+            <div class="data-card detail-siswa-card">
+                <div class="data-card-header">
+                    <h2 class="data-card-title">
+                        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                        Detail: {{ detail_siswa.nama }}
+                        <span class="badge-kelas" style="margin-left:4px">{{ detail_siswa.kelas }}</span>
+                    </h2>
+                    <a href="{% url 'literacy:recap' %}?periode={{ current_periode }}{% if current_kelas %}&kelas={{ current_kelas }}{% endif %}" class="btn-detail">
+                        Tutup Detail
+                    </a>
+                </div>
+                <div class="mini-stat-grid">
+                    <div class="mini-stat">
+                        <div class="mini-stat-val">{{ detail_siswa.jumlah_review }}</div>
+                        <div class="mini-stat-lbl">Review Disetujui</div>
+                    </div>
+                    <div class="mini-stat">
+                        <div class="mini-stat-val">{{ detail_siswa.konsistensi }}</div>
+                        <div class="mini-stat-lbl">Minggu Konsisten</div>
+                    </div>
+                    <div class="mini-stat">
+                        <div class="mini-stat-val">{{ detail_siswa.pending }}</div>
+                        <div class="mini-stat-lbl">Menunggu Verifikasi</div>
+                    </div>
+                    <div class="mini-stat">
+                        <div class="mini-stat-val">{{ detail_siswa.ditolak }}</div>
+                        <div class="mini-stat-lbl">Ditolak</div>
+                    </div>
+                </div>
+                {% if detail_siswa.reviews %}
+                <div class="table-scroll" style="margin-top:20px">
+                    <table class="recap-table">
+                        <thead>
+                        <tr>
+                            <th>Postingan / Sesi</th>
+                            <th>Tanggal Submit</th>
+                            <th>Status</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for r in detail_siswa.reviews %}
+                        <tr class="tr-anim" style="--ri:{{ forloop.counter }}">
+                            <td>
+                                {% if r.entry_type == 'book' %}
+                                <strong>{{ r.title }}</strong>
+                                <br><small class="text-muted">Review Buku</small>
+                                {% else %}
+                                <strong>{{ r.session|default:r.title }}</strong>
+                                <br><small class="text-muted">Postingan Literasi</small>
+                                {% endif %}
+                            </td>
+                            <td>{{ r.created_at|date:"d M Y" }}</td>
+                            <td>
+                                {% if r.status == 'verified' %}
+                                <span class="status-badge status-badge--green">Disetujui</span>
+                                {% elif r.status == 'pending' %}
+                                <span class="status-badge status-badge--yellow">Menunggu</span>
+                                {% else %}
+                                <span class="status-badge status-badge--red">Ditolak</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+
+        </div>
+
+        <!-- ════════════════════════════════════
+             TAB: PER KELAS
+        ════════════════════════════════════ -->
+        <div class="tab-panel tab-panel--hidden" id="tab-per-kelas">
+
+            <div class="data-card">
+                <div class="data-card-header">
+                    <h2 class="data-card-title">
+                        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+                        Perbandingan Kelas
+                    </h2>
+                    <span class="count-pill">{{ per_kelas|length }} kelas</span>
+                </div>
+
+                {% if per_kelas %}
+                <div class="kelas-grid">
+                    {% for k in per_kelas %}
+                    <div class="kelas-card {% if forloop.first %}kelas-card--top{% endif %}" style="--ki:{{ forloop.counter }}">
+                        {% if forloop.first %}<div class="kelas-crown">🥇</div>{% endif %}
+                        <div class="kelas-name">{{ k.kelas }}</div>
+                        <div class="kelas-total">{{ k.total_review }}</div>
+                        <div class="kelas-sub-label">total review</div>
+                        <div class="kelas-divider"></div>
+                        <div class="kelas-meta">
+                            <span>{{ k.rata_per_siswa|floatformat:1 }} rata-rata</span>
+                            <span>{{ k.jumlah_siswa }} siswa</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <div class="table-scroll" style="margin-top:24px">
+                    <table class="recap-table" id="tableKelas">
+                        <thead>
+                        <tr>
+                            <th class="th-no">Rank</th>
+                            <th class="th-sortable" onclick="sortTable('tableKelas',1)">Kelas <span class="sort-icon">⇅</span></th>
+                            <th class="th-sortable th-num" onclick="sortTable('tableKelas',2)">Total Review <span class="sort-icon">⇅</span></th>
+                            <th class="th-sortable th-num" onclick="sortTable('tableKelas',3)">Jumlah Siswa <span class="sort-icon">⇅</span></th>
+                            <th class="th-sortable th-num" onclick="sortTable('tableKelas',4)">Rata-rata / Siswa <span class="sort-icon">⇅</span></th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for k in per_kelas %}
+                        <tr class="tr-anim" style="--ri:{{ forloop.counter }}">
+                            <td class="td-no">
+                                {% if forloop.counter == 1 %}🥇
+                                {% elif forloop.counter == 2 %}🥈
+                                {% elif forloop.counter == 3 %}🥉
+                                {% else %}{{ forloop.counter }}{% endif %}
+                            </td>
+                            <td><strong>{{ k.kelas }}</strong></td>
+                            <td class="td-num"><span class="num-chip num-chip--blue">{{ k.total_review }}</span></td>
+                            <td class="td-num">{{ k.jumlah_siswa }}</td>
+                            <td class="td-num">{{ k.rata_per_siswa|floatformat:1 }}</td>
+                        </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="empty-state">
+                    <div class="empty-icon">🏫</div>
+                    <p class="empty-title">Belum ada data kelas</p>
+                    <p class="empty-desc">Tidak ada review yang disetujui pada periode ini.</p>
+                </div>
+                {% endif %}
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
+<style>
+    /* ── Reveal system ───────────────────── */
+    .recap-page { animation: fadeIn .3s ease both; }
+    .recap-page.ready { visibility: visible; }
+    [style*="--d"] { animation: slideUp .42s calc(var(--d,0) * 80ms) cubic-bezier(.22,.68,0,1.2) both; }
+
+    /* ── Layout ──────────────────────────── */
+    .recap-container {
+        max-width: 960px; margin: 0 auto;
+        padding: 28px 20px 72px;
+        display: flex; flex-direction: column; gap: 20px;
+    }
+
+    /* ── Page Header ─────────────────────── */
+    .page-header {
+        display: flex; align-items: flex-start; justify-content: space-between;
+        gap: 16px; flex-wrap: wrap;
+    }
+    .page-header-left { display: flex; flex-direction: column; gap: 5px; }
+    .page-eyebrow {
+        display: inline-flex; align-items: center; gap: 6px;
+        font-family: 'Work Sans', sans-serif; font-size: .7rem; font-weight: 700;
+        letter-spacing: .08em; text-transform: uppercase;
+        color: var(--primary-600); margin: 0;
+    }
+    .page-title {
+        font-family: 'Playfair Display', serif; font-size: 2rem; font-weight: 700;
+        color: var(--primary-900); margin: 0; line-height: 1.2;
+    }
+    .page-subtitle {
+        font-family: 'Work Sans', sans-serif; font-size: .88rem;
+        color: var(--neutral-500); margin: 0;
+    }
+    .btn-outline-nav {
+        display: inline-flex; align-items: center; gap: 7px;
+        font-family: 'Work Sans', sans-serif; font-size: .82rem; font-weight: 700;
+        color: var(--primary-700); text-decoration: none;
+        padding: 9px 16px; border: 1.5px solid rgba(30,58,138,.3);
+        border-radius: var(--radius-sm); background: var(--neutral-50);
+        white-space: nowrap; flex-shrink: 0;
+        transition: background .2s, border-color .2s, transform .2s;
+    }
+    .btn-outline-nav:hover { background: var(--primary-50); border-color: #1e3a8a; transform: translateY(-1px); }
+
+    /* ── Filter Card ─────────────────────── */
+    .filter-card {
+        background: var(--neutral-50);
+        border: 1.5px solid rgba(30,58,138,.2);
+        border-radius: var(--radius-md);
+        padding: 20px 24px;
+        box-shadow: var(--shadow-sm);
+    }
+    .filter-form { display: flex; gap: 14px; flex-wrap: wrap; align-items: flex-end; }
+    .filter-group { display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 140px; }
+    .filter-group--btn { flex: 0 0 auto; min-width: unset; }
+    .filter-label {
+        font-family: 'Work Sans', sans-serif; font-size: .7rem; font-weight: 700;
+        text-transform: uppercase; letter-spacing: .06em; color: var(--primary-700);
+    }
+    .filter-input {
+        font-family: 'Work Sans', sans-serif; font-size: .88rem; color: var(--primary-900);
+        padding: 9px 12px; border: 1.5px solid rgba(30,58,138,.25);
+        border-radius: var(--radius-sm); background: var(--neutral-50);
+        outline: none; transition: border-color .2s, box-shadow .2s;
+        width: 100%; box-sizing: border-box;
+    }
+    .filter-input:focus { border-color: #1e3a8a; box-shadow: 0 0 0 3px rgba(30,58,138,.08); }
+    .btn-filter {
+        display: inline-flex; align-items: center; gap: 7px;
+        font-family: 'Work Sans', sans-serif; font-size: .85rem; font-weight: 700;
+        color: #fff; background: #1e3a8a;
+        padding: 9px 18px; border: none; border-radius: var(--radius-sm);
+        cursor: pointer; white-space: nowrap;
+        transition: background .2s, transform .2s;
+    }
+    .btn-filter:hover { background: var(--primary-800); transform: translateY(-1px); }
+    .filter-meta {
+        margin-top: 12px; padding-top: 12px;
+        border-top: 1px solid rgba(30,58,138,.08);
+        font-family: 'Work Sans', sans-serif; font-size: .8rem; color: var(--neutral-500);
+    }
+    .filter-meta strong { color: var(--primary-800); }
+
+    /* ── Tab Nav ─────────────────────────── */
+    .tab-nav {
+        display: flex; gap: 4px;
+        background: rgba(30,58,138,.05);
+        border: 1.5px solid rgba(30,58,138,.14);
+        border-radius: var(--radius-sm);
+        padding: 5px; align-self: flex-start;
+    }
+    .tab-btn {
+        display: inline-flex; align-items: center; gap: 7px;
+        font-family: 'Work Sans', sans-serif; font-size: .84rem; font-weight: 600;
+        color: var(--neutral-500); background: transparent;
+        padding: 8px 16px; border: none; border-radius: 6px;
+        cursor: pointer; transition: color .18s, background .18s;
+        white-space: nowrap;
+    }
+    .tab-btn:hover { color: var(--primary-700); background: rgba(30,58,138,.06); }
+    .tab-btn--active {
+        color: #1e3a8a; background: var(--neutral-50);
+        box-shadow: 0 1px 4px rgba(30,58,138,.12);
+    }
+    .tab-btn--active:hover { background: var(--neutral-50); }
+
+    /* ── Tab Panels ──────────────────────── */
+    .tab-panel { display: flex; flex-direction: column; gap: 16px; animation: slideUp .35s ease both; }
+    .tab-panel--hidden { display: none; }
+
+    /* ── Summary Cards ───────────────────── */
+    .summary-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; }
+    .summary-card {
+        border-radius: var(--radius-md); padding: 20px 18px;
+        border: 1.5px solid; position: relative; overflow: hidden;
+        animation: slideUp .4s calc(var(--ci,1) * 60ms) cubic-bezier(.22,.68,0,1.2) both;
+    }
+    .summary-card--blue   { background: linear-gradient(135deg,#eff6ff,#dbeafe); border-color: #93c5fd; }
+    .summary-card--green  { background: linear-gradient(135deg,#f0fdf4,#dcfce7); border-color: #86efac; }
+    .summary-card--gold   { background: linear-gradient(135deg,#fffbeb,#fef3c7); border-color: #fcd34d; }
+    .summary-card--purple { background: linear-gradient(135deg,#f5f3ff,#ede9fe); border-color: #c4b5fd; }
+    .summary-icon { font-size: 1.5rem; margin-bottom: 8px; line-height: 1; }
+    .summary-value {
+        font-family: 'Playfair Display', serif; font-size: 1.8rem; font-weight: 700;
+        color: var(--primary-900); line-height: 1; margin-bottom: 4px;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .summary-label {
+        font-family: 'Work Sans', sans-serif; font-size: .75rem; font-weight: 700;
+        color: var(--primary-700); text-transform: uppercase; letter-spacing: .04em;
+    }
+    .summary-sub {
+        font-family: 'Work Sans', sans-serif; font-size: .72rem; color: var(--neutral-500); margin-top: 2px;
+    }
+
+    /* ── Data Card ───────────────────────── */
+    .data-card {
+        background: var(--neutral-50);
+        border: 1.5px solid #1e3a8a;
+        border-radius: var(--radius-md);
+        padding: 24px 28px;
+        box-shadow: var(--shadow-sm);
+    }
+    .data-card-header {
+        display: flex; align-items: center; justify-content: space-between;
+        gap: 12px; flex-wrap: wrap; margin-bottom: 20px;
+    }
+    .data-card-title {
+        font-family: 'Playfair Display', serif; font-size: 1.1rem; font-weight: 700;
+        color: var(--primary-900); margin: 0;
+        display: flex; align-items: center; gap: 9px;
+    }
+    .count-pill {
+        font-family: 'Work Sans', sans-serif; font-size: .72rem; font-weight: 700;
+        background: var(--primary-50); color: var(--primary-700);
+        border: 1px solid rgba(30,58,138,.2); border-radius: 100px;
+        padding: 3px 11px;
+    }
+    .detail-siswa-card { border-color: rgba(30,58,138,.35); background: rgba(239,246,255,.4); }
+
+    /* ── Bar Chart ───────────────────────── */
+    .bar-chart { display: flex; flex-direction: column; gap: 11px; }
+    .bar-row {
+        display: flex; align-items: center; gap: 12px;
+        animation: slideIn .35s calc(var(--bi,1) * 50ms) ease both;
+    }
+    .bar-label {
+        font-family: 'Work Sans', sans-serif; font-size: .82rem; font-weight: 700;
+        color: var(--primary-900); width: 60px; flex-shrink: 0;
+    }
+    .bar-track { flex: 1; height: 10px; border-radius: 99px; background: rgba(30,58,138,.08); overflow: hidden; }
+    .bar-fill {
+        height: 100%; border-radius: 99px; width: 0;
+        background: linear-gradient(90deg, #1e3a8a, #2563eb);
+        animation: growBar .6s calc(var(--bi,1) * 50ms + .2s) ease both;
+    }
+    @keyframes growBar { from { width: 0; } to { width: var(--pct); } }
+    .bar-value {
+        font-family: 'Work Sans', sans-serif; font-size: .82rem; font-weight: 700;
+        color: var(--primary-700); width: 80px; text-align: right; flex-shrink: 0;
+    }
+    .bar-value span { font-weight: 400; color: var(--neutral-500); }
+
+    /* ── Table ───────────────────────────── */
+    .table-scroll { overflow-x: auto; }
+    .recap-table { width: 100%; border-collapse: collapse; font-family: 'Work Sans', sans-serif; }
+    .recap-table th {
+        font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em;
+        color: var(--primary-700); padding: 10px 14px;
+        background: rgba(30,58,138,.04); border-bottom: 2px solid rgba(30,58,138,.14);
+        text-align: left; white-space: nowrap;
+    }
+    .th-no { width: 44px; text-align: center; }
+    .th-num { text-align: right; }
+    .th-sortable { cursor: pointer; user-select: none; }
+    .th-sortable:hover { color: #1e3a8a; }
+    .sort-icon { opacity: .4; font-size: .65rem; }
+    .recap-table td {
+        font-size: .875rem; color: var(--neutral-700);
+        padding: 12px 14px; border-bottom: 1px solid rgba(30,58,138,.07); vertical-align: middle;
+    }
+    .td-no { text-align: center; color: var(--neutral-400); font-size: .78rem; }
+    .td-num { text-align: right; }
+    .tr-anim { animation: slideIn .3s calc(var(--ri,1) * 40ms) ease both; transition: background .15s; }
+    .tr-anim:hover { background: var(--primary-50); }
+    .td-nama { display: flex; align-items: center; gap: 10px; font-weight: 600; color: var(--primary-900); }
+
+    /* ── Avatar ──────────────────────────── */
+    .avatar {
+        border-radius: 50%; display: flex; align-items: center; justify-content: center;
+        font-family: 'Playfair Display', serif; font-weight: 700; color: #fff; flex-shrink: 0;
+    }
+    .avatar--xs {
+        width: 30px; height: 30px; font-size: .75rem;
+        background: linear-gradient(135deg, #1e3a8a, #2563eb);
+        border: 1.5px solid rgba(30,58,138,.2);
+    }
+
+    /* ── Badges & chips ──────────────────── */
+    .badge-kelas {
+        display: inline-block;
+        font-family: 'Work Sans', sans-serif; font-size: .7rem; font-weight: 700;
+        background: rgba(30,58,138,.07); color: var(--primary-700);
+        border: 1px solid rgba(30,58,138,.18); border-radius: 100px; padding: 2px 10px;
+    }
+    .num-chip {
+        display: inline-block; font-family: 'Work Sans', sans-serif;
+        font-size: .82rem; font-weight: 700; padding: 3px 12px;
+        border-radius: 100px; border: 1px solid;
+    }
+    .num-chip--blue { background: #eff6ff; color: #1d4ed8; border-color: #bfdbfe; }
+    .status-badge {
+        display: inline-block; font-family: 'Work Sans', sans-serif;
+        font-size: .72rem; font-weight: 700; padding: 2px 10px;
+        border-radius: 100px; letter-spacing: .02em;
+    }
+    .status-badge--green  { background: #dcfce7; color: #16a34a; }
+    .status-badge--yellow { background: #fef9c3; color: #ca8a04; }
+    .status-badge--red    { background: #fee2e2; color: #dc2626; }
+
+    /* ── Konsistensi ─────────────────────── */
+    .konsistensi-bar {
+        display: inline-block; width: 54px; height: 6px;
+        background: rgba(30,58,138,.1); border-radius: 99px;
+        vertical-align: middle; overflow: hidden; margin-right: 6px;
+    }
+    .konsistensi-fill { display: block; height: 100%; border-radius: 99px; background: linear-gradient(90deg, #16a34a, #4ade80); }
+    .konsistensi-label { font-family: 'Work Sans', sans-serif; font-size: .78rem; font-weight: 600; color: var(--primary-700); }
+
+    /* ── Mini stats (detail siswa) ───────── */
+    .mini-stat-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; }
+    .mini-stat {
+        background: rgba(30,58,138,.04); border: 1px solid rgba(30,58,138,.12);
+        border-radius: var(--radius-sm); padding: 14px 16px; text-align: center;
+    }
+    .mini-stat-val {
+        font-family: 'Playfair Display', serif; font-size: 1.5rem; font-weight: 700;
+        color: var(--primary-900);
+    }
+    .mini-stat-lbl {
+        font-family: 'Work Sans', sans-serif; font-size: .7rem; font-weight: 700;
+        text-transform: uppercase; letter-spacing: .04em; color: var(--neutral-500); margin-top: 2px;
+    }
+
+    /* ── Kelas grid ──────────────────────── */
+    .kelas-grid { display: flex; gap: 12px; flex-wrap: wrap; }
+    .kelas-card {
+        flex: 1; min-width: 110px; max-width: 170px;
+        background: rgba(30,58,138,.04); border: 1.5px solid rgba(30,58,138,.15);
+        border-radius: var(--radius-md); padding: 16px 14px;
+        text-align: center; position: relative;
+        animation: slideUp .35s calc(var(--ki,1) * 50ms) ease both;
+        transition: transform .2s, box-shadow .2s;
+    }
+    .kelas-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(30,58,138,.1); }
+    .kelas-card--top { background: linear-gradient(135deg,#fffbeb,#fef3c7); border-color: #fcd34d; box-shadow: 0 4px 16px rgba(250,204,21,.15); }
+    .kelas-crown { font-size: 1.1rem; margin-bottom: 4px; }
+    .kelas-name {
+        font-family: 'Work Sans', sans-serif; font-size: .75rem; font-weight: 700;
+        color: var(--primary-700); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 6px;
+    }
+    .kelas-total {
+        font-family: 'Playfair Display', serif; font-size: 1.9rem; font-weight: 700;
+        color: var(--primary-900); line-height: 1;
+    }
+    .kelas-sub-label { font-family: 'Work Sans', sans-serif; font-size: .7rem; color: var(--neutral-500); margin: 2px 0 8px; }
+    .kelas-divider { height: 1px; background: rgba(30,58,138,.1); margin: 8px 0; }
+    .kelas-meta { display: flex; flex-direction: column; gap: 2px; font-family: 'Work Sans', sans-serif; font-size: .7rem; color: var(--neutral-600); }
+
+    /* ── Action Buttons ──────────────────── */
+    .btn-detail {
+        display: inline-flex; align-items: center; gap: 5px;
+        font-family: 'Work Sans', sans-serif; font-size: .78rem; font-weight: 700;
+        color: var(--primary-700); text-decoration: none;
+        padding: 5px 12px; border: 1.5px solid rgba(30,58,138,.25);
+        border-radius: var(--radius-sm); background: var(--primary-50);
+        white-space: nowrap; transition: background .2s, border-color .2s, transform .2s;
+    }
+    .btn-detail:hover { background: #dbeafe; border-color: #1e3a8a; transform: translateX(2px); }
+
+    /* ── Empty State ─────────────────────── */
+    .empty-state { text-align: center; padding: 48px 20px; display: flex; flex-direction: column; align-items: center; gap: 7px; }
+    .empty-icon  { font-size: 2.2rem; opacity: .4; margin-bottom: 4px; }
+    .empty-title { font-family: 'Playfair Display', serif; font-size: 1rem; font-weight: 700; color: var(--primary-900); margin: 0; }
+    .empty-desc  { font-family: 'Work Sans', sans-serif; font-size: .84rem; color: var(--neutral-500); margin: 0; }
+    .empty-inline { font-family: 'Work Sans', sans-serif; font-size: .84rem; color: var(--neutral-500); padding: 20px 0; text-align: center; }
+    .text-muted  { color: var(--neutral-400); font-size: .8rem; }
+
+    /* ── Keyframes ───────────────────────── */
+    @keyframes fadeIn  { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes slideIn { from { opacity: 0; transform: translateX(-8px); } to { opacity: 1; transform: translateX(0); } }
+
+    /* ── Responsive ──────────────────────── */
+    @media (max-width: 768px) {
+        .summary-grid { grid-template-columns: 1fr 1fr; }
+        .mini-stat-grid { grid-template-columns: 1fr 1fr; }
+        .data-card { padding: 18px 20px; }
+        .page-title { font-size: 1.55rem; }
+        .tab-btn { padding: 7px 12px; font-size: .78rem; }
+    }
+    @media (max-width: 480px) {
+        .summary-grid { grid-template-columns: 1fr 1fr; }
+        .filter-form { flex-direction: column; }
+        .kelas-grid { flex-direction: column; }
+        .kelas-card { max-width: 100%; }
+        .tab-nav { align-self: stretch; }
+    }
+</style>
+
+<script>
+    document.querySelector('.recap-page').classList.add('ready');
+
+    function switchTab(btn, tabId) {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('tab-btn--active'));
+        document.querySelectorAll('.tab-panel').forEach(p => p.classList.add('tab-panel--hidden'));
+        btn.classList.add('tab-btn--active');
+        const panel = document.getElementById('tab-' + tabId);
+        if (panel) {
+            panel.classList.remove('tab-panel--hidden');
+            panel.style.animation = 'none';
+            void panel.offsetHeight;
+            panel.style.animation = '';
+        }
+    }
+
+    const sortState = {};
+    function sortTable(tableId, colIndex) {
+        const table = document.getElementById(tableId);
+        if (!table) return;
+        const tbody = table.tBodies[0];
+        const rows  = Array.from(tbody.rows);
+        const key   = tableId + '-' + colIndex;
+        sortState[key] = !sortState[key];
+        const asc = sortState[key];
+        rows.sort((a, b) => {
+            const at = a.cells[colIndex]?.innerText.trim() || '';
+            const bt = b.cells[colIndex]?.innerText.trim() || '';
+            const an = parseFloat(at.replace(/[^\d.]/g,''));
+            const bn = parseFloat(bt.replace(/[^\d.]/g,''));
+            if (!isNaN(an) && !isNaN(bn)) return asc ? an - bn : bn - an;
+            return asc ? at.localeCompare(bt,'id') : bt.localeCompare(at,'id');
+        });
+        rows.forEach(r => tbody.appendChild(r));
+        table.querySelectorAll('.th-sortable').forEach((th, i) => {
+            const icon = th.querySelector('.sort-icon');
+            if (!icon) return;
+            icon.textContent = (i + 1 === parseInt(colIndex)) ? (asc ? '↑' : '↓') : '⇅';
+            icon.style.opacity = (i + 1 === parseInt(colIndex)) ? '1' : '.4';
+        });
+    }
+
+    const params = new URLSearchParams(location.search);
+    if (params.has('siswa_id')) {
+        const tabBtn = document.querySelector('[data-tab="per-siswa"]');
+        if (tabBtn) switchTab(tabBtn, 'per-siswa');
+        requestAnimationFrame(() => {
+            const detailCard = document.querySelector('.detail-siswa-card');
+            if (detailCard) detailCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+    }
+</script>
+{% endblock %}

@@ -416,47 +416,77 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
 
                     <!-- Podium (left col) -->
-                    <div>
-                        <!-- Crown + 1st place name -->
-                        <div class="flex items-end justify-center gap-4 mb-4" style="height: 280px;">
+                    <div class="bg-gray-50/50 rounded-3xl p-6 md:p-8">
+                        <!-- Crown + Podium elements -->
+                        <div class="flex items-end justify-center gap-2 md:gap-4 mb-4 min-h-[220px] md:min-h-[280px]">
                             <!-- 2nd -->
-                            <div class="text-center flex flex-col items-center gap-1.5">
+                            <div class="text-center flex flex-col items-center gap-1.5 flex-1 max-w-[80px] md:max-w-[100px]">
                                 <div class="relative inline-flex">
-                                    <div class="user-avatar w-12 h-12 text-base" style="background:var(--neutral-400);">
-                                        {% if top_readers|length > 1 %}{{ top_readers.1.first_name|make_list|first|upper }}{{ top_readers.1.last_name|make_list|first|upper }}{% else %}HH{% endif %}
+                                    <div class="user-avatar w-10 h-10 md:w-12 md:h-12 flex items-center justify-center overflow-hidden" style="background:var(--neutral-400);">
+                                        {% if top_readers|length > 1 %}
+                                            {% if top_readers.1.profile_picture_url %}
+                                                <img src="{{ top_readers.1.profile_picture_url }}" class="w-full h-full object-cover">
+                                            {% else %}
+                                                <span class="text-sm md:text-base font-bold text-white">{{ top_readers.1.first_name.0|upper }}{{ top_readers.1.last_name.0|upper }}</span>
+                                            {% endif %}
+                                        {% else %}
+                                            <span class="text-sm md:text-base font-bold text-white">HH</span>
+                                        {% endif %}
                                     </div>
-                                    <span style="position:absolute;bottom:-4px;right:-4px;width:18px;height:18px;border-radius:50%;background:var(--neutral-400);border:2px solid var(--color-surface);display:flex;align-items:center;justify-content:center;font-size:0.6rem;font-weight:800;color:var(--neutral-50);">2</span>
+                                    <span style="position:absolute;bottom:-4px;right:-4px;width:16px;height:16px;md:width:18px;md:height:18px;border-radius:50%;background:var(--neutral-400);border:2px solid var(--color-surface);display:flex;align-items:center;justify-content:center;font-size:0.55rem;md:font-size:0.6rem;font-weight:800;color:var(--neutral-50);">2</span>
                                 </div>
-                                <p class="text-xs font-semibold" style="color:var(--neutral-700);">{% if top_readers|length > 1 %}{{ top_readers.1.first_name }} {{ top_readers.1.last_name }}{% else %}Hanina Hasanah{% endif %}</p>
-                                <span class="points-pill">{% if top_readers|length > 1 %}{{ top_readers.1.points }}{% else %}800{% endif %} pts</span>
-                                <div class="podium-bar silver" style="width: 64px; height: 60px;"></div>
+                                <p class="text-[9px] md:text-[10px] font-bold text-center truncate w-full px-1" style="color:var(--neutral-700);" title="{% if top_readers|length > 1 %}{{ top_readers.1.first_name }} {{ top_readers.1.last_name }}{% else %}Belum Ada{% endif %}">
+                                    {% if top_readers|length > 1 %}{{ top_readers.1.first_name }} {{ top_readers.1.last_name }}{% else %}Belum Ada{% endif %}
+                                </p>
+                                <span class="points-pill scale-90 md:scale-100">{% if top_readers|length > 1 %}{{ top_readers.1.points }}{% else %}0{% endif %} pts</span>
+                                <div class="podium-bar silver w-full" style="height: 50px; md:height: 60px;"></div>
                             </div>
                             <!-- 1st -->
-                            <div class="text-center flex flex-col items-center gap-1.5">
-                                <svg class="crown-icon w-6 h-6 mb-0.5" viewBox="0 0 24 24" fill="currentColor">
+                            <div class="text-center flex flex-col items-center gap-1.5 flex-1 max-w-[90px] md:max-w-[120px]">
+                                <svg class="crown-icon w-5 h-5 md:w-6 md:h-6 mb-0.5" viewBox="0 0 24 24" fill="currentColor">
                                     <path d="M3 18h18v2H3v-2zm-.5-5l3.33-6.67L9.5 11l2.5-7 2.5 7 3.67-4.67L21.5 13H2.5z"/>
                                 </svg>
                                 <div class="relative inline-flex">
-                                    <div class="user-avatar w-14 h-14 text-lg" style="background:var(--primary-900);">
-                                        {% if top_readers|length > 0 %}{{ top_readers.0.first_name|make_list|first|upper }}{{ top_readers.0.last_name|make_list|first|upper }}{% else %}AA{% endif %}
+                                    <div class="user-avatar w-12 h-12 md:w-14 md:h-14 flex items-center justify-center overflow-hidden shadow-[0_0_25px_rgba(245,158,11,0.5)] ring-2 ring-amber-400/30" style="background:var(--primary-900);">
+                                        {% if top_readers|length > 0 %}
+                                            {% if top_readers.0.profile_picture_url %}
+                                                <img src="{{ top_readers.0.profile_picture_url }}" class="w-full h-full object-cover">
+                                            {% else %}
+                                                <span class="text-base md:text-lg font-bold text-white">{{ top_readers.0.first_name.0|upper }}{{ top_readers.0.last_name.0|upper }}</span>
+                                            {% endif %}
+                                        {% else %}
+                                            <span class="text-base md:text-lg font-bold text-white">AA</span>
+                                        {% endif %}
                                     </div>
-                                    <span style="position:absolute;bottom:-4px;right:-4px;width:20px;height:20px;border-radius:50%;background:var(--accent-500);border:2px solid var(--color-surface);display:flex;align-items:center;justify-content:center;font-size:0.65rem;font-weight:800;color:var(--neutral-50);">1</span>
+                                    <span style="position:absolute;bottom:-4px;right:-4px;width:18px;height:18px;md:width:20px;md:height:20px;border-radius:50%;background:var(--accent-500);border:2px solid var(--color-surface);display:flex;align-items:center;justify-content:center;font-size:0.6rem;md:font-size:0.65rem;font-weight:800;color:var(--neutral-50);">1</span>
                                 </div>
-                                <p class="text-sm font-bold text-primary">{% if top_readers|length > 0 %}{{ top_readers.0.first_name }} {{ top_readers.0.last_name }}{% else %}Alisha Aline{% endif %}</p>
-                                <span class="points-pill" style="background:rgba(245,158,11,0.15); color:var(--accent-700);">{% if top_readers|length > 0 %}{{ top_readers.0.points }}{% else %}1000{% endif %} pts</span>
-                                <div class="podium-bar gold" style="width: 64px; height: 90px;"></div>
+                                <p class="text-[10px] md:text-xs font-bold text-primary text-center truncate w-full px-1" title="{% if top_readers|length > 0 %}{{ top_readers.0.first_name }} {{ top_readers.0.last_name }}{% else %}Belum Ada{% endif %}">
+                                    {% if top_readers|length > 0 %}{{ top_readers.0.first_name }} {{ top_readers.0.last_name }}{% else %}Belum Ada{% endif %}
+                                </p>
+                                <span class="points-pill scale-90 md:scale-100" style="background:rgba(245,158,11,0.15); color:var(--accent-700);">{% if top_readers|length > 0 %}{{ top_readers.0.points }}{% else %}0{% endif %} pts</span>
+                                <div class="podium-bar gold w-full" style="height: 80px; md:height: 90px;"></div>
                             </div>
                             <!-- 3rd -->
-                            <div class="text-center flex flex-col items-center gap-1.5">
+                            <div class="text-center flex flex-col items-center gap-1.5 flex-1 max-w-[80px] md:max-w-[100px]">
                                 <div class="relative inline-flex">
-                                    <div class="user-avatar w-12 h-12 text-base" style="background:var(--accent-600);">
-                                        {% if top_readers|length > 2 %}{{ top_readers.2.first_name|make_list|first|upper }}{{ top_readers.2.last_name|make_list|first|upper }}{% else %}CI{% endif %}
+                                    <div class="user-avatar w-10 h-10 md:w-12 md:h-12 flex items-center justify-center overflow-hidden" style="background:var(--accent-600);">
+                                        {% if top_readers|length > 2 %}
+                                            {% if top_readers.2.profile_picture_url %}
+                                                <img src="{{ top_readers.2.profile_picture_url }}" class="w-full h-full object-cover">
+                                            {% else %}
+                                                <span class="text-sm md:text-base font-bold text-white">{{ top_readers.2.first_name.0|upper }}{{ top_readers.2.last_name.0|upper }}</span>
+                                            {% endif %}
+                                        {% else %}
+                                            <span class="text-sm md:text-base font-bold text-white">CI</span>
+                                        {% endif %}
                                     </div>
-                                    <span style="position:absolute;bottom:-4px;right:-4px;width:18px;height:18px;border-radius:50%;background:var(--accent-600);border:2px solid var(--color-surface);display:flex;align-items:center;justify-content:center;font-size:0.6rem;font-weight:800;color:var(--neutral-50);">3</span>
+                                    <span style="position:absolute;bottom:-4px;right:-4px;width:16px;height:16px;md:width:18px;md:height:18px;border-radius:50%;background:var(--accent-600);border:2px solid var(--color-surface);display:flex;align-items:center;justify-content:center;font-size:0.55rem;md:font-size:0.6rem;font-weight:800;color:var(--neutral-50);">3</span>
                                 </div>
-                                <p class="text-xs font-semibold" style="color:var(--neutral-700);">{% if top_readers|length > 2 %}{{ top_readers.2.first_name }} {{ top_readers.2.last_name }}{% else %}Clarissa Indriana{% endif %}</p>
-                                <span class="points-pill">{% if top_readers|length > 2 %}{{ top_readers.2.points }}{% else %}700{% endif %} pts</span>
-                                <div class="podium-bar bronze" style="width: 64px; height: 45px;"></div>
+                                <p class="text-[9px] md:text-[10px] font-bold text-center truncate w-full px-1" style="color:var(--neutral-700);" title="{% if top_readers|length > 2 %}{{ top_readers.2.first_name }} {{ top_readers.2.last_name }}{% else %}Belum Ada{% endif %}">
+                                    {% if top_readers|length > 2 %}{{ top_readers.2.first_name }} {{ top_readers.2.last_name }}{% else %}Belum Ada{% endif %}
+                                </p>
+                                <span class="points-pill scale-90 md:scale-100">{% if top_readers|length > 2 %}{{ top_readers.2.points }}{% else %}0{% endif %} pts</span>
+                                <div class="podium-bar bronze w-full" style="height: 35px; md:height: 45px;"></div>
                             </div>
                         </div>
                     </div>
@@ -468,31 +498,15 @@
                             {% for reader in next_readers %}
                             <div class="rank-row">
                                 <span class="text-sm font-bold w-5 text-center" style="color:var(--neutral-400);">{{ forloop.counter|add:3 }}</span>
-                                <div class="rank-avatar" style="background: var(--primary-400);">
-                                    {{ reader.first_name|make_list|first|upper }}{{ reader.last_name|make_list|first|upper }}
+                                 <div class="rank-avatar flex items-center justify-center overflow-hidden" style="background: var(--primary-400);">
+                                    {% if reader.profile_picture_url %}
+                                        <img src="{{ reader.profile_picture_url }}" class="w-full h-full object-cover">
+                                    {% else %}
+                                        <span class="text-white font-bold">{{ reader.first_name.0|upper }}{{ reader.last_name.0|upper }}</span>
+                                    {% endif %}
                                 </div>
-                                <p class="flex-1 text-sm font-medium" style="color:var(--neutral-800);">{{ reader.first_name }} {{ reader.last_name }}</p>
+                                <p class="flex-1 text-sm font-medium truncate pr-4" style="color:var(--neutral-800);" title="{{ reader.first_name }} {{ reader.last_name }}">{{ reader.first_name }} {{ reader.last_name }}</p>
                                 <span class="points-pill">{{ reader.points }} pts</span>
-                            </div>
-                            {% empty %}
-                            <!-- Fallback -->
-                            <div class="rank-row">
-                                <span class="text-sm font-bold w-5 text-center" style="color:var(--neutral-400);">4</span>
-                                <div class="rank-avatar" style="background:var(--primary-400);">NI</div>
-                                <p class="flex-1 text-sm font-medium" style="color:var(--neutral-800);">Naurah Iradya</p>
-                                <span class="points-pill">198 pts</span>
-                            </div>
-                            <div class="rank-row">
-                                <span class="text-sm font-bold w-5 text-center" style="color:var(--neutral-400);">5</span>
-                                <div class="rank-avatar" style="background:var(--primary-400);">SS</div>
-                                <p class="flex-1 text-sm font-medium" style="color:var(--neutral-800);">Samuel Sips</p>
-                                <span class="points-pill">134 pts</span>
-                            </div>
-                            <div class="rank-row">
-                                <span class="text-sm font-bold w-5 text-center" style="color:var(--neutral-400);">6</span>
-                                <div class="rank-avatar" style="background:var(--primary-400);">AL</div>
-                                <p class="flex-1 text-sm font-medium" style="color:var(--neutral-800);">Alamak Lamak</p>
-                                <span class="points-pill">100 pts</span>
                             </div>
                             {% endfor %}
                         </div>
@@ -528,8 +542,8 @@
                     </svg>
                 </div>
                 <div>
-                    <p class="font-display text-2xl font-bold text-primary">#{{ user_rank|default:"12" }}</p>
-                    <p class="text-xs mt-0.5" style="color:var(--neutral-500);">your rank out of {{ total_students|default:"100" }} students!</p>
+                    <p class="font-display text-2xl font-bold text-primary">#{{ user_rank|default:"—" }}</p>
+                    <p class="text-xs mt-0.5" style="color:var(--neutral-500);">your rank out of {{ total_students|default:"0" }} students!</p>
                 </div>
             </div>
             <!-- Books Read -->
@@ -540,7 +554,7 @@
                     </svg>
                 </div>
                 <div>
-                    <p class="font-display text-2xl font-bold text-primary">{{ books_read_this_month|default:"20" }}</p>
+                    <p class="font-display text-2xl font-bold text-primary">{{ books_read_this_month|default:"0" }}</p>
                     <p class="text-xs mt-0.5" style="color:var(--neutral-500);">books read this month</p>
                 </div>
             </div>
@@ -552,7 +566,7 @@
                     </svg>
                 </div>
                 <div>
-                    <p class="font-display text-2xl font-bold text-primary">{{ active_loans|default:"3" }}</p>
+                    <p class="font-display text-2xl font-bold text-primary">{{ active_loans|default:"0" }}</p>
                     <p class="text-xs mt-0.5" style="color:var(--neutral-500);">books currently borrowed</p>
                 </div>
             </div>

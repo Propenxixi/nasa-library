@@ -1,0 +1,232 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Pantau Antrian Peminjaman — Nasa Library{% endblock %}
+
+{% block content %}
+<div class="w-full min-h-screen bg-gray-50">
+    <div class="w-full flex justify-center px-4 sm:px-6 md:px-8 py-6 sm:py-8 md:py-12">
+        <div class="w-full max-w-5xl">
+
+            <!-- Header -->
+            <div class="mb-8 sm:mb-10">
+                <h1 class="text-slate-900 text-3xl sm:text-4xl md:text-5xl font-bold font-['Playfair_Display'] leading-tight">
+                    Pantau Antrian Peminjaman
+                </h1>
+                <p class="text-zinc-500 text-base sm:text-lg font-normal font-['Work_Sans'] leading-normal mt-2">
+                    Pantau buku-buku yang sedang dalam antrian dan siapa saja yang menunggu
+                </p>
+            </div>
+
+            <!-- Search and Filter Bar -->
+            <form method="GET" class="mb-8">
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <div class="flex-1">
+                        <input
+                            type="text"
+                            name="search"
+                            value="{{ search }}"
+                            placeholder="Cari judul buku atau penulis..."
+                            class="w-full px-4 py-3 bg-white rounded-2xl outline outline-1 outline-offset-[-1px] outline-gray-200 text-slate-900 text-sm font-normal font-['Work_Sans'] placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-900 transition"
+                        >
+                    </div>
+                    <select
+                        name="status"
+                        class="px-4 py-3 bg-white rounded-2xl outline outline-1 outline-offset-[-1px] outline-gray-200 text-slate-900 text-sm font-['Work_Sans'] focus:outline-none focus:ring-2 focus:ring-blue-900 transition"
+                    >
+                        <option value="">Semua Status</option>
+                        <option value="menunggu" {% if status_filter == 'menunggu' %}selected{% endif %}>Menunggu</option>
+                        <option value="siap_dipinjam" {% if status_filter == 'siap_dipinjam' %}selected{% endif %}>Siap Diambil</option>
+                    </select>
+                    <button type="submit" class="px-6 py-3 bg-blue-900 text-white text-sm font-semibold font-['Work_Sans'] rounded-2xl hover:bg-blue-800 active:bg-blue-950 transition-colors whitespace-nowrap">
+                        Cari
+                    </button>
+                    {% if search or status_filter %}
+                    <a href="{% url 'book_loan:waiting_list_admin' %}" class="px-6 py-3 bg-white outline outline-1 outline-gray-200 text-gray-600 text-sm font-semibold font-['Work_Sans'] rounded-2xl hover:bg-gray-100 transition-colors whitespace-nowrap text-center">
+                        Reset
+                    </a>
+                    {% endif %}
+                </div>
+            </form>
+
+            <!-- Summary Stats -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
+                <div class="bg-white rounded-2xl outline outline-1 outline-offset-[-1px] outline-gray-200 shadow-[0px_1px_3px_0px_rgba(0,0,0,0.06)] px-5 py-4 flex flex-col gap-2">
+                    <div class="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center">
+                        <svg class="w-4 h-4 text-blue-900" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z"/>
+                        </svg>
+                    </div>
+                    <p class="text-zinc-500 text-[10px] font-semibold font-['Work_Sans'] uppercase tracking-wide">Buku Antrian</p>
+                    <p class="text-slate-900 text-3xl font-bold font-['Playfair_Display'] leading-none">{{ total_books_with_queue }}</p>
+                </div>
+                <div class="bg-white rounded-2xl outline outline-1 outline-offset-[-1px] outline-gray-200 shadow-[0px_1px_3px_0px_rgba(0,0,0,0.06)] px-5 py-4 flex flex-col gap-2">
+                    <div class="w-8 h-8 bg-amber-50 rounded-lg flex items-center justify-center">
+                        <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6l4 2m6-2a10 10 0 11-20 0 10 10 0 0120 0z"/>
+                        </svg>
+                    </div>
+                    <p class="text-zinc-500 text-[10px] font-semibold font-['Work_Sans'] uppercase tracking-wide">Total Menunggu</p>
+                    <p class="text-slate-900 text-3xl font-bold font-['Playfair_Display'] leading-none">{{ total_people_waiting }}</p>
+                </div>
+                <div class="bg-white rounded-2xl outline outline-1 outline-offset-[-1px] outline-gray-200 shadow-[0px_1px_3px_0px_rgba(0,0,0,0.06)] px-5 py-4 flex flex-col gap-2">
+                    <div class="w-8 h-8 bg-emerald-50 rounded-lg flex items-center justify-center">
+                        <svg class="w-4 h-4 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z"/>
+                        </svg>
+                    </div>
+                    <p class="text-zinc-500 text-[10px] font-semibold font-['Work_Sans'] uppercase tracking-wide">Buku Siap</p>
+                    <p class="text-slate-900 text-3xl font-bold font-['Playfair_Display'] leading-none">{{ books_ready }}</p>
+                </div>
+                <div class="bg-white rounded-2xl outline outline-1 outline-offset-[-1px] outline-gray-200 shadow-[0px_1px_3px_0px_rgba(0,0,0,0.06)] px-5 py-4 flex flex-col gap-2">
+                    <div class="w-8 h-8 bg-emerald-50 rounded-lg flex items-center justify-center">
+                        <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                    <p class="text-zinc-500 text-[10px] font-semibold font-['Work_Sans'] uppercase tracking-wide">Orang Siap</p>
+                    <p class="text-slate-900 text-3xl font-bold font-['Playfair_Display'] leading-none">{{ people_ready }}</p>
+                </div>
+            </div>
+
+            <!-- Book Cards -->
+            <div class="space-y-4">
+                {% if book_queue_data %}
+                    {% for queue_info in book_queue_data %}
+                    <div class="bg-white rounded-2xl outline outline-1 outline-offset-[-1px] outline-gray-200 shadow-[0px_1px_3px_0px_rgba(0,0,0,0.06)] overflow-hidden">
+
+                        <!-- Book Info Header -->
+                        <div class="px-6 pt-6 pb-5">
+                            <div class="flex items-start justify-between gap-4">
+                                <div class="min-w-0">
+                                    <h3 class="text-slate-900 text-xl sm:text-2xl font-bold font-['Playfair_Display'] leading-snug">
+                                        <a href="{% url 'book:book_detail' queue_info.book.id %}" class="hover:text-blue-900 transition-colors">
+                                            {{ queue_info.book.title }}
+                                        </a>
+                                    </h3>
+                                    <p class="text-zinc-500 text-sm font-['Work_Sans'] mt-1">{{ queue_info.book.author }}</p>
+                                </div>
+                                <span class="flex-shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold font-['Work_Sans']
+                                    {% if queue_info.ready_count > 0 %}bg-emerald-50 text-emerald-700{% else %}bg-amber-50 text-amber-700{% endif %}">
+                                    <span class="w-1.5 h-1.5 rounded-full {% if queue_info.ready_count > 0 %}bg-emerald-500{% else %}bg-amber-400{% endif %}"></span>
+                                    {{ queue_info.total_queue }} dalam antrian
+                                </span>
+                            </div>
+
+                            <!-- Mini stats -->
+                            <div class="flex items-center gap-6 mt-4 pt-4 border-t border-gray-100">
+                                <div>
+                                    <p class="text-zinc-400 text-[10px] font-semibold font-['Work_Sans'] uppercase tracking-wide">Total</p>
+                                    <p class="text-slate-900 text-lg font-bold font-['Playfair_Display']">{{ queue_info.total_queue }}</p>
+                                </div>
+                                <div class="w-px h-7 bg-gray-100"></div>
+                                <div>
+                                    <p class="text-zinc-400 text-[10px] font-semibold font-['Work_Sans'] uppercase tracking-wide">Menunggu</p>
+                                    <p class="text-amber-600 text-lg font-bold font-['Playfair_Display']">{{ queue_info.waiting_count }}</p>
+                                </div>
+                                <div class="w-px h-7 bg-gray-100"></div>
+                                <div>
+                                    <p class="text-zinc-400 text-[10px] font-semibold font-['Work_Sans'] uppercase tracking-wide">Siap Diambil</p>
+                                    <p class="text-emerald-600 text-lg font-bold font-['Playfair_Display']">{{ queue_info.ready_count }}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Table Header -->
+                        <div class="border-t border-gray-100 bg-gray-50 px-6 py-2.5 grid grid-cols-12 gap-4">
+                            <div class="col-span-1">
+                                <p class="text-zinc-400 text-[10px] font-semibold font-['Work_Sans'] uppercase tracking-wide">Pos.</p>
+                            </div>
+                            <div class="col-span-5 sm:col-span-4">
+                                <p class="text-zinc-400 text-[10px] font-semibold font-['Work_Sans'] uppercase tracking-wide">Nama</p>
+                            </div>
+                            <div class="col-span-3 hidden sm:block">
+                                <p class="text-zinc-400 text-[10px] font-semibold font-['Work_Sans'] uppercase tracking-wide">Terdaftar</p>
+                            </div>
+                            <div class="col-span-2 hidden sm:block">
+                                <p class="text-zinc-400 text-[10px] font-semibold font-['Work_Sans'] uppercase tracking-wide">Status</p>
+                            </div>
+                            <div class="col-span-2 hidden sm:block text-right">
+                                <p class="text-zinc-400 text-[10px] font-semibold font-['Work_Sans'] uppercase tracking-wide">Batas Ambil</p>
+                            </div>
+                        </div>
+
+                        <!-- Queue Rows -->
+                        <div class="divide-y divide-gray-100">
+                            {% for waiting in queue_info.waiting_lists %}
+                            <div class="px-6 py-3.5 grid grid-cols-12 gap-4 items-center
+                                {% if waiting.status == 'siap_dipinjam' %}bg-emerald-50/50{% else %}hover:bg-gray-50{% endif %}
+                                transition-colors duration-100">
+
+                                <!-- Position -->
+                                <div class="col-span-1">
+                                    <div class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold font-['Work_Sans']
+                                        {% if waiting.status == 'siap_dipinjam' %}bg-emerald-500 text-white{% else %}bg-gray-200 text-slate-600{% endif %}">
+                                        {{ waiting.position }}
+                                    </div>
+                                </div>
+
+                                <!-- Name + email -->
+                                <div class="col-span-5 sm:col-span-4 min-w-0">
+                                    <p class="text-slate-900 text-sm font-semibold font-['Work_Sans'] truncate">
+                                        {{ waiting.user.first_name }} {{ waiting.user.last_name }}
+                                    </p>
+                                    <p class="text-zinc-400 text-xs font-['Work_Sans'] truncate mt-0.5">{{ waiting.user.email }}</p>
+                                </div>
+
+                                <!-- Date joined -->
+                                <div class="col-span-3 hidden sm:block">
+                                    <p class="text-slate-700 text-sm font-['Work_Sans']">{{ waiting.registered_date|date:"d M Y" }}</p>
+                                </div>
+
+                                <!-- Status badge -->
+                                <div class="col-span-6 sm:col-span-2 flex sm:block justify-end">
+                                    {% if waiting.status == 'siap_dipinjam' %}
+                                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-semibold font-['Work_Sans'] bg-emerald-100 text-emerald-700 whitespace-nowrap">
+                                        <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span> Siap Diambil
+                                    </span>
+                                    {% else %}
+                                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-semibold font-['Work_Sans'] bg-amber-100 text-amber-700 whitespace-nowrap">
+                                        <span class="w-1.5 h-1.5 bg-amber-400 rounded-full"></span> Menunggu
+                                    </span>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Claim deadline -->
+                                <div class="col-span-2 hidden sm:block text-right">
+                                    {% if waiting.claim_deadline %}
+                                    <p class="text-slate-700 text-xs font-semibold font-['Work_Sans']">{{ waiting.claim_deadline|date:"d M" }}</p>
+                                    <p class="text-zinc-400 text-[10px] font-['Work_Sans']">{{ waiting.claim_deadline|date:"H:i" }}</p>
+                                    {% else %}
+                                    <p class="text-zinc-300 text-xs font-['Work_Sans']">—</p>
+                                    {% endif %}
+                                </div>
+
+                            </div>
+                            {% empty %}
+                            <div class="px-6 py-8 text-center">
+                                <p class="text-zinc-400 text-sm font-['Work_Sans']">Tidak ada antrian untuk buku ini.</p>
+                            </div>
+                            {% endfor %}
+                        </div>
+
+                    </div>
+                    {% endfor %}
+
+                {% else %}
+                <div class="bg-white rounded-2xl outline outline-1 outline-offset-[-1px] outline-gray-200 py-20 text-center">
+                    <div class="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <svg class="w-6 h-6 text-zinc-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.966 8.966 0 00-6 2.292m0-14.25v14.25"/>
+                        </svg>
+                    </div>
+                    <p class="text-slate-900 text-base font-bold font-['Playfair_Display'] mb-1">Tidak Ada Antrian</p>
+                    <p class="text-zinc-400 text-sm font-['Work_Sans']">Tidak ada buku yang sedang dalam antrian peminjaman.</p>
+                </div>
+                {% endif %}
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}
