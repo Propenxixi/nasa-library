@@ -1266,12 +1266,11 @@ def calculate_leaderboard_scores(target_month=None, target_year=None):
                 quality_bonus += 5
 
         # --- 2. Konsistensi (Streak Mingguan) ---
-        # Definisi: Cari minggu aktif terakhir (di bulan ini) lalu hitung mundur ke belakang (global).
         # AC: "5 poin per minggu berturut-turut (max 20 minggu)"
 
         # Ambil semua minggu unik di mana siswa memiliki verified activity (sepanjang waktu)
-        all_activities = list(BookReview.objects.filter(student=student, status='verified').values_list('verified_at', flat=True)) + \
-                         list(LiteracyPost.objects.filter(student=student, verification_status='verified').values_list('verified_at', flat=True))
+        all_activities = list(BookReview.objects.filter(student=student, status='verified').values_list('created_at', flat=True)) + \
+                         list(LiteracyPost.objects.filter(student=student, verification_status='verified').values_list('created_at', flat=True))
 
         active_weeks = set()
         for dt in all_activities:
@@ -1279,19 +1278,22 @@ def calculate_leaderboard_scores(target_month=None, target_year=None):
                 # Pastikan aware datetime
                 if timezone.is_naive(dt):
                     dt = timezone.make_aware(dt)
-                active_weeks.add(dt.strftime('%G-%V'))
+                # Geser 3 hari ke belakang agar Kamis jadi awal minggu (Kamis-Rabu menjadi Senin-Minggu secara ISO)
+                shifted_dt = dt - timedelta(days=3)
+                active_weeks.add(shifted_dt.strftime('%G-%V'))
 
         # Hitung streak ke belakang mulai dari minggu terakhir di periode target
         streak_count = 0
         if year == now.year and month == now.month:
-            # Mulai dari hari ini (pastikan di akhir hari agar mencakup kiriman hari ini)
-            current_check_date = now.replace(hour=23, minute=59, second=59)
+            current_check_date = now
+            # Sesuai request: Tidak ada "kemaafan". Jika di siklus berjalan (Kamis-Rabu) kosong, reset 0.
         else:
             current_check_date = end_date - timedelta(days=1)
 
         # Maksimal cek 20 minggu ke belakang
         for i in range(20):
-            week_key = current_check_date.strftime('%G-%V')
+            shifted_check = current_check_date - timedelta(days=3)
+            week_key = shifted_check.strftime('%G-%V')
             if week_key in active_weeks:
                 streak_count += 1
                 current_check_date -= timedelta(days=7)
@@ -1300,8 +1302,8 @@ def calculate_leaderboard_scores(target_month=None, target_year=None):
 
         # --- 3. First Activity in Period (for tie-breaking) ---
         period_activities = list(chain(
-            br_qs.values_list('verified_at', flat=True),
-            lp_qs.values_list('verified_at', flat=True)
+            br_qs.values_list('created_at', flat=True),
+            lp_qs.values_list('created_at', flat=True)
         ))
         first_activity = min([dt for dt in period_activities if dt], default=None)
 
