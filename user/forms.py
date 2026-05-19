@@ -94,7 +94,12 @@ class UserUpdateForm(forms.Form):
         # Handle profile picture removal only
         if data.get("remove_profile_picture"):
             if profile.profile_picture:
-                profile.profile_picture.delete()  # Delete the file from storage
+                try:
+                    # Try to delete the file from storage
+                    profile.profile_picture.delete(save=False)
+                except (TypeError, AttributeError):
+                    # If deletion fails (e.g., MEDIA_ROOT is None for Cloudinary), just clear the field
+                    pass
             profile.profile_picture = None
 
         profile.role   = data["role"]
