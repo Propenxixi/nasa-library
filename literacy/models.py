@@ -35,7 +35,7 @@ class BookReview(models.Model):
     rejection_reason = models.TextField(blank=True, help_text="Reason for rejection")
     
     # Timestamps
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(default=timezone.now)
     verified_at = models.DateTimeField(null=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True)
     
@@ -166,7 +166,7 @@ class LiteracyPost(models.Model):
     likes = models.ManyToManyField(User, blank=True, related_name='liked_posts')
     
     # Timestamps
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
     
     class Meta:

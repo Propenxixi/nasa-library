@@ -1374,30 +1374,47 @@ def calculate_student_score(student, month, year):
         if p.content and len(p.content) > 500:
             quality_bonus += 5
 
-    # Streak: cukup ambil verified_at dalam rentang yang relevan (max 20 minggu ke belakang)
+    # Streak: cukup ambil created_at dalam rentang yang relevan (max 20 minggu ke belakang)
     lookback_start = end_date - timedelta(weeks=20)
-    all_dates = list(chain(
-        BookReview.objects.filter(
-            student=student, status='verified',
-            verified_at__gte=lookback_start,
-        ).values_list('verified_at', flat=True),
-        LiteracyPost.objects.filter(
-            student=student, verification_status='verified',
-            verified_at__gte=lookback_start,
-        ).values_list('verified_at', flat=True),
-    ))
+    all_dates = list(BookReview.objects.filter(
+        student=student, status='verified',
+        created_at__gte=lookback_start,
+    ).values_list('created_at', flat=True)) + list(LiteracyPost.objects.filter(
+        student=student, verification_status='verified',
+        created_at__gte=lookback_start,
+    ).values_list('created_at', flat=True))
 
-    active_weeks = {dt.strftime('%G-%V') for dt in all_dates if dt}
+    active_weeks = set()
+    for dt in all_dates:
+        if dt:
+            if timezone.is_naive(dt):
+                dt = timezone.make_aware(dt)
+            # Geser 3 hari ke belakang agar Kamis jadi awal minggu
+            shifted_dt = dt - timedelta(days=3)
+            active_weeks.add(shifted_dt.strftime('%G-%V'))
 
     streak_count = 0
-    current_check_date = end_date - timedelta(days=1)
+    now = timezone.now()
+    if year == now.year and month == now.month:
+        current_check_date = now
+    else:
+        current_check_date = end_date - timedelta(days=1)
+
     for _ in range(20):
-        week_key = current_check_date.strftime('%G-%V')
+        shifted_check = current_check_date - timedelta(days=3)
+        week_key = shifted_check.strftime('%G-%V')
         if week_key in active_weeks:
             streak_count += 1
             current_check_date -= timedelta(days=7)
         else:
             break
+
+    # Tie-breaking
+    period_activities = list(chain(
+        br_qs.values_list('created_at', flat=True),
+        lp_qs.values_list('created_at', flat=True)
+    ))
+    first_activity = min([dt for dt in period_activities if dt], default=None)
 
     streak_score = streak_count * 5
     total_score = books_score + quality_bonus + streak_score
@@ -1410,6 +1427,7 @@ def calculate_student_score(student, month, year):
             'quality_bonus_score': quality_bonus,
             'consistency_score':   streak_score,
             'total_score':         total_score,
+            'first_activity_at':   first_activity,
         },
     )
 

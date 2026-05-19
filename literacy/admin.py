@@ -6,7 +6,7 @@ class BookReviewAdmin(admin.ModelAdmin):
     list_display = ('title', 'student', 'status', 'verified_at', 'created_at')
     list_filter = ('status', 'created_at')
     search_fields = ('title', 'student__username', 'student__first_name')
-    readonly_fields = ('created_at', 'updated_at')
+    readonly_fields = ('updated_at',)
 
 @admin.register(LiteracySession)
 class LiteracySessionAdmin(admin.ModelAdmin):
