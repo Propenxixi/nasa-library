@@ -9,3 +9,5 @@ django-crontab
 python-dotenv
 dj-database-url
 reportlab
+cloudinary
+django-cloudinary-storage
