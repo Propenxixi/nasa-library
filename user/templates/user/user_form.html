@@ -395,18 +395,6 @@
                     <h3>Informasi Profil</h3>
                 </div>
                 <div class="uf-section-body">
-                    {% if action == 'Edit' and user_obj.profile.profile_picture %}
-                    <div class="uf-field">
-                        <label class="uf-label">Foto Profil</label>
-                        <p class="uf-hint">Pengguna memiliki foto profil. Anda dapat menghapusnya jika diperlukan.</p>
-                        <div style="margin-top:8px;">
-                            <label style="display:flex;align-items:center;gap:8px;font-size:0.875rem;color:#374151;cursor:pointer;">
-                                {{ form.remove_profile_picture }}
-                                <span>Hapus foto profil saat ini</span>
-                            </label>
-                        </div>
-                    </div>
-                    {% endif %}
                     <div class="uf-grid-2">
                         <div>
                             <label class="uf-label">Role <span class="req">*</span></label>

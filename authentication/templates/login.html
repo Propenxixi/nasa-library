@@ -37,7 +37,7 @@
                     <!-- Messages Section -->
                     {% if messages %}
                         {% for message in messages %}
-                            <div class="p-3 md:p-4 rounded-xl border text-xs md:text-sm" style="{% if message.tags %}border-color: #fca5a5; background-color: #fee2e2; color: #991b1b;{% else %}border-color: #bfdbfe; background-color: #eff6ff; color: #1e40af;{% endif %}">
+                            <div class="p-3 md:p-4 rounded-xl border text-xs md:text-sm" style="{% if 'success' in message.tags %}border-color: #86efac; background-color: #f0fdf4; color: #15803d;{% elif 'error' in message.tags %}border-color: #fca5a5; background-color: #fee2e2; color: #991b1b;{% else %}border-color: #bfdbfe; background-color: #eff6ff; color: #1e40af;{% endif %}">
                                 <p class="font-['Work_Sans'] font-medium">{{ message }}</p>
                             </div>
                         {% endfor %}

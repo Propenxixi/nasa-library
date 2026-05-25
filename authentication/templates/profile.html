@@ -67,37 +67,6 @@
                 <div class="h-1 bg-gradient-to-r from-blue-900 to-slate-500"></div>
 
                 <div class="p-4 sm:p-6">
-                    <!-- Profile Picture Section -->
-                    <div class="mb-6 sm:mb-8">
-                        <div class="flex justify-start items-center gap-3 mb-4 sm:mb-6">
-                            <div class="w-8 h-8 sm:w-10 sm:h-10 px-2 sm:px-2.5 bg-slate-200 rounded-2xl flex justify-center items-center flex-shrink-0">
-                                <img src="{% static 'assets/Camera.svg' %}" alt="Profile Picture" class="w-5 h-5 sm:w-6 sm:h-6">
-                            </div>
-                            <div class="flex-1 min-w-0">
-                                <div class="text-slate-900 text-base sm:text-lg font-bold font-['Playfair_Display'] leading-7">Foto Profil</div>
-                                <div class="text-zinc-600 text-xs sm:text-sm font-normal font-['Work_Sans'] leading-5">Upload foto profil baru (maksimal 5MB)</div>
-                            </div>
-                        </div>
-
-                        <!-- Profile Picture Upload -->
-                        <div class="flex flex-col items-center gap-4">
-                            <div class="relative">
-                                <img id="profile-preview" src="{{ user_profile.get_profile_picture_url }}" alt="Profile Preview" class="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl object-cover border-4 border-gray-100">
-                                <label for="profile-picture-input" class="absolute -bottom-2 -right-2 w-7 h-7 sm:w-8 sm:h-8 bg-blue-600 rounded-full flex items-center justify-center cursor-pointer hover:bg-blue-700 transition-colors">
-                                    <svg class="w-3 h-3 sm:w-4 sm:h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
-                                    </svg>
-                                </label>
-                            </div>
-                            <div class="text-center">
-                                <button type="button" onclick="document.getElementById('profile-picture-input').click()" class="text-blue-600 hover:text-blue-800 text-sm font-medium underline">
-                                    Ganti Foto Profil
-                                </button>
-                            </div>
-                            {{ form.profile_picture }}
-                        </div>
-                    </div>
-
                     <!-- Username Change Section -->
                     <div class="mb-6 sm:mb-8">
                         <div class="flex justify-start items-center gap-3 mb-4 sm:mb-6">
@@ -203,18 +172,6 @@
     updateTime();
     setInterval(updateTime, 1000);
 
-    // Profile picture preview
-    document.getElementById('profile-picture-input').addEventListener('change', function(e) {
-        const file = e.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                document.getElementById('profile-preview').src = e.target.result;
-            };
-            reader.readAsDataURL(file);
-        }
-    });
-
     // Error modal functions
     function showErrorModal(errors) {
         const errorList = document.getElementById('error-list');
@@ -254,9 +211,14 @@
         const newPassword2 = document.querySelector('input[name="new_password2"]').value.trim();
         const errors = [];
 
-        // If changing username or password, require current password
-        if ((newUsername || newPassword1 || newPassword2) && !oldPassword) {
-            errors.push('Password saat ini diperlukan untuk mengubah username atau password.');
+        // If changing password, require current password
+        if ((newPassword1 || newPassword2) && !oldPassword) {
+            errors.push('Password saat ini diperlukan untuk mengubah password.');
+        }
+
+        // If changing username, require current password
+        if (newUsername && !oldPassword) {
+            errors.push('Password saat ini diperlukan untuk mengubah username.');
         }
 
         // Check password confirmation

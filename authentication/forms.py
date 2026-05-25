@@ -124,7 +124,7 @@ class StudentBatchImportForm(forms.Form):
 
 
 class ProfileUpdateForm(forms.ModelForm):
-    """Form for updating user profile including password, username, and profile picture"""
+    """Form for updating user profile including password and username"""
 
     # Password change fields
     old_password = forms.CharField(
@@ -170,14 +170,8 @@ class ProfileUpdateForm(forms.ModelForm):
 
     class Meta:
         model = UserProfile
-        fields = ['profile_picture']
-        widgets = {
-            'profile_picture': forms.FileInput(attrs={
-                'accept': 'image/*',
-                'class': 'hidden',
-                'id': 'profile-picture-input',
-            })
-        }
+        fields = []
+        widgets = {}
 
     def __init__(self, user, *args, **kwargs):
         self.user = user
@@ -189,21 +183,9 @@ class ProfileUpdateForm(forms.ModelForm):
         new_password1 = cleaned_data.get('new_password1', '').strip()
         new_password2 = cleaned_data.get('new_password2', '').strip()
         new_username = cleaned_data.get('new_username', '').strip()
-        profile_picture = cleaned_data.get('profile_picture')
 
-        # Validate profile picture
-        if profile_picture:
-            # Check file size (max 5MB)
-            if profile_picture.size > 5 * 1024 * 1024:
-                raise ValidationError('Ukuran file foto profil tidak boleh lebih dari 5MB.')
-
-            # Check file type
-            allowed_types = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
-            if profile_picture.content_type not in allowed_types:
-                raise ValidationError('Format file foto profil harus JPEG, PNG, GIF, atau WebP.')
-
-        # Validate password change
-        if new_password1 or new_password2 or old_password:
+        # Validate password change - hanya jika user ingin ubah password
+        if new_password1 or new_password2:
             if not old_password:
                 raise ValidationError('Password saat ini diperlukan untuk mengubah password.')
             if not self.user.check_password(old_password):
@@ -231,7 +213,6 @@ class ProfileUpdateForm(forms.ModelForm):
         cleaned_data = self.cleaned_data
         new_username = cleaned_data.get('new_username', '').strip()
         new_password1 = cleaned_data.get('new_password1', '').strip()
-        profile_picture = cleaned_data.get('profile_picture')
         
         # Check if username will change
         if new_username and new_username != self.user.username:
@@ -239,10 +220,6 @@ class ProfileUpdateForm(forms.ModelForm):
         
         # Check if password will change
         if new_password1:
-            return True
-        
-        # Check if profile picture will change
-        if profile_picture:
             return True
         
         return False

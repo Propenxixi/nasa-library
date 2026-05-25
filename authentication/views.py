@@ -122,7 +122,7 @@ def change_username(request):
 @require_http_methods(["GET", "POST"])
 @login_required(login_url='authentication:login')
 def profile(request):
-    """User profile management view - edit username, password, and profile picture"""
+    """User profile management view - edit username and password"""
 
     user_profile = request.user.profile
 
