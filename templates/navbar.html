@@ -48,7 +48,9 @@
                         {% endif %}
                         {% if user.profile.is_student or user.profile.is_teacher %}
                         <a href="{% url 'literacy:forum' %}">
-                            <img src="{% static 'assets/Pen.svg' %}" class="w-4 h-4 opacity-60" alt=""> Forum Literasi
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:#4b61a1;opacity:0.6;">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+                            </svg> Forum Literasi
                         </a>
                         {% endif %}
                         {% if user.profile.is_librarian %}
@@ -81,13 +83,17 @@
                         {% endif %}
                         {% if user.profile.is_teacher %}
                         <a href="{% url 'literacy:teacher_verify_reviews' %}">
-                            <svg class="w-4 h-4 opacity-60" fill="currentColor" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" style="color:#4b61a1;opacity:0.6;">
+                                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                            </svg>
                             Verifikasi Ulasan
                         </a>
                         {% endif %}
                         {% if user.profile.is_teacher %}
                         <a href="{% url 'literacy:recap' %}">
-                            <svg class="w-4 h-4 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:#4b61a1;opacity:0.6;">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                            </svg>
                             Rekap Literasi
                         </a>
                         {% endif %}

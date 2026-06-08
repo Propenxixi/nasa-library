@@ -234,19 +234,6 @@
             </div>
             <svg class="quicknav-chevron" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
         </a>
-
-        <a href="{% url 'literacy:submit_review' %}" class="quicknav-card quicknav-card--accent">
-            <div class="quicknav-icon quicknav-icon--accent">
-                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/>
-                </svg>
-            </div>
-            <div>
-                <div class="quicknav-title">Review Baru</div>
-                <div class="quicknav-desc">Bagikan buku yang baru kamu selesaikan</div>
-            </div>
-            <svg class="quicknav-chevron" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
-        </a>
     </div>
 
 </div>
@@ -574,7 +561,7 @@
 
     /* ── Quick Nav ───────────────────────────────────────── */
     .quicknav-grid {
-        display: grid; grid-template-columns: repeat(3, 1fr);
+        display: grid; grid-template-columns: repeat(2, 1fr);
         gap: 14px; animation: fadeSlideUp .5s .5s ease both;
     }
     .quicknav-card {

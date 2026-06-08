@@ -27,7 +27,7 @@
         </div>
 
         <!-- ── Stats Row ── -->
-        <div class="stats-grid" style="--d:1">
+        <div class="stats-grid stats-grid--four" style="--d:1">
             <div class="stat-card stat-card--amber">
                 <div class="stat-icon stat-icon--amber">
                     <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
@@ -53,6 +53,15 @@
                 <div class="stat-body">
                     <p class="stat-value">{{ stats.total_verified }}</p>
                     <p class="stat-label">Total Disetujui</p>
+                </div>
+            </div>
+            <div class="stat-card stat-card--red" onclick="showReportsSection()" style="cursor:pointer;" title="Lihat laporan komentar">
+                <div class="stat-icon stat-icon--red">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
+                </div>
+                <div class="stat-body">
+                    <p class="stat-value" id="stat-reports">{{ stats.pending_reports }}</p>
+                    <p class="stat-label">Laporan Komentar</p>
                 </div>
             </div>
         </div>
@@ -85,6 +94,12 @@
                             <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
                             Lesson Learned
                         </button>
+                        {# ── TAB BARU ── #}
+                        <button class="type-tab type-tab--report" id="btn-reports" onclick="showReportsSection()">
+                            <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
+                            Laporan Komentar
+                            <span class="report-tab-badge" id="report-tab-count" style="display:none;">0</span>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -116,6 +131,30 @@
                 <h3 class="empty-title">Semua Sudah Ditinjau!</h3>
                 <p class="empty-desc">Tidak ada review yang menunggu verifikasi untuk filter ini.</p>
             </div>
+        </div>
+
+        <!-- ── Laporan Komentar Section ── -->
+        <div id="reports-section" style="display:none;" class="review-list">
+            <div id="reports-loading" class="skeleton-list" style="display:none;">
+                {% for i in "123" %}
+                <div class="skeleton-card">
+                    <div class="skel-avatar"></div>
+                    <div class="skel-body">
+                        <div class="skel skel--name"></div>
+                        <div class="skel skel--title"></div>
+                        <div class="skel skel--block"></div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            <div id="reports-empty" class="empty-state" style="display:none;">
+                <div class="empty-icon">
+                    <svg width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                </div>
+                <h3 class="empty-title">Tidak Ada Laporan</h3>
+                <p class="empty-desc">Belum ada komentar yang dilaporkan oleh siswa.</p>
+            </div>
+            <div id="reports-list"></div>
         </div>
 
     </div>
@@ -503,6 +542,111 @@
         .card-actions { flex-direction: column; }
         .stats-grid { grid-template-columns: 1fr 1fr; }
     }
+    /* ── Tab Laporan ─────────────────────── */
+    .type-tab--report { border-color: rgba(220,38,38,.3); color: #dc2626; }
+    .type-tab--report:hover { background: #fff5f5; border-color: #f87171; }
+    .type-tab--report.type-tab--active { background: #dc2626; color: #fff; border-color: #dc2626; }
+
+    .report-tab-badge {
+        display: inline-flex; align-items: center; justify-content: center;
+        min-width: 18px; height: 18px; padding: 0 5px;
+        background: #dc2626; color: #fff; border-radius: 100px;
+        font-size: .65rem; font-weight: 700; line-height: 1;
+    }
+    .type-tab--active .report-tab-badge { background: rgba(255,255,255,.3); }
+
+    /* ── Report Card ─────────────────────── */
+    .report-card {
+        border: 1.5px solid #f87171; border-radius: var(--radius-md);
+        background: #fff8f8; padding: 20px 22px;
+        box-shadow: var(--shadow-sm);
+        animation: slideUp .38s calc(var(--ri,1) * 55ms) cubic-bezier(.22,.68,0,1.1) both;
+        transition: box-shadow .25s ease;
+    }
+    .report-card:hover { box-shadow: 0 8px 28px rgba(220,38,38,.1); }
+    .report-card-top {
+        display: flex; align-items: flex-start; justify-content: space-between;
+        gap: 12px; margin-bottom: 12px; flex-wrap: wrap;
+    }
+    .report-commenter {
+        display: flex; align-items: center; gap: 10px;
+    }
+    .report-avatar {
+        width: 38px; height: 38px; border-radius: 50%; flex-shrink: 0;
+        background: linear-gradient(135deg, #dc2626, #f87171);
+        color: #fff; font-family: 'Playfair Display', serif; font-weight: 700;
+        font-size: .95rem; display: flex; align-items: center; justify-content: center;
+        border: 2px solid rgba(220,38,38,.2);
+    }
+    .report-commenter-name { font-weight: 700; font-size: .88rem; color: var(--primary-900); margin: 0 0 2px; }
+    .report-commenter-meta { font-size: .72rem; color: var(--neutral-500); margin: 0; }
+    .report-badge {
+        display: inline-flex; align-items: center; gap: 4px;
+        padding: 3px 10px; border-radius: 100px;
+        font-family: 'Work Sans', sans-serif; font-size: .7rem; font-weight: 700;
+        background: #fff5f5; color: #dc2626; border: 1.5px solid rgba(220,38,38,.3);
+        white-space: nowrap; flex-shrink: 0;
+    }
+    .report-comment-box {
+        background: #fff; border: 1px solid rgba(220,38,38,.15);
+        border-radius: var(--radius-sm); padding: 11px 14px; margin-bottom: 12px;
+    }
+    .report-comment-label {
+        font-family: 'Work Sans', sans-serif; font-size: .7rem; font-weight: 700;
+        text-transform: uppercase; letter-spacing: .05em;
+        color: var(--neutral-400); margin-bottom: 5px;
+    }
+    .report-comment-text {
+        font-family: 'Work Sans', sans-serif; font-size: .86rem;
+        color: var(--neutral-700); line-height: 1.6; margin: 0;
+    }
+    .report-reason-box {
+        background: #fff5f5; border: 1px solid rgba(220,38,38,.2);
+        border-radius: var(--radius-sm); padding: 11px 14px; margin-bottom: 14px;
+    }
+    .report-reason-label {
+        font-family: 'Work Sans', sans-serif; font-size: .7rem; font-weight: 700;
+        text-transform: uppercase; letter-spacing: .05em;
+        color: #dc2626; margin-bottom: 5px;
+    }
+    .report-reason-text {
+        font-family: 'Work Sans', sans-serif; font-size: .86rem;
+        color: var(--neutral-700); line-height: 1.6; margin: 0;
+    }
+    .report-post-link {
+        font-family: 'Work Sans', sans-serif; font-size: .76rem;
+        color: var(--primary-700); text-decoration: none; font-weight: 600;
+        display: inline-flex; align-items: center; gap: 4px;
+        margin-bottom: 14px;
+        transition: color .18s;
+    }
+    .report-post-link:hover { color: var(--primary-900); }
+    .report-actions { display: flex; gap: 10px; }
+    .btn-report-delete {
+        flex: 1; padding: 10px; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+        border: 1.5px solid #f87171; border-radius: var(--radius-sm);
+        color: #dc2626; background: #fff8f8; font-family: 'Work Sans', sans-serif;
+        font-size: .84rem; font-weight: 700; cursor: pointer;
+        transition: background .2s, color .2s, transform .2s, box-shadow .2s;
+    }
+    .btn-report-delete:hover { background: #dc2626; color: #fff; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(220,38,38,.2); }
+    .btn-report-ignore {
+        flex: 1; padding: 10px; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+        border: 1.5px solid rgba(30,58,138,.22); border-radius: var(--radius-sm);
+        color: var(--neutral-500); background: var(--neutral-50); font-family: 'Work Sans', sans-serif;
+        font-size: .84rem; font-weight: 700; cursor: pointer;
+        transition: background .2s, color .2s, transform .2s;
+    }
+    .btn-report-ignore:hover { background: var(--neutral-100); color: var(--primary-900); transform: translateY(-1px); }
+    @keyframes report-out { to { opacity: 0; transform: translateX(60px) scale(.95); } }
+    .report-removing { animation: report-out .3s cubic-bezier(.4,0,1,1) forwards; }
+    .stats-grid--four { grid-template-columns: repeat(4, 1fr); }
+    .stat-card--red   { border-color: #f87171; background: linear-gradient(135deg,#fff5f5,#fff8f8); }
+    .stat-icon--red   { background: #fee2e2; color: #dc2626; }
+
+    @media (max-width: 768px) {
+        .stats-grid--four { grid-template-columns: 1fr 1fr; }
+    }
 </style>
 
 <script>
@@ -700,6 +844,187 @@
     document.addEventListener('DOMContentLoaded', () => {
         loadReviews();
         document.querySelector('.verify-page').classList.add('ready');
+    });
+    const REPORTS_URL    = '{% url "literacy:api_reported_comments" %}';
+    const RESOLVE_URL    = (id) => '{% url "literacy:api_resolve_report" report_id=0 %}'.replace('0/resolve', `${id}/resolve`);
+
+    let allReports       = [];
+    let isReportsActive  = false;
+
+    async function loadReports() {
+        document.getElementById('reports-loading').style.display = 'flex';
+        document.getElementById('reports-empty').style.display   = 'none';
+        document.getElementById('reports-list').innerHTML        = '';
+
+        try {
+            const res = await fetch(REPORTS_URL, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+            allReports = await res.json();
+            renderReports();
+        } catch {
+            document.getElementById('reports-loading').innerHTML =
+                '<p style="padding:32px;text-align:center;color:#dc2626;font-size:.88rem;font-family:\'Work Sans\',sans-serif">Gagal memuat laporan. Muat ulang halaman.</p>';
+        }
+    }
+
+    function renderReports() {
+        document.getElementById('reports-loading').style.display = 'none';
+        const list = document.getElementById('reports-list');
+        list.innerHTML = '';
+
+        if (allReports.length === 0) {
+            document.getElementById('reports-empty').style.display = 'flex';
+            document.getElementById('section-count').textContent = '0 laporan';
+            return;
+        }
+        document.getElementById('reports-empty').style.display = 'none';
+        document.getElementById('section-count').textContent = `${allReports.length} laporan`;
+
+        // Update badge
+        const badge = document.getElementById('report-tab-count');
+        if (allReports.length > 0) {
+            badge.style.display = 'inline-flex';
+            badge.textContent = allReports.length;
+        } else {
+            badge.style.display = 'none';
+        }
+
+        allReports.forEach((r, idx) => list.appendChild(buildReportCard(r, idx + 1)));
+    }
+
+    function buildReportCard(r, idx) {
+        const initial     = (r.commenter_name || '?').charAt(0).toUpperCase();
+        const reportDate  = r.reported_at
+            ? new Date(r.reported_at).toLocaleDateString('id-ID', { day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' })
+            : '—';
+        const commentDate = r.comment_date
+            ? new Date(r.comment_date).toLocaleDateString('id-ID', { day:'numeric', month:'short', year:'numeric' })
+            : '—';
+
+        const div = document.createElement('div');
+        div.className = 'report-card';
+        div.dataset.reportId = r.report_id;
+        div.style.setProperty('--ri', idx);
+        div.innerHTML = `
+            <div class="report-card-top">
+                <div class="report-commenter">
+                    <div class="report-avatar">${esc(initial)}</div>
+                    <div>
+                        <p class="report-commenter-name">${esc(r.commenter_name)}</p>
+                        <p class="report-commenter-meta">Dikomentari ${esc(commentDate)} · Dilaporkan oleh ${esc(r.reporter_name)}</p>
+                    </div>
+                </div>
+                <span class="report-badge">
+                    <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
+                    Dilaporkan
+                </span>
+            </div>
+            <a href="/literacy/forum/${r.post_id}/"  class="report-post-link">
+                <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                Di postingan: ${esc(r.post_title)}
+            </a>
+            <div class="report-comment-box">
+                <p class="report-comment-label">Isi Komentar</p>
+                <p class="report-comment-text">${esc(r.comment_text)}</p>
+            </div>
+            <div class="report-reason-box">
+                <p class="report-reason-label">🚩 Alasan Laporan</p>
+                <p class="report-reason-text">${esc(r.reason)}</p>
+            </div>
+            <div class="report-actions">
+                <button class="btn-report-delete" onclick="resolveReport(${r.report_id}, 'delete')">
+                    <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+                    Hapus Komentar
+                </button>
+                <button class="btn-report-ignore" onclick="resolveReport(${r.report_id}, 'ignore')">
+                    <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+                    Abaikan
+                </button>
+            </div>`;
+        return div;
+    }
+
+    async function resolveReport(reportId, action) {
+        try {
+            const res = await fetch(RESOLVE_URL(reportId), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': CSRF,
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                body: JSON.stringify({ action }),
+            });
+            const data = await res.json();
+            if (res.ok) {
+                const msg = action === 'delete' ? '🗑️ Komentar berhasil dihapus.' : 'ℹ️ Laporan diabaikan.';
+                showToast(msg, action === 'delete' ? 'reject' : 'approve');
+                removeReportCard(reportId);
+            } else {
+                showToast('⚠️ ' + (data.error || 'Terjadi kesalahan.'), 'reject');
+            }
+        } catch {
+            showToast('⚠️ Gagal menghubungi server.', 'reject');
+        }
+    }
+
+    function removeReportCard(reportId) {
+        const card = document.querySelector(`.report-card[data-report-id="${reportId}"]`);
+        if (!card) return;
+        card.classList.add('report-removing');
+        card.addEventListener('animationend', () => {
+            card.remove();
+            allReports = allReports.filter(r => r.report_id !== reportId);
+            const badge = document.getElementById('report-tab-count');
+            if (allReports.length > 0) {
+                badge.textContent = allReports.length;
+            } else {
+                badge.style.display = 'none';
+                document.getElementById('reports-empty').style.display = 'flex';
+            }
+            document.getElementById('section-count').textContent = `${allReports.length} laporan`;
+        }, { once: true });
+    }
+
+    function showReportsSection() {
+        // Sembunyikan review section, tampilkan reports section
+        document.getElementById('review-list').style.display    = 'none';
+        document.getElementById('reports-section').style.display = 'flex';
+        document.getElementById('reports-section').style.flexDirection = 'column';
+        document.getElementById('reports-section').style.gap = '12px';
+
+        // Update tab aktif
+        document.querySelectorAll('.type-tab').forEach(b => b.classList.remove('type-tab--active'));
+        document.getElementById('btn-reports').classList.add('type-tab--active');
+
+        isReportsActive = true;
+        if (allReports.length === 0) loadReports();
+        else renderReports();
+    }
+
+    // Override setTypeFilter agar bisa kembali ke review list
+    const _origSetTypeFilter = setTypeFilter;
+    function setTypeFilter(type) {
+        // Kalau sedang di tab reports, kembalikan review-list dulu
+        if (isReportsActive) {
+            document.getElementById('reports-section').style.display = 'none';
+            document.getElementById('review-list').style.display     = 'flex';
+            isReportsActive = false;
+        }
+        _origSetTypeFilter(type);
+    }
+
+    // Load badge count saat halaman dimuat
+    document.addEventListener('DOMContentLoaded', async () => {
+        try {
+            const res = await fetch(REPORTS_URL, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+            const data = await res.json();
+            if (data.length > 0) {
+                const badge = document.getElementById('report-tab-count');
+                badge.style.display = 'inline-flex';
+                badge.textContent = data.length;
+                allReports = data;
+            }
+        } catch { /* badge tidak muncul */ }
     });
 </script>
 {% endblock %}

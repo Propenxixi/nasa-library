@@ -234,12 +234,20 @@ def loan_history_admin(request):
     search = request.GET.get('search', '').strip()
     status_filter = request.GET.get('status', '').strip()
 
-    # Get all completed loans (dikembalikan)
-    loans = Loan.objects.filter(status='dikembalikan').select_related('user', 'book')
+    # Get all loans including completed and active ones (untuk analytics dan timeline)
+    # But for book_analytics, only use completed loans
+    all_loans = Loan.objects.select_related('user', 'book')
+    completed_loans = Loan.objects.filter(status='dikembalikan').select_related('user', 'book')
 
     # Apply search filter (judul buku, penulis, atau peminjam)
     if search:
-        loans = loans.filter(
+        all_loans = all_loans.filter(
+            Q(book__title__icontains=search) |
+            Q(book__author__icontains=search) |
+            Q(user__first_name__icontains=search) |
+            Q(user__last_name__icontains=search)
+        )
+        completed_loans = completed_loans.filter(
             Q(book__title__icontains=search) |
             Q(book__author__icontains=search) |
             Q(user__first_name__icontains=search) |
@@ -248,19 +256,19 @@ def loan_history_admin(request):
 
     # Apply status filter
     if status_filter == 'tepat_waktu':
-        loans = loans.filter(is_overdue=False)
+        completed_loans = completed_loans.filter(is_overdue=False)
     elif status_filter == 'terlambat':
-        loans = loans.filter(is_overdue=True)
+        completed_loans = completed_loans.filter(is_overdue=True)
 
-    # Calculate statistics
-    total_loans = loans.count()
-    unique_borrowers = loans.values('user').distinct().count()
-    on_time_loans = loans.filter(is_overdue=False).count()
-    late_loans = loans.filter(is_overdue=True).count()
+    # Calculate statistics (based on completed loans)
+    total_loans = completed_loans.count()
+    unique_borrowers = completed_loans.values('user').distinct().count()
+    on_time_loans = completed_loans.filter(is_overdue=False).count()
+    late_loans = completed_loans.filter(is_overdue=True).count()
 
-    # Get book borrowing analytics - group by book and calculate stats
+    # Get book borrowing analytics - group by book and calculate stats (only from completed loans)
     from django.db.models import Count, Max
-    book_stats = loans.values('book').annotate(
+    book_stats = completed_loans.values('book').annotate(
         total_loans=Count('id'),
         unique_borrowers=Count('user', distinct=True),
         last_borrowed_date=Max('loan_date')
@@ -285,8 +293,8 @@ def loan_history_admin(request):
             popularity_class = 'slate'
             icon = '📚'
 
-        # Get loan history for this book
-        book_loans = loans.filter(book=book).select_related('user').order_by('-loan_date')[:10]  # Last 10 loans for this book
+        # Get loan history for this book (from completed loans)
+        book_loans = completed_loans.filter(book=book).select_related('user').order_by('-loan_date')[:10]  # Last 10 loans for this book
 
         book_analytics.append({
             'book': book,
@@ -299,8 +307,23 @@ def loan_history_admin(request):
             'loan_history': book_loans,
         })
 
-    # Get timeline data (recent loans for timeline view)
-    timeline_loans = loans.select_related('user', 'book').order_by('-loan_date')[:20]  # Last 20 loans
+    # Get timeline data (include both active and completed loans)
+    timeline_loans = all_loans.filter(
+        Q(status='sedang_dipinjam') | Q(status='dikembalikan')
+    ).select_related('user', 'book').order_by('-loan_date')[:20]  # Last 20 loans
+
+    # Add computed is_overdue flag for timeline (based on return_date or current date)
+    for loan in timeline_loans:
+        # Calculate due date from loan_date + duration_days
+        calculated_due_date = (loan.loan_date + timedelta(days=loan.duration_days)).date()
+        
+        # Determine if overdue
+        if loan.return_date:
+            # If returned, check if return_date > due_date
+            loan.is_late = loan.return_date.date() > calculated_due_date
+        else:
+            # If still borrowing, check if today > due_date
+            loan.is_late = timezone.now().date() > calculated_due_date
 
     context = {
         'search': search,
@@ -422,6 +445,15 @@ def loan_approve(request, loan_id):
             return redirect('book_loan:loan_management')
         
         loan.approve()
+
+        # Recalculate score
+        import threading
+        from literacy.views import calculate_student_score
+        threading.Thread(
+            target=calculate_student_score,
+            args=(loan.user, loan.approved_date.month, loan.approved_date.year),
+            daemon=True
+        ).start()
         
         Notification.objects.create(
             user=loan.user,
@@ -511,7 +543,18 @@ def loan_cancel(request, loan_id):
             messages.error(request, 'Hanya peminjaman dengan status "Siap Diambil" yang dapat dibatalkan')
             return redirect('book_loan:loan_management')
         
+        loan_approved_date = loan.approved_date
         loan.cancel()
+
+        # Recalculate score
+        if loan_approved_date:
+            import threading
+            from literacy.views import calculate_student_score
+            threading.Thread(
+                target=calculate_student_score,
+                args=(loan.user, loan_approved_date.month, loan_approved_date.year),
+                daemon=True
+            ).start()
         
         # Notify user about cancellation
         Notification.objects.create(
@@ -721,6 +764,15 @@ def api_approve_loan(request, loan_id):
             }, status=400)
         
         loan.approve()
+
+        # Recalculate score
+        import threading
+        from literacy.views import calculate_student_score
+        threading.Thread(
+            target=calculate_student_score,
+            args=(loan.user, loan.approved_date.month, loan.approved_date.year),
+            daemon=True
+        ).start()
         
         # Update waiting list status to "siap_diambil_di_perpustakaan" if loan came from waiting list
         waiting = WaitingList.objects.filter(

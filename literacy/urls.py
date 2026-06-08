@@ -6,13 +6,9 @@ app_name = 'literacy'
 
 urlpatterns = [
     # Siswa
-    path('submit-review/', views.submit_review_view, name='submit_review'),
     path('history/', history_view, name='history'),
     path('reviews/<int:pk>/', views.review_detail_view, name='review_detail'),
 
-    # Submit review baru
-    # POST /api/literacy/reviews  →  201 Created / 400 Bad Request
-    path('api/literacy/reviews', views.submit_review_api, name='api_submit_review'),
 
     # Riwayat review siswa
     # Dipanggil JS di forum.html via fetch('/api/literacy/reviews/my-reviews')
@@ -50,5 +46,17 @@ urlpatterns = [
     # Riwayat postingan forum milik siswa yang login
     # GET /api/literacy/forum/posts/my-posts  →  200 OK (dipakai forum.html)
     path('api/literacy/forum/posts/my-posts', views.my_forum_posts_api, name='my_forum_posts_api'),
+
+    path('api/literacy/award-rating-points/', views.award_rating_points, name='award_rating_points'),
+
+    # ── Report Komentar ─────────────────────────────────────────────────────
+    # Siswa melaporkan komentar
+    path('api/literacy/comments/<int:comment_id>/report', views.report_comment_api, name='api_report_comment'),
+
+    # Guru: ambil daftar laporan pending
+    path('api/literacy/reported-comments', views.reported_comments_api, name='api_reported_comments'),
+
+    # Guru: selesaikan laporan (hapus/abaikan)
+    path('api/literacy/reported-comments/<int:report_id>/resolve', views.resolve_report_api, name='api_resolve_report'),
 
 ]

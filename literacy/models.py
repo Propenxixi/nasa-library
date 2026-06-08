@@ -236,6 +236,9 @@ class LiteracyLeaderboard(models.Model):
     books_read_score = models.IntegerField(default=0, help_text="10 pts per verified review")
     consistency_score = models.IntegerField(default=0, help_text="5 pts per weekly streak, max 20 weeks")
     quality_bonus_score = models.IntegerField(default=0, help_text="+5 pts if summary > 500 chars")
+    book_rating_score = models.IntegerField(default=0, help_text="+2 pts per book rating & review submitted in catalog")
+    book_loans_count = models.IntegerField(default=0, help_text="Number of book loans in this period")
+    book_loans_score = models.IntegerField(default=0, help_text="+2 pts per approved book loan")
     total_score = models.IntegerField(default=0)
     
     # Ranking
@@ -284,5 +287,71 @@ class LiteracyAchievement(models.Model):
     def __str__(self):
         return f"{self.student.get_full_name()} - {self.get_achievement_type_display()}"
 
+class CommentReport(models.Model):
+    """Laporan komentar yang dikirim siswa ke guru untuk ditinjau."""
+
+    STATUS_CHOICES = [
+        ('pending',  'Menunggu Tinjauan'),
+        ('deleted',  'Komentar Dihapus'),
+        ('ignored',  'Diabaikan'),
+    ]
+
+    comment     = models.ForeignKey(
+        'LiteracyComment',
+        on_delete=models.CASCADE,
+        related_name='reports',
+    )
+    reported_by = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='comment_reports',
+    )
+    reason      = models.TextField(max_length=500, help_text="Alasan melaporkan komentar")
+    status      = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    resolved_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='resolved_reports',
+    )
+    resolved_at = models.DateTimeField(null=True, blank=True)
+    created_at  = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        # Satu user hanya bisa lapor satu komentar sekali
+        unique_together = ('comment', 'reported_by')
+        verbose_name = "Comment Report"
+        verbose_name_plural = "Comment Reports"
+
+    def __str__(self):
+        return f"Laporan komentar #{self.comment_id} oleh {self.reported_by.get_full_name()}"
 
 
+# Signals for automatic leaderboard score recalculation
+from django.db.models.signals import post_save, post_delete
+from django.dispatch import receiver
+
+@receiver(post_save, sender=BookReview)
+def book_review_post_save(sender, instance, **kwargs):
+    from literacy.views import calculate_student_score
+    ref_date = instance.created_at or timezone.now()
+    calculate_student_score(instance.student, ref_date.month, ref_date.year)
+
+@receiver(post_delete, sender=BookReview)
+def book_review_post_delete(sender, instance, **kwargs):
+    from literacy.views import calculate_student_score
+    ref_date = instance.created_at or timezone.now()
+    calculate_student_score(instance.student, ref_date.month, ref_date.year)
+
+@receiver(post_save, sender=LiteracyPost)
+def literacy_post_save(sender, instance, **kwargs):
+    from literacy.views import calculate_student_score
+    ref_date = instance.created_at or timezone.now()
+    calculate_student_score(instance.student, ref_date.month, ref_date.year)
+
+@receiver(post_delete, sender=LiteracyPost)
+def literacy_post_delete(sender, instance, **kwargs):
+    from literacy.views import calculate_student_score
+    ref_date = instance.created_at or timezone.now()
+    calculate_student_score(instance.student, ref_date.month, ref_date.year)

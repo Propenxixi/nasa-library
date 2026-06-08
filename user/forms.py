@@ -13,12 +13,27 @@ class UserCreateForm(forms.Form):
     nis        = forms.CharField(label="Student ID (NIS)", required=False, widget=forms.TextInput(attrs={"class": "form-control"}))
     gender     = forms.ChoiceField(label="Gender", required=False, choices=[("", "-"), ("L", "Male"), ("P", "Female")], widget=forms.Select(attrs={"class": "form-select"}))
     kelas      = forms.CharField(label="Class", required=False, widget=forms.TextInput(attrs={"class": "form-control", "placeholder": "e.g. XII IPA 1"}))
+    profile_picture = forms.ImageField(label="Profile Picture", required=False, widget=forms.FileInput(attrs={"class": "form-control", "accept": "image/*"}))
 
     def clean_username(self):
         username = self.cleaned_data["username"]
         if User.objects.filter(username=username).exists():
             raise forms.ValidationError("Username already taken.")
         return username
+
+    def clean_profile_picture(self):
+        picture = self.cleaned_data.get('profile_picture')
+        if picture:
+            # Check file size (max 5MB)
+            if picture.size > 5 * 1024 * 1024:
+                raise forms.ValidationError('Ukuran file foto profil tidak boleh lebih dari 5MB.')
+
+            # Check file type
+            allowed_types = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+            if hasattr(picture, 'content_type') and picture.content_type not in allowed_types:
+                raise forms.ValidationError('Format file foto profil harus JPEG, PNG, GIF, atau WebP.')
+
+        return picture
 
     def save(self, created_by=None):
         data = self.cleaned_data
@@ -35,6 +50,7 @@ class UserCreateForm(forms.Form):
             nis=data.get("nis") or None,
             gender=data.get("gender") or None,
             kelas=data.get("kelas") or None,
+            profile_picture=data.get("profile_picture") or None,
         )
         return user
 
@@ -48,6 +64,7 @@ class UserUpdateForm(forms.Form):
     nis        = forms.CharField(label="Student ID (NIS)", required=False, widget=forms.TextInput(attrs={"class": "form-control"}))
     gender     = forms.ChoiceField(label="Gender", required=False, choices=[("", "-"), ("L", "Male"), ("P", "Female")], widget=forms.Select(attrs={"class": "form-select"}))
     kelas      = forms.CharField(label="Class", required=False, widget=forms.TextInput(attrs={"class": "form-control"}))
+    remove_profile_picture = forms.BooleanField(label="Remove current profile picture", required=False, widget=forms.CheckboxInput(attrs={"class": "form-check-input"}))
 
     def __init__(self, *args, user_instance=None, **kwargs):
         super().__init__(*args, **kwargs)
@@ -62,6 +79,7 @@ class UserUpdateForm(forms.Form):
                 self.fields["nis"].initial    = p.nis
                 self.fields["gender"].initial = p.gender
                 self.fields["kelas"].initial  = p.kelas
+                # Note: profile_picture field doesn't need initial value as it's a file upload
 
     def save(self, user_instance):
         data = self.cleaned_data
