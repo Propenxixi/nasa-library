@@ -168,12 +168,27 @@
             {% if comments %}
             <div class="comments-list">
                 {% for comment in comments %}
-                <div class="comment-item" style="--ci:{{ forloop.counter }}">
+                <div class="comment-item" style="--ci:{{ forloop.counter }}" id="comment-{{ comment.pk }}">
                     <div class="avatar avatar--sm avatar--violet">{{ comment.student.first_name|first|upper }}</div>
                     <div class="comment-body">
                         <div class="comment-meta">
                             <span class="comment-author">{{ comment.student.get_full_name }}</span>
                             <span class="comment-date">{{ comment.created_at|date:"d M Y · H:i" }}</span>
+                            {# Tombol report — disembunyikan kalau komentar milik sendiri #}
+                            {% if comment.student != request.user %}
+                            <button
+                                    class="btn-report-comment"
+                                    title="Laporkan komentar ini"
+                                    onclick="openReportModal({{ comment.pk }}, '{{ comment.student.get_full_name|escapejs }}')"
+                                    aria-label="Laporkan komentar"
+                            >
+                                <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/>
+                                    <line x1="4" y1="22" x2="4" y2="15"/>
+                                </svg>
+                                Laporkan
+                            </button>
+                            {% endif %}
                         </div>
                         <p class="comment-text">{{ comment.content }}</p>
                     </div>
@@ -190,6 +205,52 @@
             {% endif %}
 
         </section>
+
+        <!-- ── Modal Report Komentar ── -->
+        <div id="modal-report" class="report-modal-overlay" role="dialog" aria-modal="true" style="display:none;">
+            <div class="report-modal-box">
+                <button class="report-modal-close" onclick="closeReportModal()" aria-label="Tutup">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                        <path d="M18 6L6 18M6 6l12 12"/>
+                    </svg>
+                </button>
+
+                <div class="report-modal-icon">
+                    <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/>
+                        <line x1="4" y1="22" x2="4" y2="15"/>
+                    </svg>
+                </div>
+
+                <h2 class="report-modal-title">Laporkan Komentar</h2>
+                <p class="report-modal-desc">Komentar dari <strong id="report-commenter-name"></strong></p>
+
+                <label class="report-field-label">
+                    Alasan Laporan <span style="color:#dc2626">*</span>
+                </label>
+                <textarea
+                        id="report-reason"
+                        class="report-textarea"
+                        placeholder="Jelaskan mengapa komentar ini perlu ditinjau oleh guru…"
+                        maxlength="500"
+                ></textarea>
+                <div class="report-char-counter"><span id="report-char-count">0</span>/500</div>
+                <p id="report-error" class="report-error" style="display:none;">Alasan laporan wajib diisi.</p>
+
+                <div class="report-modal-actions">
+                    <button onclick="closeReportModal()" class="report-btn-ghost">Batal</button>
+                    <button id="btn-submit-report" onclick="submitReport()" class="report-btn-submit">
+                        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                            <path d="M22 2L11 13"/><path d="M22 2L15 22 11 13 2 9l20-7z"/>
+                        </svg>
+                        Kirim Laporan
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── Toast notifikasi ── -->
+        <div id="report-toast" class="report-toast" role="status" aria-live="polite"></div>
 
         <!-- ── Bottom Nav ── -->
         <nav class="nav-grid" style="--d:3">
@@ -634,9 +695,209 @@
         .book-card { max-width: 100%; min-width: unset; width: 100%; }
         .book-card-title, .book-card-author { white-space: normal; }
     }
+
+    /* ── Tombol Report ───────────────────────────────────────── */
+    .btn-report-comment {
+        display: inline-flex; align-items: center; gap: 4px;
+        margin-left: auto;
+        padding: 3px 8px; border-radius: 100px;
+        font-family: 'Work Sans', sans-serif; font-size: .7rem; font-weight: 600;
+        color: var(--neutral-400); background: transparent;
+        border: 1px solid transparent; cursor: pointer;
+        transition: color .18s, background .18s, border-color .18s;
+        white-space: nowrap;
+    }
+    .btn-report-comment:hover {
+        color: #dc2626; background: #fff5f5; border-color: rgba(220,38,38,.25);
+    }
+    /* Biar meta row bisa push tombol ke kanan */
+    .comment-meta { justify-content: flex-start; }
+
+    /* ── Report Modal ────────────────────────────────────────── */
+    .report-modal-overlay {
+        position: fixed; inset: 0; background: rgba(15,23,42,.45);
+        z-index: 1000; align-items: center; justify-content: center;
+        padding: 20px; backdrop-filter: blur(4px);
+        opacity: 0; transition: opacity .24s ease;
+    }
+    .report-modal-overlay.is-open { opacity: 1; display: flex !important; }
+    .report-modal-box {
+        background: var(--neutral-50); border-radius: var(--radius-md);
+        border: 1.5px solid #dc2626; max-width: 440px; width: 100%;
+        padding: 32px 28px; box-shadow: 0 28px 64px rgba(15,23,42,.26);
+        position: relative;
+        transform: translateY(14px) scale(.98);
+        transition: transform .26s cubic-bezier(.22,.68,0,1.2);
+    }
+    .report-modal-overlay.is-open .report-modal-box { transform: translateY(0) scale(1); }
+    .report-modal-close {
+        position: absolute; top: 14px; right: 14px; background: none; border: none;
+        cursor: pointer; color: var(--neutral-400); padding: 5px; border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        transition: color .18s, background .18s;
+    }
+    .report-modal-close:hover { color: #dc2626; background: #fff5f5; }
+    .report-modal-icon {
+        width: 50px; height: 50px; border-radius: 50%;
+        background: #fff5f5; border: 2px solid #f87171; color: #dc2626;
+        display: flex; align-items: center; justify-content: center;
+        margin: 0 auto 16px;
+    }
+    .report-modal-title {
+        font-family: 'Playfair Display', serif; font-size: 1.2rem; font-weight: 700;
+        color: var(--primary-900); text-align: center; margin: 0 0 6px;
+    }
+    .report-modal-desc {
+        font-family: 'Work Sans', sans-serif; font-size: .86rem;
+        color: var(--neutral-600); text-align: center; margin: 0 0 18px;
+    }
+    .report-field-label {
+        display: block; font-family: 'Work Sans', sans-serif;
+        font-size: .82rem; font-weight: 700; color: var(--primary-900); margin-bottom: 8px;
+    }
+    .report-textarea {
+        width: 100%; box-sizing: border-box;
+        border: 1.5px solid rgba(30,58,138,.25); border-radius: var(--radius-sm);
+        padding: 10px 13px; font-family: 'Work Sans', sans-serif; font-size: .86rem;
+        color: var(--primary-900); resize: none; height: 108px; outline: none;
+        transition: box-shadow .2s, border-color .2s; margin-bottom: 4px;
+        background: var(--neutral-50);
+    }
+    .report-textarea:focus { box-shadow: 0 0 0 3px rgba(220,38,38,.08); border-color: #f87171; }
+    .report-char-counter {
+        font-family: 'Work Sans', sans-serif; font-size: .72rem;
+        color: var(--neutral-400); text-align: right; margin-bottom: 6px;
+    }
+    .report-error { font-family: 'Work Sans', sans-serif; font-size: .78rem; color: #dc2626; margin-bottom: 10px; }
+    .report-modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+    .report-btn-ghost {
+        flex: 1; padding: 11px; font-family: 'Work Sans', sans-serif; font-weight: 700;
+        font-size: .88rem; color: var(--primary-700); background: var(--neutral-50);
+        border: 1.5px solid rgba(30,58,138,.28); border-radius: var(--radius-sm);
+        cursor: pointer; transition: background .2s, transform .2s;
+    }
+    .report-btn-ghost:hover { background: var(--primary-50); transform: translateY(-1px); }
+    .report-btn-submit {
+        flex: 1; padding: 11px; font-family: 'Work Sans', sans-serif; font-weight: 700;
+        font-size: .88rem; color: #fff; background: #dc2626;
+        border: none; border-radius: var(--radius-sm); cursor: pointer;
+        display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+        transition: background .2s, transform .2s, box-shadow .2s;
+    }
+    .report-btn-submit:hover { background: #b91c1c; transform: translateY(-1px); box-shadow: 0 4px 14px rgba(220,38,38,.25); }
+    .report-btn-submit:disabled { opacity: .6; cursor: not-allowed; transform: none; }
+
+    /* ── Toast ───────────────────────────────────────────────── */
+    .report-toast {
+        position: fixed; bottom: 28px; left: 50%;
+        transform: translateX(-50%) translateY(14px);
+        z-index: 9999; padding: 12px 22px; border-radius: 100px;
+        font-family: 'Work Sans', sans-serif; font-size: .88rem; font-weight: 700;
+        color: #fff; pointer-events: none;
+        opacity: 0; transition: opacity .28s ease, transform .28s cubic-bezier(.22,.68,0,1.2);
+        box-shadow: 0 8px 24px rgba(0,0,0,.18);
+    }
+    .report-toast--visible { opacity: 1 !important; transform: translateX(-50%) translateY(0) !important; }
+    .report-toast--success { background: #16a34a; }
+    .report-toast--error   { background: #dc2626; }
 </style>
+
 
 <script>
     document.querySelector('.detail-page').classList.add('ready');
+
+    const CSRF_TOKEN   = '{{ csrf_token }}';
+    const REPORT_URL   = (id) => `/literacy/api/literacy/comments/${id}/report`;
+
+    let activeReportCommentId = null;
+
+    function openReportModal(commentId, commenterName) {
+        activeReportCommentId = commentId;
+        document.getElementById('report-commenter-name').textContent = commenterName;
+        document.getElementById('report-reason').value = '';
+        document.getElementById('report-char-count').textContent = '0';
+        document.getElementById('report-error').style.display = 'none';
+
+        const overlay = document.getElementById('modal-report');
+        overlay.style.display = 'flex';
+        requestAnimationFrame(() => overlay.classList.add('is-open'));
+    }
+
+    function closeReportModal() {
+        const overlay = document.getElementById('modal-report');
+        overlay.classList.remove('is-open');
+        setTimeout(() => { overlay.style.display = 'none'; activeReportCommentId = null; }, 260);
+    }
+
+    // Char counter
+    document.addEventListener('DOMContentLoaded', () => {
+        const ta = document.getElementById('report-reason');
+        if (ta) {
+            ta.addEventListener('input', () => {
+                document.getElementById('report-char-count').textContent = ta.value.length;
+            });
+        }
+
+        // Tutup modal klik di luar
+        document.getElementById('modal-report').addEventListener('click', (e) => {
+            if (e.target.id === 'modal-report') closeReportModal();
+        });
+    });
+
+    // Tutup dengan Escape
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeReportModal();
+    });
+
+    async function submitReport() {
+        const reason = document.getElementById('report-reason').value.trim();
+        const errorEl = document.getElementById('report-error');
+
+        if (!reason) {
+            errorEl.style.display = 'block';
+            return;
+        }
+        errorEl.style.display = 'none';
+
+        const btn = document.getElementById('btn-submit-report');
+        btn.disabled = true;
+        btn.textContent = 'Mengirim…';
+
+        try {
+            const res = await fetch(REPORT_URL(activeReportCommentId), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': CSRF_TOKEN,
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                body: JSON.stringify({ reason }),
+            });
+
+            const data = await res.json();
+
+            if (res.status === 201) {
+                closeReportModal();
+                showReportToast('✅ Laporan berhasil dikirim ke guru.', 'success');
+            } else if (res.status === 409) {
+                closeReportModal();
+                showReportToast('ℹ️ Kamu sudah pernah melaporkan komentar ini.', 'error');
+            } else {
+                showReportToast('⚠️ ' + (data.error || 'Terjadi kesalahan.'), 'error');
+            }
+        } catch {
+            showReportToast('⚠️ Gagal menghubungi server.', 'error');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = `<svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M22 2L11 13"/><path d="M22 2L15 22 11 13 2 9l20-7z"/></svg> Kirim Laporan`;
+        }
+    }
+
+    function showReportToast(msg, type) {
+        const t = document.getElementById('report-toast');
+        t.textContent = msg;
+        t.className = `report-toast report-toast--${type} report-toast--visible`;
+        setTimeout(() => { t.className = 'report-toast'; }, 3500);
+    }
 </script>
 {% endblock %}

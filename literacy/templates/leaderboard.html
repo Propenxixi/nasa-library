@@ -252,7 +252,6 @@
                             <div class="flex items-center gap-6">
                                 <div>
                                     <p class="font-sans text-lg font-bold text-[#0d183a] group-hover:text-[#1e3a8a] transition-colors leading-none mb-1.5">{{ entry.student.get_full_name }}</p>
-                                    <p class="text-[10px] font-black text-gray-500 uppercase tracking-[0.15em]">Verified Reader</p>
                                 </div>
                             </div>
                         </td>
@@ -306,12 +305,12 @@
                 <p class="font-sans text-gray-500 mt-4 max-w-2xl mx-auto">Tingkatkan peringkatmu dengan terus membaca dan menulis ulasan berkualitas di NASA Library.</p>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
                 <!-- Rule 1: Verified Review -->
                 <div class="bg-white p-10 rounded-[2.5rem] shadow-xl border border-gray-100 flex flex-col group hover:-translate-y-2 transition-all duration-300">
                     <div class="flex items-center gap-4 mb-6">
                         <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-xl">📚</div>
-                        <h3 class="font-display text-xl font-black text-[#0d183a]">Ulasan Terverifikasi</h3>
+                        <h3 class="font-display text-xl font-black text-[#0d183a]">Literasi Terverifikasi</h3>
                     </div>
                     <p class="text-gray-500 font-medium text-sm leading-relaxed mb-8">Poin diberikan untuk setiap partisipasi kegiatan literasi yang telah diverifikasi oleh petugas sekolah.</p>
                     <div class="mt-auto bg-blue-50 text-blue-600 px-5 py-2.5 rounded-xl font-black text-xs w-fit">
@@ -342,10 +341,29 @@
                         +5 Poin / Minggu
                     </div>
                 </div>
+                <!-- Rule 4: Book Rating -->
+                <div class="bg-white p-10 rounded-[2.5rem] shadow-xl border border-gray-100 flex flex-col group hover:-translate-y-2 transition-all duration-300">
+                    <div class="flex items-center gap-4 mb-6">
+                        <div class="w-10 h-10 rounded-xl bg-purple-50 text-purple-500 flex items-center justify-center text-xl">⭐</div>
+                        <h3 class="font-display text-xl font-black text-[#0d183a]">Rating Buku</h3>
+                    </div>
+                    <p class="text-gray-500 font-medium text-sm leading-relaxed mb-8">Berikan rating dan ulasan pada buku yang ada di katalog perpustakaan untuk mendapatkan poin tambahan.</p>
+                    <div class="mt-auto bg-purple-50 text-purple-500 px-5 py-2.5 rounded-xl font-black text-xs w-fit">
+                        +2 Poin / Rating
+                    </div>
+                </div>
+                <!-- Rule 5: Book Loan -->
+                <div class="bg-white p-10 rounded-[2.5rem] shadow-xl border border-gray-100 flex flex-col group hover:-translate-y-2 transition-all duration-300">
+                    <div class="flex items-center gap-4 mb-6">
+                        <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl">📖</div>
+                        <h3 class="font-display text-xl font-black text-[#0d183a]">Peminjaman Buku</h3>
+                    </div>
+                    <p class="text-gray-500 font-medium text-sm leading-relaxed mb-8">Dapatkan poin untuk setiap buku yang berhasil dipinjam dari katalog perpustakaan.</p>
+                    <div class="mt-auto bg-indigo-50 text-indigo-600 px-5 py-2.5 rounded-xl font-black text-xs w-fit">
+                        +2 Poin / Buku
+                    </div>
+                </div>
             </div>
-        </div>
-    </div>
-</div>
 
 <style>
     @keyframes fade-in {
@@ -356,5 +374,56 @@
         animation: fade-in 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
 </style>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const angkatanSelect = document.querySelector('select[name="angkatan"]');
+    const kelasSelect = document.querySelector('select[name="kelas"]');
+    
+    if (angkatanSelect && kelasSelect) {
+        // Simpan semua opsi kelas asli
+        const originalOptions = Array.from(kelasSelect.options).map(opt => {
+            return {
+                value: opt.value,
+                text: opt.text
+            };
+        });
+        
+        function filterKelas() {
+            const selectedAngkatan = angkatanSelect.value;
+            const currentSelectedValue = kelasSelect.value;
+            
+            // Bersihkan opsi saat ini
+            kelasSelect.innerHTML = '';
+            
+            originalOptions.forEach(optData => {
+                if (optData.value === "") {
+                    // Selalu tampilkan "Semua Kelas"
+                    const newOpt = new Option(optData.text, optData.value);
+                    kelasSelect.appendChild(newOpt);
+                } else {
+                    const classCohort = optData.value.split(" ")[0];
+                    if (!selectedAngkatan || classCohort === selectedAngkatan) {
+                        const newOpt = new Option(optData.text, optData.value);
+                        kelasSelect.appendChild(newOpt);
+                    }
+                }
+            });
+            
+            // Kembalikan seleksi sebelumnya jika masih ada di daftar kelas yang telah difilter
+            const hasSelectedValue = Array.from(kelasSelect.options).some(opt => opt.value === currentSelectedValue);
+            if (hasSelectedValue) {
+                kelasSelect.value = currentSelectedValue;
+            } else {
+                kelasSelect.value = "";
+            }
+        }
+        
+        angkatanSelect.addEventListener('change', filterKelas);
+        // Jalankan sekali saat load pertama kali untuk menyesuaikan filter aktif dari backend
+        filterKelas();
+    }
+});
+</script>
 
 {% endblock %}

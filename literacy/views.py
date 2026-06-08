@@ -13,7 +13,7 @@ import threading
 from django.db import transaction
 from django.contrib.auth.models import User
 
-from .models import BookReview, LiteracyPost, LiteracyLeaderboard, LiteracySession
+from .models import BookReview, LiteracyPost, LiteracyLeaderboard, LiteracySession, CommentReport
 from .forms import BookReviewForm, LiteracyPostForm, CommentForm, LiteracySessionForm
 from authentication.models import UserProfile
 from book_loan.models import Loan
@@ -159,39 +159,6 @@ def _available_kelas():
         .distinct()
         .order_by('kelas')
     )
-
-
-# ---------------------------------------------------------------------------
-# Input Review Buku Literasi
-# ---------------------------------------------------------------------------
-
-@login_required
-def submit_review_view(request):
-    """Student submits a book review (form-based)."""
-    user_profile = _get_or_create_profile(request.user)
-    if not user_profile.is_student():
-        messages.error(request, "Only students can submit book reviews.")
-        return redirect('literacy:leaderboard')
-
-    if request.method == 'POST':
-        form = BookReviewForm(request.POST)
-        if form.is_valid():
-            review = form.save(commit=False)
-            review.student = request.user
-            review.save()
-            messages.success(
-                request,
-                f"✨ Great job! Your review of '{review.title}' is pending teacher verification.",
-            )
-            return redirect('literacy:history')
-    else:
-        form = BookReviewForm()
-
-    stats = {
-        'reviews_count': BookReview.objects.filter(student=request.user).count(),
-        'verified_count': BookReview.objects.filter(student=request.user, status='verified').count(),
-    }
-    return render(request, 'submit-review.html', {'form': form, 'user_profile': user_profile, 'stats': stats})
 
 
 @login_required
@@ -447,6 +414,7 @@ def teacher_verify_reviews_view(request):
                 BookReview.objects.filter(status='verified', verified_by=request.user).count() +
                 LiteracyPost.objects.filter(verification_status='verified', verified_by=request.user).count()
         ),
+        'pending_reports': CommentReport.objects.count(),
     }
     return render(request, 'teacher-verify-reviews.html', {
         'stats': stats,
@@ -570,7 +538,7 @@ def verify_review_api(request, id):
             return JsonResponse({'error': 'Anda hanya dapat memverifikasi posting dari siswa di kelas Anda.'}, status=403)
         obj.verify(request.user) if status_input == 'Disetujui' else obj.reject(request.user, catatan)
         if status_input == 'Disetujui':
-            m, y = obj.verified_at.month, obj.verified_at.year
+            m, y = obj.created_at.month, obj.created_at.year
             threading.Thread(
                 target=calculate_student_score, args=(obj.student, m, y), daemon=True
             ).start()
@@ -590,7 +558,7 @@ def verify_review_api(request, id):
             return JsonResponse({'error': 'Anda hanya dapat memverifikasi review dari siswa di kelas Anda.'}, status=403)
         obj.verify(request.user) if status_input == 'Disetujui' else obj.reject(request.user, catatan)
         if status_input == 'Disetujui':
-            m, y = obj.verified_at.month, obj.verified_at.year
+            m, y = obj.created_at.month, obj.created_at.year
             threading.Thread(
                 target=calculate_student_score, args=(obj.student, m, y), daemon=True
             ).start()
@@ -980,6 +948,9 @@ def create_post_view(request):
     disertakan saat siswa menekan tombol "Buat Posting" di halaman sesi.
     """
     user_profile = _get_or_create_profile(request.user)
+    if not user_profile.is_student():
+        messages.error(request, "Hanya siswa yang dapat membuat posting literasi.")
+        return redirect('literacy:forum')
     session_pk = request.GET.get('session') or request.POST.get('session')
     active_session = get_object_or_404(LiteracySession, pk=session_pk) if session_pk else None
 
@@ -1246,11 +1217,11 @@ def calculate_leaderboard_scores(target_month=None, target_year=None):
         # --- 1. Jumlah Buku & Bonus Kualitas (Verified in this period) ---
         br_qs = BookReview.objects.filter(
             student=student, status='verified',
-            verified_at__gte=start_date, verified_at__lt=end_date
+            created_at__gte=start_date, created_at__lt=end_date
         )
         lp_qs = LiteracyPost.objects.filter(
             student=student, verification_status='verified',
-            verified_at__gte=start_date, verified_at__lt=end_date
+            created_at__gte=start_date, created_at__lt=end_date
         )
 
         books_count = br_qs.count() + lp_qs.count()
@@ -1307,8 +1278,20 @@ def calculate_leaderboard_scores(target_month=None, target_year=None):
         ))
         first_activity = min([dt for dt in period_activities if dt], default=None)
 
+        # --- 4. Jumlah Pinjam Buku (Approved in this period) ---
+        loans_qs = Loan.objects.filter(
+            user=student,
+            approved_date__gte=start_date, approved_date__lt=end_date
+        ).exclude(status__in=['ditolak', 'dibatalkan'])
+        loans_count = loans_qs.count()
+        loans_score = loans_count * 2
+
+        # Pertahankan book_rating_score yang sudah ada (poin dari rating buku di katalog)
+        existing = LiteracyLeaderboard.objects.filter(student=student, month=month, year=year).first()
+        existing_rating_score = getattr(existing, 'book_rating_score', 0) or 0 if existing else 0
+
         streak_score = streak_count * 5
-        total_score  = books_score + quality_bonus + streak_score
+        total_score  = books_score + quality_bonus + streak_score + existing_rating_score + loans_score
 
         LiteracyLeaderboard.objects.update_or_create(
             student=student, month=month, year=year,
@@ -1317,6 +1300,9 @@ def calculate_leaderboard_scores(target_month=None, target_year=None):
                 'books_read_score':    books_score,
                 'quality_bonus_score': quality_bonus,
                 'consistency_score':   streak_score,
+                'book_rating_score':   existing_rating_score,
+                'book_loans_count':    loans_count,
+                'book_loans_score':    loans_score,
                 'total_score':         total_score,
                 'first_activity_at':   first_activity,
             }
@@ -1356,11 +1342,11 @@ def calculate_student_score(student, month, year):
 
     br_qs = BookReview.objects.filter(
         student=student, status='verified',
-        verified_at__gte=start_date, verified_at__lt=end_date,
+        created_at__gte=start_date, created_at__lt=end_date,
     )
     lp_qs = LiteracyPost.objects.filter(
         student=student, verification_status='verified',
-        verified_at__gte=start_date, verified_at__lt=end_date,
+        created_at__gte=start_date, created_at__lt=end_date,
     )
 
     books_count = br_qs.count() + lp_qs.count()
@@ -1416,8 +1402,21 @@ def calculate_student_score(student, month, year):
     ))
     first_activity = min([dt for dt in period_activities if dt], default=None)
 
+    # --- 4. Jumlah Pinjam Buku (Approved in this period) ---
+    loans_qs = Loan.objects.filter(
+        user=student,
+        approved_date__gte=start_date, approved_date__lt=end_date
+    ).exclude(status__in=['ditolak', 'dibatalkan'])
+    loans_count = loans_qs.count()
+    loans_score = loans_count * 2
+
     streak_score = streak_count * 5
-    total_score = books_score + quality_bonus + streak_score
+
+    # Pertahankan book_rating_score yang sudah ada (poin dari rating buku di katalog)
+    existing = LiteracyLeaderboard.objects.filter(student=student, month=month, year=year).first()
+    existing_rating_score = getattr(existing, 'book_rating_score', 0) or 0 if existing else 0
+
+    total_score = books_score + quality_bonus + streak_score + existing_rating_score + loans_score
 
     LiteracyLeaderboard.objects.update_or_create(
         student=student, month=month, year=year,
@@ -1426,6 +1425,9 @@ def calculate_student_score(student, month, year):
             'books_read_score':    books_score,
             'quality_bonus_score': quality_bonus,
             'consistency_score':   streak_score,
+            'book_rating_score':   existing_rating_score,
+            'book_loans_count':    loans_count,
+            'book_loans_score':    loans_score,
             'total_score':         total_score,
             'first_activity_at':   first_activity,
         },
@@ -1463,10 +1465,64 @@ def api_leaderboard(request):
             'skor_total':  e.total_score,
             'jumlah_buku': e.books_read,
             'konsistensi': e.consistency_score // 5, # dalam minggu
+            'jumlah_pinjam_buku': getattr(e, 'book_loans_count', 0),
+            'poin_pinjam_buku':   getattr(e, 'book_loans_score', 0),
             'is_ambassador': e.is_monthly_ambassador
         })
 
     return JsonResponse(data, safe=False)
+
+@login_required
+@require_http_methods(["POST"])
+def award_rating_points(request):
+    """
+    POST /api/literacy/award-rating-points/
+    Body JSON: { "book_id": <int>, "has_comment": <bool> }
+    - Rating saja      → +1 poin
+    - Rating + komentar → +2 poin
+    """
+    user_profile = _get_or_create_profile(request.user)
+    if not user_profile.is_student():
+        return JsonResponse({'error': 'Hanya siswa yang mendapatkan poin.'}, status=403)
+
+    try:
+        body = json.loads(request.body)
+    except (json.JSONDecodeError, ValueError):
+        body = {}
+
+    # Tentukan poin: +1 rating saja, +2 jika ada komentar
+    has_comment = bool(body.get('has_comment', False))
+    poin = 2 if has_comment else 1
+
+    now = timezone.now()
+    month, year = now.month, now.year
+
+    with transaction.atomic():
+        LiteracyLeaderboard.objects.get_or_create(
+            student=request.user, month=month, year=year,
+            defaults={
+                'books_read': 0, 'books_read_score': 0,
+                'quality_bonus_score': 0, 'consistency_score': 0,
+                'book_rating_score': 0, 'total_score': 0,
+            }
+        )
+        entry = LiteracyLeaderboard.objects.select_for_update().get(
+            student=request.user, month=month, year=year
+        )
+        entry.book_rating_score = (entry.book_rating_score or 0) + poin
+        entry.total_score = (entry.total_score or 0) + poin
+        entry.save(update_fields=['book_rating_score', 'total_score'])
+
+    threading.Thread(
+        target=_update_ranks_for_period, args=(month, year), daemon=True
+    ).start()
+
+    keterangan = 'rating + komentar' if has_comment else 'rating saja'
+    return JsonResponse({
+        'message': f'+{poin} poin ditambahkan ({keterangan}).',
+        'poin_ditambahkan': poin,
+        'total_score': entry.total_score,
+    }, status=200)
 
 @login_required
 @require_http_methods(["GET"])
@@ -1490,7 +1546,9 @@ def api_scores(request):
                 'poin_buku': 0,
                 'konsistensi_minggu': 0,
                 'poin_konsistensi': 0,
-                'bonus_kualitas': 0
+                'bonus_kualitas': 0,
+                'jumlah_pinjam_buku': 0,
+                'poin_pinjam_buku': 0
             }
         })
 
@@ -1505,6 +1563,146 @@ def api_scores(request):
             'poin_buku':         entry.books_read_score,
             'konsistensi_minggu': entry.consistency_score // 5,
             'poin_konsistensi':  entry.consistency_score,
-            'bonus_kualitas':    entry.quality_bonus_score
+            'bonus_kualitas':    entry.quality_bonus_score,
+            'jumlah_pinjam_buku': getattr(entry, 'book_loans_count', 0),
+            'poin_pinjam_buku':   getattr(entry, 'book_loans_score', 0)
         }
     })
+
+# ---------------------------------------------------------------------------
+# Fitur Report Komentar
+# ---------------------------------------------------------------------------
+
+@login_required
+@require_http_methods(["POST"])
+def report_comment_api(request, comment_id):
+    """
+    POST /api/literacy/comments/<id>/report
+    Siswa melaporkan komentar. Body JSON: { "reason": "..." }
+    Mengembalikan 201 Created | 400 Bad Request | 409 Conflict (sudah pernah lapor)
+    """
+    from .models import LiteracyComment, CommentReport
+
+    comment = get_object_or_404(LiteracyComment, pk=comment_id)
+
+    # Jangan bisa lapor komentar sendiri
+    if comment.student == request.user:
+        return JsonResponse({'error': 'Tidak bisa melaporkan komentar sendiri.'}, status=400)
+
+    try:
+        body = json.loads(request.body)
+    except (json.JSONDecodeError, ValueError):
+        return JsonResponse({'error': 'Request body harus berupa JSON.'}, status=400)
+
+    reason = body.get('reason', '').strip()
+    if not reason:
+        return JsonResponse({'error': 'Alasan laporan wajib diisi.'}, status=400)
+    if len(reason) > 500:
+        return JsonResponse({'error': 'Alasan maksimal 500 karakter.'}, status=400)
+
+    # Cek apakah sudah pernah lapor
+    if CommentReport.objects.filter(comment=comment, reported_by=request.user).exists():
+        return JsonResponse({'error': 'Kamu sudah pernah melaporkan komentar ini.'}, status=409)
+
+    CommentReport.objects.create(
+        comment=comment,
+        reported_by=request.user,
+        reason=reason,
+    )
+    return JsonResponse({'message': 'Laporan berhasil dikirim dan akan ditinjau oleh guru.'}, status=201)
+
+
+@login_required
+@require_http_methods(["GET"])
+def reported_comments_api(request):
+    """
+    GET /api/literacy/reported-comments
+    Guru mengambil daftar laporan komentar yang masih pending.
+    Mengembalikan 200 OK | 403 Forbidden
+    """
+    from .models import CommentReport
+
+    user_profile = _get_or_create_profile(request.user)
+    if not (user_profile.is_teacher() or user_profile.role in ('admin', 'staff', 'librarian')):
+        return JsonResponse({'error': 'Hanya guru yang dapat mengakses data ini.'}, status=403)
+
+    reports = (
+        CommentReport.objects
+        .filter(status='pending')
+        .select_related('comment__student', 'comment__post', 'reported_by')
+        .order_by('-created_at')
+    )
+
+    data = []
+    for rp in reports:
+        c = rp.comment
+        data.append({
+            'report_id':      rp.pk,
+            'comment_id':     c.pk,
+            'comment_text':   c.content,
+            'comment_date':   c.created_at.isoformat() if c.created_at else None,
+            'commenter_name': c.student.get_full_name(),
+            'commenter_id':   c.student_id,
+            'post_id':        c.post_id,
+            'post_title':     c.post.title if c.post else '',
+            'reporter_name':  rp.reported_by.get_full_name(),
+            'reporter_id':    rp.reported_by_id,
+            'reason':         rp.reason,
+            'reported_at':    rp.created_at.isoformat() if rp.created_at else None,
+        })
+
+    return JsonResponse(data, safe=False, status=200)
+
+
+@login_required
+@require_http_methods(["POST"])
+def resolve_report_api(request, report_id):
+    """
+    POST /api/literacy/reported-comments/<id>/resolve
+    Guru memilih aksi: hapus komentar atau abaikan laporan.
+    Body JSON: { "action": "delete" | "ignore" }
+    Mengembalikan 200 OK | 400 Bad Request | 403 Forbidden | 404 Not Found
+    """
+    from .models import CommentReport
+
+    user_profile = _get_or_create_profile(request.user)
+    if not (user_profile.is_teacher() or user_profile.role in ('admin', 'staff', 'librarian')):
+        return JsonResponse({'error': 'Hanya guru yang dapat menyelesaikan laporan.'}, status=403)
+
+    report = get_object_or_404(CommentReport, pk=report_id, status='pending')
+
+    try:
+        body = json.loads(request.body)
+    except (json.JSONDecodeError, ValueError):
+        return JsonResponse({'error': 'Request body harus berupa JSON.'}, status=400)
+
+    action = body.get('action', '').strip()
+    if action not in ('delete', 'ignore'):
+        return JsonResponse({'error': 'Aksi tidak valid. Gunakan "delete" atau "ignore".'}, status=400)
+
+    with transaction.atomic():
+        report.resolved_by = request.user
+        report.resolved_at = timezone.now()
+
+        if action == 'delete':
+            comment = report.comment
+            # Tandai semua laporan untuk komentar ini sebagai deleted
+            CommentReport.objects.filter(comment=comment, status='pending').update(
+                status='deleted',
+                resolved_by=request.user,
+                resolved_at=timezone.now(),
+            )
+            comment.delete()
+            return JsonResponse({
+                'message': 'Komentar berhasil dihapus.',
+                'action': 'deleted',
+                'report_id': report_id,
+            }, status=200)
+        else:
+            report.status = 'ignored'
+            report.save()
+            return JsonResponse({
+                'message': 'Laporan diabaikan.',
+                'action': 'ignored',
+                'report_id': report_id,
+            }, status=200)

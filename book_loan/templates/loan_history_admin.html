@@ -161,13 +161,13 @@
                         <!-- Timeline spine -->
                         <div class="flex flex-col items-center flex-shrink-0 pt-5">
                             <div class="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0
-                                {% if loan.return_date and loan.return_date > loan.due_date %}bg-red-50 outline outline-1 outline-red-200{% else %}bg-emerald-50 outline outline-1 outline-emerald-200{% endif %}">
-                                {% if loan.return_date and loan.return_date > loan.due_date %}
+                                {% if loan.is_late %}bg-red-50 outline outline-1 outline-red-200{% elif loan.return_date %}bg-emerald-50 outline outline-1 outline-emerald-200{% else %}bg-amber-50 outline outline-1 outline-amber-200{% endif %}">
+                                {% if loan.is_late %}
                                 <svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/>
                                 </svg>
                                 {% else %}
-                                <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <svg class="w-4 h-4 {% if loan.return_date %}text-emerald-500{% else %}text-amber-500{% endif %}" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                 </svg>
                                 {% endif %}
@@ -189,10 +189,12 @@
                                         <p class="text-slate-900 text-base sm:text-lg font-bold font-['Playfair_Display'] leading-snug truncate">{{ loan.book.title }}</p>
                                         <p class="text-zinc-500 text-sm font-['Work_Sans']">{{ loan.user.first_name }} {{ loan.user.last_name }}</p>
                                     </div>
-                                    {% if loan.return_date and loan.return_date > loan.due_date %}
+                                    {% if loan.is_late %}
                                     <span class="flex-shrink-0 px-2.5 py-1 bg-red-50 text-red-600 text-[10px] font-semibold font-['Work_Sans'] rounded-lg">Terlambat</span>
-                                    {% else %}
+                                    {% elif loan.return_date %}
                                     <span class="flex-shrink-0 px-2.5 py-1 bg-emerald-50 text-emerald-600 text-[10px] font-semibold font-['Work_Sans'] rounded-lg">Tepat Waktu</span>
+                                    {% else %}
+                                    <span class="flex-shrink-0 px-2.5 py-1 bg-amber-50 text-amber-600 text-[10px] font-semibold font-['Work_Sans'] rounded-lg">Sedang Dipinjam</span>
                                     {% endif %}
                                 </div>
                                 <div class="flex flex-wrap gap-x-5 gap-y-1.5 text-sm">
@@ -202,7 +204,11 @@
                                     </div>
                                     <div class="flex items-center gap-1.5">
                                         <span class="text-zinc-500 font-['Work_Sans'] text-xs">Dikembalikan</span>
+                                        {% if loan.return_date %}
                                         <span class="text-slate-900 font-semibold font-['Work_Sans'] text-xs">{{ loan.return_date|date:"d M Y" }}</span>
+                                        {% else %}
+                                        <span class="text-zinc-300 font-['Work_Sans'] text-xs">—</span>
+                                        {% endif %}
                                     </div>
                                     <div class="flex items-center gap-1.5">
                                         <span class="text-zinc-500 font-['Work_Sans'] text-xs">Durasi</span>

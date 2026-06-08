@@ -1334,6 +1334,8 @@
       btn.disabled = true;
       btn.textContent = 'Mengirim…';
 
+      const hasComment = comment.trim().length > 0;
+
       try {
         const r = await fetch(`/book/api/books/${bookPk}/reviews/`, {
           method: 'POST',
@@ -1345,8 +1347,27 @@
         });
         const d = await r.json();
         if (r.ok) {
-          const isUpdate = d.message?.includes('diperbarui');
-          showToast(isUpdate ? 'Review diperbarui!' : 'Review terkirim!');
+          const isUpdate  = d.message?.includes('diperbarui');
+          const isUpgrade = d.comment_upgraded === true;
+
+          // Poin sepenuhnya ditangani server-side di api_book_reviews.
+          // Toast hanya mencerminkan apa yang sudah dilakukan server:
+          //   - isUpgrade  : edit kosong → isi komentar → +1
+          //   - isUpdate   : edit biasa (tanpa upgrade)  →  0
+          //   - submit baru dengan komentar              → +2
+          //   - submit baru rating saja                  → +1
+          let toastMsg;
+          if (isUpgrade) {
+            toastMsg = 'Komentar ditambahkan! +1 poin literasi ⭐';
+          } else if (isUpdate) {
+            toastMsg = 'Review diperbarui!';
+          } else if (hasComment) {
+            toastMsg = 'Review terkirim! +2 poin literasi ✨';
+          } else {
+            toastMsg = 'Rating dikirim! +1 poin literasi ⭐';
+          }
+          showToast(toastMsg);
+
           loadReviews(1);
           // Reset textarea & char count saja — bintang TIDAK di-reset (persistensi rating)
           this.comment.value = '';
@@ -1354,6 +1375,7 @@
           document.getElementById('charHelper').classList.remove('show');
           this.comment.classList.remove('over-limit');
           document.getElementById('charCount').classList.remove('over-limit');
+          // Poin literasi sudah diberikan server-side — tidak perlu fetch terpisah
         } else {
           showToast(d.error || 'Gagal mengirim review', 'red');
         }

@@ -303,3 +303,20 @@ class Notification(models.Model):
         self.is_read = True
         self.read_at = timezone.now()
         self.save()
+
+
+# Signals for automatic leaderboard score recalculation based on loans
+from django.db.models.signals import post_save, post_delete
+from django.dispatch import receiver
+
+@receiver(post_save, sender=Loan)
+def loan_post_save(sender, instance, **kwargs):
+    if instance.approved_date:
+        from literacy.views import calculate_student_score
+        calculate_student_score(instance.user, instance.approved_date.month, instance.approved_date.year)
+
+@receiver(post_delete, sender=Loan)
+def loan_post_delete(sender, instance, **kwargs):
+    if instance.approved_date:
+        from literacy.views import calculate_student_score
+        calculate_student_score(instance.user, instance.approved_date.month, instance.approved_date.year)

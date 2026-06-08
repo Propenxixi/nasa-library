@@ -484,9 +484,9 @@ def api_visitors_summary(request):
         'stats': {
             'active_visitors': active_visitors,
             'left_visitors': left_visitors,
+            'total_visitors': active_visitors + left_visitors,  # tambah ini
         }
     })
-
 
 @login_required
 def api_visitors_trend(request):

@@ -412,12 +412,6 @@
         <div class="no-data-msg" id="chartNoData" style="display:none;">Data tidak tersedia</div>
         <canvas id="visitorTrendChart"></canvas>
       </div>
-      <div class="chart-totals">
-        <div class="chart-total-item">
-          <span class="ct-label">Total Pengunjung</span>
-          <span class="ct-value" id="totalVisitors" style="color:#1E3A8A;">—</span>
-        </div>
-      </div>
     </div>
 
     <!-- PBI-53: Popular Activities -->
@@ -526,8 +520,8 @@ async function loadSummary() {
     if (data.status !== 'success') return;
     const s = data.stats;
     container.innerHTML =
-      statCard('active', 'Pengunjung Aktif',  s.active_visitors) +
-      statCard('left',   'Sudah Keluar',      s.left_visitors);
+      statCard('active', 'Pengunjung Aktif',   s.active_visitors) +
+      statCard('left',   'Total Pengunjung',   s.total_visitors);
   } catch(e) {
     container.innerHTML = '<p style="color:#F26969;font-size:.875rem;padding:1rem;grid-column:1/-1;">Gagal memuat statistik.</p>';
   }
@@ -549,8 +543,6 @@ async function loadTrend() {
   try {
     const data = await fetchJSON(`/api/dashboard/visitors/trend/?${buildParams()}`);
     if (data.status !== 'success') return;
-
-    document.getElementById('totalVisitors').textContent = data.summary.total_visitors;
 
     const periodLabels = {
       today:      'Hari Ini',

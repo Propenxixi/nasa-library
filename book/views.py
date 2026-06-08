@@ -500,6 +500,60 @@ def book_api_detail(request, pk):
         return JsonResponse({'message': 'Buku berhasil dinonaktifkan (soft delete)'})
 
 
+# ─── Helper: Award Literacy Points (server-side) ─────────────────────────────
+
+def _award_literacy_points(user, points):
+    """
+    Tambah poin literasi dari rating buku. Dipanggil server-side dari api_book_reviews
+    sehingga frontend tidak bisa memanipulasi jumlah poin.
+
+    Aturan poin (dijaga di api_book_reviews, bukan di sini):
+      - Submit baru, rating saja        → +1
+      - Submit baru, rating + komentar  → +2
+      - Edit: kosong → isi komentar     → +1  (upgrade)
+      - Edit biasa / hapus komentar     →  0  (tidak dipanggil)
+      - Restore setelah soft-delete     → sama seperti submit baru
+    """
+    import threading as _threading
+    try:
+        from literacy.models import LiteracyLeaderboard
+        from literacy.views import _update_ranks_for_period
+        from authentication.models import UserProfile
+        from django.db import transaction as _transaction
+
+        profile, _ = UserProfile.objects.get_or_create(user=user, defaults={'role': 'student'})
+        if not profile.is_student():
+            return
+
+        now   = timezone.now()
+        month = now.month
+        year  = now.year
+
+        with _transaction.atomic():
+            LiteracyLeaderboard.objects.get_or_create(
+                student=user, month=month, year=year,
+                defaults={
+                    'books_read': 0, 'books_read_score': 0,
+                    'quality_bonus_score': 0, 'consistency_score': 0,
+                    'book_rating_score': 0, 'total_score': 0,
+                }
+            )
+            entry = LiteracyLeaderboard.objects.select_for_update().get(
+                student=user, month=month, year=year
+            )
+            entry.book_rating_score = (entry.book_rating_score or 0) + points
+            entry.total_score       = (entry.total_score or 0) + points
+            entry.save(update_fields=['book_rating_score', 'total_score'])
+
+        _threading.Thread(
+            target=_update_ranks_for_period, args=(month, year), daemon=True
+        ).start()
+
+    except Exception as e:
+        import logging
+        logging.getLogger(__name__).error(f'_award_literacy_points error: {e}')
+
+
 # ─── API: Book Reviews ──────────────────────────────────────────────────────────
 
 @login_required
@@ -600,7 +654,7 @@ def api_book_reviews(request, book_id):
         except json.JSONDecodeError:
             return JsonResponse({'error': 'Invalid JSON'}, status=400)
 
-        rating = data.get('rating')
+        rating  = data.get('rating')
         comment = data.get('comment', '').strip()
 
         if not rating or not isinstance(rating, int) or rating < 1 or rating > 5:
@@ -609,20 +663,32 @@ def api_book_reviews(request, book_id):
         if comment and len(comment) > 500:
             return JsonResponse({'error': 'Komentar maksimal 500 karakter'}, status=400)
 
-        # Check for active review first
+        # ── CASE 1: Update review yang sudah ada ──────────────────────────────
         active_review = all_reviews.filter(user=request.user).first()
         if active_review:
-            # ── Update review: hanya updated_at yang berubah, created_at tetap
-            active_review.rating  = rating
-            active_review.comment = comment
+            # Deteksi upgrade: sebelumnya komentar kosong, sekarang diisi
+            # Ini satu-satunya kasus edit yang mendapat poin tambahan (+1)
+            was_empty        = not active_review.comment.strip()
+            now_has_comment  = bool(comment)
+            comment_upgraded = was_empty and now_has_comment
+
+            active_review.rating     = rating
+            active_review.comment    = comment
             active_review.updated_at = timezone.now()
             active_review.save(update_fields=['rating', 'comment', 'updated_at'])
+
+            # Beri +1 poin hanya untuk upgrade kosong → ada komentar
+            # Edit biasa (ganti komentar yang sudah ada, atau hapus komentar) → 0 poin
+            if comment_upgraded:
+                _award_literacy_points(request.user, points=1)
+
             return JsonResponse({
-                'message': 'Review berhasil diperbarui',
-                'review_id': active_review.id
+                'message':          'Review berhasil diperbarui',
+                'review_id':        active_review.id,
+                'comment_upgraded': comment_upgraded,
             })
 
-        # Check for soft-deleted review to restore
+        # ── CASE 2: Restore review yang sudah dihapus (soft-delete) ──────────
         deleted_review = Review.objects.filter(
             book=book,
             user=request.user,
@@ -630,7 +696,7 @@ def api_book_reviews(request, book_id):
         ).first()
 
         if deleted_review:
-            # ── Restore: anggap sebagai review baru — reset kedua timestamp
+            # Diperlakukan seperti submit baru — reset kedua timestamp
             deleted_review.rating     = rating
             deleted_review.comment    = comment
             deleted_review.deleted_at = None
@@ -638,12 +704,17 @@ def api_book_reviews(request, book_id):
             deleted_review.created_at = timezone.now()
             deleted_review.updated_at = timezone.now()
             deleted_review.save()
+
+            # Poin seperti submit baru: +2 kalau ada komentar, +1 kalau tidak
+            _award_literacy_points(request.user, points=2 if comment else 1)
+
             return JsonResponse({
-                'message': 'Review berhasil dikirim',
-                'review_id': deleted_review.id
+                'message':          'Review berhasil dikirim',
+                'review_id':        deleted_review.id,
+                'comment_upgraded': False,
             })
 
-        # Create new review — created_at & updated_at di-set sama (auto via model)
+        # ── CASE 3: Buat review baru ──────────────────────────────────────────
         review = Review.objects.create(
             book=book,
             user=request.user,
@@ -651,9 +722,13 @@ def api_book_reviews(request, book_id):
             comment=comment,
         )
 
+        # Poin: +2 kalau ada komentar, +1 kalau rating saja
+        _award_literacy_points(request.user, points=2 if comment else 1)
+
         return JsonResponse({
-            'message': 'Review berhasil dikirim',
-            'review_id': review.id
+            'message':          'Review berhasil dikirim',
+            'review_id':        review.id,
+            'comment_upgraded': False,
         }, status=201)
 
 
